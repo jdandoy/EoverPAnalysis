@@ -9,9 +9,9 @@ For questions please contact: joakim.olsson[at]cern.ch
 
 ```
 mkdir myAnalysis; cd myAnalysis
-git clone http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers
+git clone -b RootCore http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers # checkout R20.7 branch
 git clone http://github.com/UCATLAS/EoverPAnalysis EoverPAnalysis
-lsetup 'rcsetup Base,2.4.20' # or later version of (Ath)AnalysisBase
+lsetup 'rcsetup Base,2.4.37' # or later version of (Ath)AnalysisBase
 rc clean && rc find_packages && rc compile && rc make_par
 ```
 
@@ -36,6 +36,13 @@ The datasets that come with the default package are located on MWT2_UC_LOCALGROU
 
 ```
 lsetup fax; fax-get-best-redirector
+```
+
+NOTE: If you are submitting jobs to condor from lxplus, you'll need to put your gridproxy.cert in a location accessible by the CERN condor nodes:
+
+```
+cp $(echo ${X509_USER_PROXY}) /eos/user/e/elonmusk
+export X509_USER_PROXY=/eos/user/e/elonmusk
 ```
 
 ### Local test run
