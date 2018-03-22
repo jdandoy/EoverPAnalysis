@@ -28,7 +28,7 @@ voms-proxy-init -voms atlas
 If you haven't done so already, you might want to add the following lines to your ~/.bash_profile:
 
 ```
-echo alias grid="voms-proxy-init -voms atlas -out $HOME/.globus/gridproxy.cert -valid 1000:00"
+alias grid="voms-proxy-init -voms atlas -out $HOME/.globus/gridproxy.cert -valid 1000:00"
 export X509_USER_PROXY=$HOME/.globus/gridproxy.cert
 ```
 
