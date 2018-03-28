@@ -41,8 +41,8 @@ lsetup fax; fax-get-best-redirector
 NOTE: If you are submitting jobs to condor from lxplus, you'll need to put your gridproxy.cert in a location accessible by the CERN condor nodes:
 
 ```
-cp $HOME/.globus/gridproxy.cert /eos/user/e/elonmusk # change to your username
-export X509_USER_PROXY=/eos/user/e/elonmusk/gridproxy.cert
+cp /afs/cern.ch/user/j/jolsson/.globus/gridproxy.cert /eos/user/j/jolsson/
+export X509_USER_PROXY=/eos/user/j/jolsson/gridproxy.cert
 ```
 
 ### Local test run
