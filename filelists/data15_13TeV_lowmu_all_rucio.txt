@@ -1,0 +1,6 @@
+user.jolsson.data15_13TeV.00267358.physics_MinBias.DAOD_EOP.r7922.20161225_alpha1_EXT1
+user.jolsson.data15_13TeV.00267599.physics_MinBias.DAOD_EOP.r7922.20161230_alpha1_2_EXT1
+user.jolsson.data15_13TeV.00267359.physics_MinBias.DAOD_EOP.r7922.20161225_alpha1_EXT1
+user.jolsson.data15_13TeV.00267367.physics_MinBias.DAOD_EOP.r7922.20161225_alpha1_EXT1
+user.jolsson.data15_13TeV.00267385.physics_MinBias.DAOD_EOP.r7922.20161225_alpha1_EXT1
+user.jolsson.data15_13TeV.00267360.physics_MinBias.DAOD_EOP.r7922.20161225_alpha1_EXT1
