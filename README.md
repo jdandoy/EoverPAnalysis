@@ -5,7 +5,20 @@ This package is based on the [xAODAnaHelpers (xAH)](https://github.com/UCATLAS/x
 
 For questions please contact: joakim.olsson[at]cern.ch
 
-## Setup
+## Setup in Release 21
+```
+mkdir myAnalysis; cd myAnalysis
+mkdir source && mkdir run && mkdir build
+cd source
+git clone http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers
+git clone http://github.com/luadamek/EoverPAnalysis
+asetup AnalysisBase,21.2.22,here
+cd ../build
+cmake ../source && make
+```
+
+
+## Setup in Release 20.7
 
 ```
 mkdir myAnalysis; cd myAnalysis
@@ -15,7 +28,7 @@ lsetup 'rcsetup Base,2.4.37' # or later version of (Ath)AnalysisBase
 rc clean && rc find_packages && rc compile && rc make_par
 ```
 
-## Running
+## Running in Release 20.7
 
 ### Grid proxy
 
