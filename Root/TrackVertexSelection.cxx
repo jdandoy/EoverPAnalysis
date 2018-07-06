@@ -18,7 +18,7 @@
 #include "xAODEventInfo/EventInfo.h"
 #include "xAODAnaHelpers/HelperFunctions.h"
 #include "EoverPAnalysis/TrackVertexSelection.h"
-#include <xAODAnaHelpers/tools/ReturnCheck.h>
+#include "AsgTools/MessageCheck.h"
 
 // ROOT include(s):
 #include "TFile.h"
@@ -110,7 +110,7 @@ EL::StatusCode TrackVertexSelection :: histInitialize ()
   // connected.
 
   Info("histInitialize()", "Calling histInitialize");
-  RETURN_CHECK("xAH::Algorithm::algInitialize()", xAH::Algorithm::algInitialize(), "");
+  ANA_CHECK( xAH::Algorithm::algInitialize());
   return EL::StatusCode::SUCCESS;
 }
 
@@ -180,21 +180,21 @@ EL::StatusCode TrackVertexSelection :: initialize ()
   // initialize and configure the track selection tool
   //------------------------------------------------------
   m_trkSelection = new InDet::InDetTrackSelectionTool("TrackSelection");
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("CutLevel", m_cutLevel.c_str()), "failed to set CutLevel property");
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("minPt", static_cast<double>(m_minPt)*1000), "failed to set minPt property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("maxAbsEta", static_cast<double>(m_maxAbsEta)), "failed to set maxAbsEta property"); 
-  // RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("minPt", 400), "failed to set minPt property"); 
-  // RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("maxAbsEta", 2.5), "failed to set maxAbsEta property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("maxZ0SinTheta", static_cast<double>(m_maxZ0SinTheta)), "failed to set maxZ0SinTheta property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("maxD0", static_cast<double>(m_maxD0)), "failed to set maxD0 property");
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("maxZ0", static_cast<double>(m_maxZ0)), "failed to set maxZ0 property");
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("minNPixelHits", static_cast<int>(m_minNPixelHits)), "failed to set minNPixelHits property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("minNSctHits", static_cast<int>(m_minNSctHits)), "failed to set minNSctHits property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("minNSiHits", static_cast<int>(m_minNSiHits)), "failed to set minNSiHits property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("maxTrtEtaAcceptance", 0.0), "failed to set property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("maxEtaForTrtHitCuts", 2.0), "failed to set property"); 
-  if (m_minNTrtHits =! -1) RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->setProperty("minNTrtHits", static_cast<int>(m_minNTrtHits)), "failed to set minNTrtHits property"); 
-  RETURN_CHECK("TrackSelectionTool::initialize()", m_trkSelection->initialize(), ""); 
+  ANA_CHECK( m_trkSelection->setProperty("CutLevel", m_cutLevel.c_str()) );
+  ANA_CHECK( m_trkSelection->setProperty("minPt", static_cast<double>(m_minPt)*1000) ); 
+  ANA_CHECK( m_trkSelection->setProperty("maxAbsEta", static_cast<double>(m_maxAbsEta)) ); 
+  // ANA_CHECK( m_trkSelection->setProperty("minPt", 400), "failed to set minPt property"); 
+  // ANA_CHECK( m_trkSelection->setProperty("maxAbsEta", 2.5), "failed to set maxAbsEta property"); 
+  ANA_CHECK( m_trkSelection->setProperty("maxZ0SinTheta", static_cast<double>(m_maxZ0SinTheta)) ); 
+  ANA_CHECK( m_trkSelection->setProperty("maxD0", static_cast<double>(m_maxD0)) );
+  ANA_CHECK( m_trkSelection->setProperty("maxZ0", static_cast<double>(m_maxZ0)) );
+  ANA_CHECK( m_trkSelection->setProperty("minNPixelHits", static_cast<int>(m_minNPixelHits)) ); 
+  ANA_CHECK( m_trkSelection->setProperty("minNSctHits", static_cast<int>(m_minNSctHits)) ); 
+  ANA_CHECK( m_trkSelection->setProperty("minNSiHits", static_cast<int>(m_minNSiHits)) ); 
+  ANA_CHECK( m_trkSelection->setProperty("maxTrtEtaAcceptance", 0.0) ); 
+  ANA_CHECK( m_trkSelection->setProperty("maxEtaForTrtHitCuts", 2.0) ); 
+  if (m_minNTrtHits =! -1) ANA_CHECK( m_trkSelection->setProperty("minNTrtHits", static_cast<int>(m_minNTrtHits)) ); 
+  ANA_CHECK( m_trkSelection->initialize()); 
 
   m_event = wk()->xaodEvent();
   m_store = wk()->xaodStore();
@@ -225,7 +225,7 @@ EL::StatusCode TrackVertexSelection :: execute ()
 
   // retrieve event
   const xAOD::EventInfo* eventInfo(nullptr);
-  RETURN_CHECK("TrackVertexSelection::execute()", HelperFunctions::retrieve(eventInfo, m_eventInfoContainerName, m_event, m_store, m_verbose) ,"");
+  ANA_CHECK( HelperFunctions::retrieve(eventInfo, m_eventInfoContainerName, m_event, m_store));
 
   // MC event weight
   float mcEvtWeight(1.0);
@@ -240,11 +240,11 @@ EL::StatusCode TrackVertexSelection :: execute ()
 
   // get the collection from TEvent or TStore
   const xAOD::TrackParticleContainer* inTracks(nullptr);
-  RETURN_CHECK("TrackVertexSelection::execute()", HelperFunctions::retrieve(inTracks, m_inContainerName, m_event, m_store, m_verbose) ,"");
+  ANA_CHECK( HelperFunctions::retrieve(inTracks, m_inContainerName, m_event, m_store));
 
   // get primary vertex
   const xAOD::VertexContainer *vertices(nullptr);
-  RETURN_CHECK("TrackVertexSelection::execute()", HelperFunctions::retrieve(vertices, "PrimaryVertices", m_event, m_store, m_verbose) ,"");
+  ANA_CHECK( HelperFunctions::retrieve(vertices, "PrimaryVertices", m_event, m_store));
   const xAOD::Vertex *pvx = HelperFunctions::getPrimaryVertex(vertices);
 
 
@@ -297,7 +297,7 @@ EL::StatusCode TrackVertexSelection :: execute ()
 
   // add output container to TStore
   if( m_createSelectedContainer ) {
-    RETURN_CHECK( "TrackVertexSelection::execute()", m_store->record( selectedTracks, m_outContainerName ), "Failed to store container.");
+    ANA_CHECK( m_store->record( selectedTracks, m_outContainerName ) );
   }
 
   m_numEventPass++;
@@ -365,6 +365,6 @@ EL::StatusCode TrackVertexSelection :: histFinalize ()
   // outputs have been merged.  This is different from finalize() in
   // that it gets called on all worker nodes regardless of whether
   // they processed input events.
-  RETURN_CHECK("xAH::Algorithm::algFinalize()", xAH::Algorithm::algFinalize(), "");
+  ANA_CHECK( xAH::Algorithm::algFinalize() );
   return EL::StatusCode::SUCCESS;
 }

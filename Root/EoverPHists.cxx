@@ -2,7 +2,6 @@
 // Joakim Olsson (joakim.olsson@cern.ch)
 
 #include "EoverPAnalysis/EoverPHists.h"
-#include "xAODAnaHelpers/tools/ReturnCheck.h"
 #include "xAODAnaHelpers/HelperFunctions.h"
 #include <regex>
 #include <sstream>

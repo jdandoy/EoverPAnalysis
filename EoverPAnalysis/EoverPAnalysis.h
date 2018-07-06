@@ -222,8 +222,7 @@ class EoverPAnalysis : public xAH::Algorithm
     // variables that don't get filled at submission time should be
     // protected from being send from the submission node to the worker
     // node (done by the //!)
-
-  public:
+    public:
     // Tree *myTree; //!
     // TH1 *myHist; //!
 

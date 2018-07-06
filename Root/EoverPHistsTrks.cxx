@@ -1,5 +1,4 @@
 #include "EoverPAnalysis/EoverPHistsTrks.h"
-#include "xAODAnaHelpers/tools/ReturnCheck.h"
 #include "xAODAnaHelpers/HelperFunctions.h"
 #include <regex>
 #include <math.h>

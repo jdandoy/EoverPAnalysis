@@ -9,7 +9,7 @@
 #include "xAODEventInfo/EventInfo.h"
 #include "xAODAnaHelpers/HelperFunctions.h"
 #include <EoverPAnalysis/EoverPAnalysis.h>
-#include <xAODAnaHelpers/tools/ReturnCheck.h>
+#include "AsgTools/MessageCheck.h"
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(EoverPAnalysis)
@@ -112,7 +112,7 @@ EL::StatusCode EoverPAnalysis :: histInitialize ()
 {
 
   Info("histInitialize()", "%s", m_name.c_str() );
-  RETURN_CHECK("xAH::Algorithm::algInitialize()", xAH::Algorithm::algInitialize(), "");
+  ANA_CHECK(xAH::Algorithm::algInitialize());
   // needed here and not in initalize since this is called first
   if( m_inTrackContainerName.empty() || m_detailStr.empty() ){
     Error("configure()", "One or more required configuration values are empty");
@@ -121,13 +121,13 @@ EL::StatusCode EoverPAnalysis :: histInitialize ()
 
   // declare class and add histograms to output
   m_plots_eop = new EoverPHists(m_name, m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, m_doProfileEta, m_doProfileP, m_doExtraEtaEnergyBinHists);
-  RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop -> initialize(), "");
+  ANA_CHECK(m_plots_eop -> initialize());
   m_plots_eop -> record( wk() );
 
   if (m_doTrkIsoHists) {
     // extra histograms for track isolation testing
     m_plots_eop_trks = new EoverPHistsTrks(m_name, m_detailStr, m_trkIsoDRmax, m_trkIsoPfrac, m_doTrkPcut, m_trkPmin, m_trkPmax, m_doTrkEtacut, m_trkEtamin, m_trkEtamax, false); 
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_trks -> initialize(), "");
+    ANA_CHECK(m_plots_eop_trks->initialize());
     m_plots_eop_trks -> record( wk() );
   }
 
@@ -142,14 +142,14 @@ EL::StatusCode EoverPAnalysis :: histInitialize ()
     m_plots_eop_TileEfrac075 = new EoverPHists(m_name+"_TileEfrac075", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, m_doProfileEta, m_doProfileP, m_doExtraEtaEnergyBinHists);
     m_plots_eop_TileEfrac080 = new EoverPHists(m_name+"_TileEfrac080", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, m_doProfileEta, m_doProfileP, m_doExtraEtaEnergyBinHists);
 
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac000 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac010 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac030 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac050 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac060 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac070 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac075 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_TileEfrac080 -> initialize(), "");
+    ANA_CHECK(m_plots_eop_TileEfrac000 -> initialize());
+    ANA_CHECK(m_plots_eop_TileEfrac010 -> initialize());
+    ANA_CHECK(m_plots_eop_TileEfrac030 -> initialize());
+    ANA_CHECK(m_plots_eop_TileEfrac050 -> initialize());
+    ANA_CHECK(m_plots_eop_TileEfrac060 -> initialize());
+    ANA_CHECK(m_plots_eop_TileEfrac070 -> initialize());
+    ANA_CHECK(m_plots_eop_TileEfrac075 -> initialize());
+    ANA_CHECK(m_plots_eop_TileEfrac080 -> initialize());
 
     m_plots_eop_TileEfrac000 -> record( wk() );
     m_plots_eop_TileEfrac010 -> record( wk() );
@@ -168,10 +168,10 @@ EL::StatusCode EoverPAnalysis :: histInitialize ()
     m_plots_eop_pG8000L12000 = new EoverPHists(m_name+"_pG8000L12000", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, m_doProfileEta, m_doProfileP, m_doExtraEtaEnergyBinHists);
     m_plots_eop_pG12000 = new EoverPHists(m_name+"_pG12000", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, m_doProfileEta, m_doProfileP, m_doExtraEtaEnergyBinHists);
 
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pL4000 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG4000L8000 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG8000L12000 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG12000 -> initialize(), "");
+    ANA_CHECK(m_plots_eop_pL4000 -> initialize());
+    ANA_CHECK(m_plots_eop_pG4000L8000 -> initialize());
+    ANA_CHECK(m_plots_eop_pG8000L12000 -> initialize());
+    ANA_CHECK(m_plots_eop_pG12000 -> initialize());
 
     m_plots_eop_pL4000 -> record( wk() );
     m_plots_eop_pG4000L8000 -> record( wk() );
@@ -186,9 +186,9 @@ EL::StatusCode EoverPAnalysis :: histInitialize ()
     m_plots_eop_etaG05L07 = new EoverPHists(m_name+"_etaG05L07", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, m_doProfileEta, m_doProfileP, m_doExtraEtaEnergyBinHists);
     m_plots_eop_etaG07 = new EoverPHists(m_name+"_etaG07", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, m_doProfileEta, m_doProfileP, m_doExtraEtaEnergyBinHists);
 
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaL05 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG05L07 -> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG07 -> initialize(), "");
+    ANA_CHECK(m_plots_eop_etaL05 -> initialize());
+    ANA_CHECK(m_plots_eop_etaG05L07 -> initialize());
+    ANA_CHECK(m_plots_eop_etaG07 -> initialize());
 
     m_plots_eop_etaL05 -> record( wk() );
     m_plots_eop_etaG05L07 -> record( wk() );
@@ -213,21 +213,21 @@ EL::StatusCode EoverPAnalysis :: histInitialize ()
     m_plots_eop_etaG18L19 = new EoverPHists(m_name+"_etaG18L19", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, false);
     m_plots_eop_etaG19L23 = new EoverPHists(m_name+"_etaG19L23", m_detailStr, m_energyCalib, m_doCaloTotal, m_doCaloEM, m_doCaloHAD, m_doBgSubtr, m_doTileLayer, m_Pbins, m_doPbinsArray, m_PbinsArray, m_Etabins, m_doEtabinsArray, m_EtabinsArray, false);
 
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG1200L1800-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG1800L2200-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG2200L2800-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG2800L3400-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG3400L4200-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_pG4200L5000-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaL06_pG2200L4200-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaL06_pG4200L50000-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaL06-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG06L11-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG11L14-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG14L15-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG15L18-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG18L19-> initialize(), "");
-    RETURN_CHECK("TrackHistsAlgo::histInitialize()", m_plots_eop_etaG19L23-> initialize(), "");
+    ANA_CHECK( m_plots_eop_pG1200L1800-> initialize());
+    ANA_CHECK( m_plots_eop_pG1800L2200-> initialize());
+    ANA_CHECK( m_plots_eop_pG2200L2800-> initialize());
+    ANA_CHECK( m_plots_eop_pG2800L3400-> initialize());
+    ANA_CHECK( m_plots_eop_pG3400L4200-> initialize());
+    ANA_CHECK( m_plots_eop_pG4200L5000-> initialize());
+    ANA_CHECK( m_plots_eop_etaL06_pG2200L4200-> initialize());
+    ANA_CHECK( m_plots_eop_etaL06_pG4200L50000-> initialize());
+    ANA_CHECK( m_plots_eop_etaL06-> initialize());
+    ANA_CHECK( m_plots_eop_etaG06L11-> initialize());
+    ANA_CHECK( m_plots_eop_etaG11L14-> initialize());
+    ANA_CHECK( m_plots_eop_etaG14L15-> initialize());
+    ANA_CHECK( m_plots_eop_etaG15L18-> initialize());
+    ANA_CHECK( m_plots_eop_etaG18L19-> initialize());
+    ANA_CHECK( m_plots_eop_etaG19L23-> initialize());
 
     m_plots_eop_pG1200L1800 -> record( wk() );
     m_plots_eop_pG1800L2200 -> record( wk() );
@@ -374,7 +374,7 @@ EL::StatusCode EoverPAnalysis :: initialize ()
 
   // pileup reweighting
   const xAOD::EventInfo* eventInfo(nullptr);
-  RETURN_CHECK("EoverPAnalysis::execute()", HelperFunctions::retrieve(eventInfo, m_eventInfoContainerName, m_event, m_store, m_verbose) ,"");
+  ANA_CHECK( HelperFunctions::retrieve(eventInfo, m_eventInfoContainerName, m_event, m_store));
   if (m_doCustomPUreweighting && eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION )) {
     // TFile *f_prw = wk()->getOutputFile ("pileup");
     // m_puwHist = (TH1D*)f_prw->Get("pileup_weights");
@@ -407,7 +407,7 @@ EL::StatusCode EoverPAnalysis :: execute ()
 
   // retrieve event
   const xAOD::EventInfo* eventInfo(nullptr);
-  RETURN_CHECK("EoverPAnalysis::execute()", HelperFunctions::retrieve(eventInfo, m_eventInfoContainerName, m_event, m_store, m_verbose) ,"");
+  ANA_CHECK( HelperFunctions::retrieve(eventInfo, m_eventInfoContainerName, m_event, m_store ));
 
   //  1.) the PU weight ("PileupWeight")
   //  2.) the corrected mu ("corrected_averageInteractionsPerCrossing")
@@ -467,14 +467,14 @@ EL::StatusCode EoverPAnalysis :: execute ()
   }
 
   const xAOD::VertexContainer *vtxs(nullptr);
-  RETURN_CHECK("TrackVertexSelection::execute()", HelperFunctions::retrieve(vtxs, "PrimaryVertices", m_event, m_store, m_verbose) ,"");
+  ANA_CHECK( HelperFunctions::retrieve(vtxs, "PrimaryVertices", m_event, m_store) );
 
   const xAOD::TrackParticleContainer* trks(nullptr);
-  RETURN_CHECK("EoverPAnalysis::execute()", HelperFunctions::retrieve(trks, m_inTrackContainerName, m_event, m_store, m_verbose) ,"");
+  ANA_CHECK( HelperFunctions::retrieve(trks, m_inTrackContainerName, m_event, m_store) );
 
   // extra histograms for track isolation testing
   if (m_doTrkIsoHists) {
-    RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_trks->execute(trks, vtxs, eventInfo, eventWeight), "");
+    ANA_CHECK( m_plots_eop_trks->execute(trks, vtxs, eventInfo, eventWeight));
   }
 
   xAOD::TrackParticleContainer::const_iterator trk_itr = trks->begin();
@@ -643,27 +643,27 @@ EL::StatusCode EoverPAnalysis :: execute ()
       // Make all the histograms for different TileEfrac selections
       if (m_doGlobalTileEfracRanges && trk_TileEfrac_200 >= 0. && trk_TileEfrac_200 < 1.) {
         if (m_doGlobalTileEfracRanges && trk_TileEfrac_200 == 0.)
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac000->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac000->execute(trk, vtxs, eventInfo, trkWeight));
         if (trk_TileEfrac_200 >= .1) {
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac010->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac010->execute(trk, vtxs, eventInfo, trkWeight));
         }
         if (trk_TileEfrac_200 >= .3) {
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac030->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac030->execute(trk, vtxs, eventInfo, trkWeight));
         }
         if (trk_TileEfrac_200 >= .5) {
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac050->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac050->execute(trk, vtxs, eventInfo, trkWeight));
         }
         if (trk_TileEfrac_200 >= .6) {
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac060->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac060->execute(trk, vtxs, eventInfo, trkWeight));
         }
         if (trk_TileEfrac_200 >= .7) {
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac070->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac070->execute(trk, vtxs, eventInfo, trkWeight));
         }
         if (trk_TileEfrac_200 >= .75) {
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac075->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac075->execute(trk, vtxs, eventInfo, trkWeight));
         }
         if (trk_TileEfrac_200 >= .8) {
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_TileEfrac080->execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_TileEfrac080->execute(trk, vtxs, eventInfo, trkWeight));
         }
       }
 
@@ -733,61 +733,61 @@ EL::StatusCode EoverPAnalysis :: execute ()
     }
 
     // fill eop histograms
-    RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop -> execute(trk, vtxs, eventInfo, trkWeight), "");
+    ANA_CHECK( m_plots_eop -> execute(trk, vtxs, eventInfo, trkWeight));
 
     // fill eop histograms for different trk p ranges
     if (m_doGlobalEnergyRanges) {
       if (trk_p < 4)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pL4000 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pL4000 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 4 && trk_p < 8)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG4000L8000 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG4000L8000 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 8 && trk_p < 12)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG8000L12000 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG8000L12000 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 12)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG12000 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG12000 -> execute(trk, vtxs, eventInfo, trkWeight));
     }
     // fill eop histograms for different trk eta ranges
     if (m_doGlobalEtaRanges) {
       if (fabs(trk_etaID) < .5) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaL05 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaL05 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) >= .5 && fabs(trk_etaID) < .7) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG05L07 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG05L07 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) >= .7) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG07 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG07 -> execute(trk, vtxs, eventInfo, trkWeight));
     }
 
     if (m_doGlobalExtraRanges) {
       if (trk_p >= 1.2 && trk_p < 1.8)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG1200L1800 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG1200L1800 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 1.8 && trk_p < 2.2)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG1800L2200 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG1800L2200 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 2.2 && trk_p < 2.8)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG2200L2800 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG2200L2800 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 2.8 && trk_p < 3.4)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG2800L3400 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG2800L3400 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 3.4 && trk_p < 4.2)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG3400L4200 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG3400L4200 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (trk_p >= 4.2 && trk_p < 5.)
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_pG4200L5000 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_pG4200L5000 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) < .6){
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaL06 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaL06 -> execute(trk, vtxs, eventInfo, trkWeight));
         if (trk_p >= 2.2 && trk_p < 4.6)
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaL06_pG2200L4200 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_etaL06_pG2200L4200 -> execute(trk, vtxs, eventInfo, trkWeight));
         if (trk_p >= 4.6 && trk_p < 50.)
-          RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaL06_pG4200L50000 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+          ANA_CHECK( m_plots_eop_etaL06_pG4200L50000 -> execute(trk, vtxs, eventInfo, trkWeight));
       }
       if (fabs(trk_etaID) >= .6 && fabs(trk_etaID) < 1.1) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG06L11 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG06L11 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) >= 1.1 && fabs(trk_etaID) < 1.4) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG11L14 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG11L14 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) >= 1.4 && fabs(trk_etaID) < 1.5) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG14L15 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG14L15 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) >= 1.5 && fabs(trk_etaID) < 1.8) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG15L18 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG15L18 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) >= 1.8 && fabs(trk_etaID) < 1.9) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG18L19 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG18L19 -> execute(trk, vtxs, eventInfo, trkWeight));
       if (fabs(trk_etaID) >= 1.9 && fabs(trk_etaID) < 2.3) 
-        RETURN_CHECK("EoverPAnalysis::execute()", m_plots_eop_etaG19L23 -> execute(trk, vtxs, eventInfo, trkWeight), "");
+        ANA_CHECK( m_plots_eop_etaG19L23 -> execute(trk, vtxs, eventInfo, trkWeight));
     }
 
   } // END looping trk
@@ -888,7 +888,7 @@ EL::StatusCode EoverPAnalysis :: histFinalize ()
   if(m_plots_eop_etaG18L19) delete m_plots_eop_etaG18L19;
   if(m_plots_eop_etaG19L23) delete m_plots_eop_etaG19L23;
 
-  RETURN_CHECK("xAH::Algorithm::algFinalize()", xAH::Algorithm::algFinalize(), "");
+  ANA_CHECK(xAH::Algorithm::algFinalize());
   return EL::StatusCode::SUCCESS;
 }
 
