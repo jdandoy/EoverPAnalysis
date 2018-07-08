@@ -1,7 +1,7 @@
 # E/p analysis for run 2
 # Joakim Olsson (joakim.olsson@cern.ch)
 
-from xAH_config import xAH_config
+from xAODAnaHelpers import Config as xAH_config
 c = xAH_config()
 
 # input containers
@@ -16,7 +16,7 @@ trks_run1 = trks+"Run1"
 ''' Set up all the algorithms '''
 c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
                                  "m_applyGRLCut": True,
-                                 "m_GRLxml": "$ROOTCOREBIN/data/EoverPAnalysis/data15_13TeV.periodB1_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardModel_MinimuBias2010.xml",
+                                 "m_GRLxml": "../source/EoverPAnalysis/data/data15_13TeV.periodB1_DetStatus-v62-pro18_DQDefects-00-01-02_PHYS_StandardModel_MinimuBias2010.xml",
                                  "m_doPUreweighting": False,
                                  "m_applyPrimaryVertexCut": True,
                                  "m_PVNTrack": 2,
@@ -40,7 +40,7 @@ c.setalg("TrackVertexSelection", {"m_name": "TrackSel_LoosePrimary",
                                   "m_inContainerName": trks,
                                   "m_decorateSelectedObjects": False,
                                   "m_createSelectedContainer": True,
-                                  "m_pass_min": 1.0,
+                                  "m_pass_min": 1,
                                   "m_cutLevel": "LoosePrimary",
                                   "m_minPt": 0.4,
                                   "m_maxAbsEta": 2.5,
