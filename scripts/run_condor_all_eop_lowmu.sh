@@ -6,7 +6,7 @@ if [ $# -eq 0 ]
 
   else
 
-    cd $ROOTCOREBIN/..
+    cd $WorkDir_DIR/../run
 
     tag=$1
     today=$(date +"%Y%m%d")
@@ -40,6 +40,6 @@ if [ $# -eq 0 ]
     echo results/condor_all_eop_lowmu_mc_DD_${today}_${tag} >> results/run_condor_eop_lowmu.log
 
     echo "--> Jobs submitted!"
-    echo "source $ROOTCOREBIN/../EoverPAnalysis/scripts/merge_condor_eop.sh $ROOTCOREBIN/../results/run_condor_eop_lowmu.log # when condor jobs are finished to merge output files"
+    echo "source $TestArea/EoverPAnalysis/scripts/merge_condor_eop.sh $WorkDir_DIR/../run/results/run_condor_eop_lowmu.log # when condor jobs are finished to merge output files"
 
 fi

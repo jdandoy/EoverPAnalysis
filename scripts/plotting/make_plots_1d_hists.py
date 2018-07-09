@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
   parser = argparse.ArgumentParser(description='E/p plotting')
 
-  parser.add_argument('--data', required=False, type=str, dest='data', metavar='<datafile.root>', default='../../results/condor_all_eop_lowmu_data_20170528_0_tilepublic.root', help='Input data file')
-  parser.add_argument('--mc', required=False, type=str, dest='mc', metavar='<mcfile.root>', default='../../results/condor_all_eop_lowmu_mc_merged_20170528_0_tilepublic.root', help='Input MC file')
+  parser.add_argument('--data', required=False, type=str, dest='data', metavar='<datafile.root>', default='$WorkDir_DIR/../run/results/condor_all_eop_lowmu_data_20170528_0_tilepublic.root', help='Input data file')
+  parser.add_argument('--mc', required=False, type=str, dest='mc', metavar='<mcfile.root>', default='$WorkDir_DIR/../run/results/condor_all_eop_lowmu_mc_merged_20170528_0_tilepublic.root', help='Input MC file')
   parser.add_argument('--output', '-o', required=False, type=str, dest='output', default='./plots', help='Directory for output files')
   parser.add_argument('--selections', '-f', type=str, nargs='+', dest='selections', default=['EoverP_LoosePrimaryTrks_ClusterEnergy_Tile_defaultCuts'], help='Folders where to look for plots in the input files')
 

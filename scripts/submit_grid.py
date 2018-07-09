@@ -18,8 +18,8 @@ parser.add_argument('--overwrite', '-w', action='store_true', default=True, help
 
 args = parser.parse_args()
 
-dataFileList='$ROOTCOREBIN/../EoverPAnalysis/filelists/data15_13TeV_lowmu_all_rucio.txt'
-mcFileList='$ROOTCOREBIN/../EoverPAnalysis/filelists/mc15_13TeV_lowmu_all_rucio.txt'
+dataFileList='$TestArea/EoverPAnalysis/filelists/data15_13TeV_lowmu_all_rucio.txt'
+mcFileList='$TestArea/EoverPAnalysis/filelists/mc15_13TeV_lowmu_all_rucio.txt'
 
 samples = []
 try:
@@ -35,9 +35,9 @@ for sample in samples:
   optGridOutputSampleName = 'user.{0:s}.{1:s}.{2:s}'.format(args.user, sampleTag, args.analysisTag)
 
   if 'data15_13TeV' in sample:
-    config = os.path.expandvars('$ROOTCOREBIN/../EoverPAnalysis/scripts/config_eop_data_lowmu.py')
+    config = os.path.expandvars('$TestArea/EoverPAnalysis/scripts/config_eop_data_lowmu.py')
   elif 'mc15_13TeV' in sample:
-    config = os.path.expandvars('$ROOTCOREBIN/../EoverPAnalysis/scripts/config_eop_mc_lowmu.py')
+    config = os.path.expandvars('$TestArea/EoverPAnalysis/scripts/config_eop_mc_lowmu.py')
   else:
     'Invalid sample: {0:s}'.format(samples)
     continue

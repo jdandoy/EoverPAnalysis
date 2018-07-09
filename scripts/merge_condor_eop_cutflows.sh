@@ -7,7 +7,7 @@ then
 
 else
 
-  cd $ROOTCOREBIN/..
+  cd $WorkDir_DIR/..
 
   logfile=$1
   echo
