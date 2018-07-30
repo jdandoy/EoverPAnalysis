@@ -14,7 +14,7 @@ trks_tight = trks+"TightPrimary"
 trks_run1 = trks+"Run1"
 
 # track pt reweighing (MC to data)
-do_trkPtRewighting = True
+do_trkPtRewighting = False
 trkPtReweightingFile = "pt_reweighting.root"
 
 ''' Set up all the algorithms '''

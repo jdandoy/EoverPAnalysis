@@ -8,7 +8,7 @@ For questions please contact: joakim.olsson[at]cern.ch
 ## Setup in Release 21
 ```
 mkdir myAnalysis; cd myAnalysis
-mkdir source && mkdir run && mkdir build
+mkdir source && mkdir run && mkdir build && mkdir run/results
 cd source
 git clone http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers
 git clone http://github.com/luadamek/EoverPAnalysis
@@ -16,7 +16,6 @@ asetup AnalysisBase,21.2.22,here
 cd ../build
 cmake ../source && make
 ```
-
 
 ## Setup in Release 20.7
 
@@ -58,11 +57,15 @@ cp /afs/cern.ch/user/j/jolsson/.globus/gridproxy.cert /eos/user/j/jolsson/
 export X509_USER_PROXY=/eos/user/j/jolsson/gridproxy.cert
 ```
 
-### Local test run
+### Local test run and plotting the results
 
 ```
+cd run
 mkdir results
-xAH_run.py --files $ROOTCOREBIN/../EoverPAnalysis/filelists/data15_13TeV_lowmu_test1.txt --inputList --config $ROOTCOREBIN/../EoverPAnalysis/scripts/config_eop_data_lowmu.py --submitDir $ROOTCOREBIN/../results/eop_data_test_0 --verbose --force direct
+rucio download user.luadamek.14704913.EXT1._000001.pool.root
+xAH_run.py --files $TestArea/../run/user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root --config $TestArea/EoverPAnalysis/scripts/config_eop_mc_lowmu.py --submitDir $TestArea/..run/results/eop_mc_test_0 --verbose --force direct
+cp results/eop_mc_test_0/hist-user.luadamek.root results/
+python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py
 ```
 
 ### First condor test run
@@ -73,7 +76,7 @@ source $ROOTCOREBIN/../EoverPAnalysis/scripts/run_condor_test_eop_lowmu.sh 0 # w
 
 The output will then be located in 'results', e.g. $ROOTCOREBIN/../results/condor_test_eop_lowmu_{mc,data}_YYYYMMDD_0/
 
-The condor output histograms and cutflows can easily be merged, just run the script below after your condor jobs have finished
+The condor output histograms and cutflows can easily be merged, jusrun the script below after your condor jobs have finished
 
 ```
 source $ROOTCOREBIN/../EoverPAnalysis/scripts/merge_condor_eop.py $ROOTCOREBIN/../results/run_condor_eop_lowmu_latest.log
