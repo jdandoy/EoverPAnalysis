@@ -96,9 +96,9 @@ def plot_1d_hists(datafile, mcfile, plot_input_dir, plot_input_list,
     if leg_labels == "":
         leg_labels = ["MC 2015", "MC15c"] #, "MC (Pythia JZ1W)"]
     #atlas_label = "Internal"
-    atlas_label = "Work-in-progress"
+    atlas_label = "Internal"
     if lumi_label == "":
-        lumi_label = "#sqrt{s} = 13 TeV, 1.6 nb^{-1}"
+        lumi_label = "#sqrt{s} = 13 TeV, ? nb^{-1}"
 
     for plot_name in plot_names:
         hdata = data.Get(plot_input_dir+"/"+plot_name)

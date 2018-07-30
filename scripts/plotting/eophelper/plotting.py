@@ -1817,6 +1817,8 @@ def save_hists_overlay(hlist, plot_opts, plot_output_path):
                 h.Draw(plot_opts.draw_style+" same")
                 leg.AddEntry(h, plot_opts.leg_labels[i], "lpf")
 
+            hlist[0].Draw("Same")#draw the data on top of the MC again
+
         # if plot_opts.do_data:
             # h_data.Draw("EX1 same")
 

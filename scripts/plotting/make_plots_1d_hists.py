@@ -19,8 +19,8 @@ if __name__ == "__main__":
 
   parser = argparse.ArgumentParser(description='E/p plotting')
 
-  parser.add_argument('--data', required=False, type=str, dest='data', metavar='<datafile.root>', default='$WorkDir_DIR/../run/results/condor_all_eop_lowmu_data_20170528_0_tilepublic.root', help='Input data file')
-  parser.add_argument('--mc', required=False, type=str, dest='mc', metavar='<mcfile.root>', default='$WorkDir_DIR/../run/results/condor_all_eop_lowmu_mc_merged_20170528_0_tilepublic.root', help='Input MC file')
+  parser.add_argument('--data', required=False, type=str, dest='data', metavar='<datafile.root>', default='$TestArea/../run/results/hist-user.luadamek.root', help='Input data file')
+  parser.add_argument('--mc', required=False, type=str, dest='mc', metavar='<mcfile.root>', default='$TestArea/../run/results/hist-user.luadamek.root', help='Input MC file')
   parser.add_argument('--output', '-o', required=False, type=str, dest='output', default='./plots', help='Directory for output files')
   parser.add_argument('--selections', '-f', type=str, nargs='+', dest='selections', default=['EoverP_LoosePrimaryTrks_ClusterEnergy_Tile_defaultCuts'], help='Folders where to look for plots in the input files')
 
@@ -35,13 +35,18 @@ if __name__ == "__main__":
   selections = args.selections
 
   # Default setup (low-mu samples) TODO: Make this easier to customize
-  tag = re.search("(?<=_)\d{1,8}_.+(?=\.)", data).group()
-  plot_input_list = "plotlist_eop_1d_hists.txt"
-  file_tag = "overlay_lowmu_data_mc"
+  if re.search("(?<=_)\d{1,8}_.+(?=\.)", data):
+    tag = re.search("(?<=_)\d{1,8}_.+(?=\.)", data).group()
+  else:
+    tag = "test"
+
+  testArea = os.environ['TestArea']
+  plot_input_list = testArea +"/EoverPAnalysis/scripts/plotting/plotlist_eop_1d_hists.txt"
+  file_tag = "lowmu_mc"
   # sample_tag = "13 TeV 2015 data from period B1 low-#mu run"
   sample_tag = ""
-  leg_labels = ["Data 2015, Low-#LT#font[50]{#mu}#GT", "Pythia MinBias"]
-  lumi_label = "#sqrt{s} = 13 TeV, 1.6 nb^{-1}"
+  leg_labels = ["Data 2017, Low-#LT#font[50]{#mu}#GT", "Pythia MinBias"]
+  lumi_label = "#sqrt{s} = 13 TeV, ? b^{-1}"
   options = ""
   #options = "public"
 
