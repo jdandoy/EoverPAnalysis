@@ -5,6 +5,8 @@ This package is based on the [xAODAnaHelpers (xAH)](https://github.com/UCATLAS/x
 
 For questions please contact: joakim.olsson[at]cern.ch
 
+Ported to release 21 by: Lukas Adamek (lukas.adamek@[at]cern.ch)
+
 ## Setup in Release 21
 ```
 mkdir myAnalysis; cd myAnalysis
