@@ -5,7 +5,7 @@ This package is based on the [xAODAnaHelpers (xAH)](https://github.com/UCATLAS/x
 
 For questions please contact: joakim.olsson[at]cern.ch
 
-Ported to release 21 by: Lukas Adamek (lukas.adamek@[at]cern.ch)
+Ported to release 21 by: Lukas Adamek (lukas.adamek[at]cern.ch)
 
 ## Setup in Release 21
 ```
@@ -26,9 +26,9 @@ source x86_64-slc6-gcc62-opt/setup.sh
 cd ../run
 mkdir results
 rucio download user.luadamek.14704913.EXT1._000001.pool.root
-xAH_run.py --files $TestArea/../run/user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root --config $TestArea/EoverPAnalysis/scripts/config_eop_mc_lowmu.py --submitDir $TestArea/../run/results/eop_mc_test_0 --verbose --force direct
+xAH_run.py --files $TestArea/../run/user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root --config $TestArea/EoverPAnalysis/scripts/config_eop_mc_lowmu_runII_general.py --submitDir $TestArea/../run/results/eop_mc_test_0 --force direct
 cp results/eop_mc_test_0/hist-user.luadamek.root results/
-python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py
+python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py --selections EoverP_LoosePrimaryTrks_ClusterEnergy_Run1paper
 ```
 
 ## Setup in Release 20.7

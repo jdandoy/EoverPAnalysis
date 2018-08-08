@@ -14,7 +14,7 @@ trks_tight = trks+"TightPrimary"
 trks_run1 = trks+"Run1"
 
 # track pt reweighing (MC to data)
-do_trkPtRewighting = True
+do_trkPtRewighting = False
 trkPtReweightingFile = "pt_reweighting_runII_general.root"
 
 eta_bins_runII_general = ".0, .6, 1.1, 1.4, 1.5, 1.8, 1.9, 2.3"
