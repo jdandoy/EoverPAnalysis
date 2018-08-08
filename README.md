@@ -21,7 +21,9 @@ cmake ../source && make
 
 ## Running locally in Release 21
 ```
-cd run
+cd ../build
+source x86_64-slc6-gcc62-opt/setup.sh
+cd ../run
 mkdir results
 rucio download user.luadamek.14704913.EXT1._000001.pool.root
 xAH_run.py --files $TestArea/../run/user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root --config $TestArea/EoverPAnalysis/scripts/config_eop_mc_lowmu.py --submitDir $TestArea/..run/results/eop_mc_test_0 --verbose --force direct
