@@ -31,6 +31,16 @@ cp results/eop_mc_test_0/hist-user.luadamek.root results/
 python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py --selections EoverP_LoosePrimaryTrks_ClusterEnergy_Run1paper
 ```
 
+## Submitting jobs to CONDOR in Release 21
+First you need to make sure that you have a list of files that you want to run over in a txt file in the filelists folder. To generate the .txt file, use GenerateListOfFiles.py script.
+python GenerateListOfFiles --grid_site GRID_SITE --dataset_name DATASET_NAME --output_file OUTPUTFILENAME
+
+As an example, we can call this command with the following dataset:
+```
+cd /source/EoverPAnalysis/filelists/
+python GenerateListOfFiles.py --grid_site CA-VICTORIA-WESTGRID-T2_LOCALGROUPDISK --dataset_name user.luadamek.mc16_13TeV.361022.jetjet.DAOD_EOP.e3668_s3170_r10572.20180724_alpha1_EXT1 --output_filename 361022_filelist.txt
+```
+
 ## Setup in Release 20.7
 
 ```
