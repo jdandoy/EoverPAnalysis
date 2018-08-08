@@ -31,17 +31,13 @@ cp results/eop_mc_test_0/hist-user.luadamek.root results/
 python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py --selections EoverP_LoosePrimaryTrks_ClusterEnergy_Run1paper
 ```
 
-## Submitting jobs to CONDOR in Release 21
-First, there needs to be a list of files that you want to run over in the filelists folder. To generate the file, use the GenerateListOfFiles.py python script.
+## Submitting Grid Jobs in Release 21
+Grid jobs are handled by a submission script located in $TestArea/EoverPAnalysis/scripts/. The grid job script takes four arguments as input: the submission directory, a txt file with all samples listed, a descriptor to label the output, and a configuration file. As an example, the following command will submit grid jobs to run over the 361022 jet jet MC sample.
+
 ```
-python GenerateListOfFiles --grid_site GRID_SITE --dataset_name DATASET_NAME --output_file OUTPUTFILENAME
+python /afs/cern.ch/work/l/luadamek/public/myEoverPAnalysis/source/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 23.2.22 --submitDir $TestArea/../run/results/ --FileList $TestArea/EoverPAnalysis/filelists/test_list.txt --config $TestArea/scripts/config_eop_mc_lowmu_runII_general.py --descriptor test
 ```
 
-As an example, we can call this command with the following dataset:
-```
-cd /source/EoverPAnalysis/filelists/
-python GenerateListOfFiles.py --grid_site CA-VICTORIA-WESTGRID-T2_LOCALGROUPDISK --dataset_name user.luadamek.mc16_13TeV.361022.jetjet.DAOD_EOP.e3668_s3170_r10572.20180724_alpha1_EXT1 --output_filename 361022_filelist.txt
-```
 
 ## Setup in Release 20.7
 
