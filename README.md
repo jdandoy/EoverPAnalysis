@@ -32,8 +32,10 @@ python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py --select
 ```
 
 ## Submitting jobs to CONDOR in Release 21
-First you need to make sure that you have a list of files that you want to run over in a txt file in the filelists folder. To generate the .txt file, use GenerateListOfFiles.py script.
+First, there needs to be a list of files that you want to run over in the filelists folder. To generate the file, use the GenerateListOfFiles.py python script.
+```
 python GenerateListOfFiles --grid_site GRID_SITE --dataset_name DATASET_NAME --output_file OUTPUTFILENAME
+```
 
 As an example, we can call this command with the following dataset:
 ```
