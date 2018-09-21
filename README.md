@@ -14,7 +14,7 @@ mkdir source && mkdir run && mkdir build && mkdir run/results
 cd source
 git clone http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers
 git clone http://github.com/luadamek/EoverPAnalysis
-asetup AnalysisBase,21.2.22,here
+asetup AnalysisBase,21.2.44,here
 cd ../build
 cmake ../source && make
 ```
@@ -35,7 +35,7 @@ python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py --select
 Grid jobs are handled by a submission script located in $TestArea/EoverPAnalysis/scripts/. The grid job script takes four arguments as input: the submission directory, a txt file with all samples listed, a descriptor to label the output, and a configuration file. As an example, the following command will submit grid jobs to run over the 361022 jet jet MC sample.
 
 ```
-python $TestArea/source/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 23.2.22 --submitDir $TestArea/../run/results/ --FileList $TestArea/EoverPAnalysis/filelists/test_list.txt --config $TestArea/scripts/config_eop_mc_lowmu_runII_general.py --descriptor test
+python $TestArea/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 21.2.44 --submitDir $TestArea/../run/results/ --FileList $TestArea/EoverPAnalysis/filelists/test_list.txt --config $TestArea/scripts/config_eop_mc_lowmu_runII_general.py --descriptor test
 ```
 
 
