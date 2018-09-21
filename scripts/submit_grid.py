@@ -38,10 +38,10 @@ for sample in samples:
 
   config = os.path.expandvars(args.config)
 
-  command = 'xAH_run.py --files {0:s} --inputRucio --config {1:s} --submitDir {2:s}'.format(sample, config, args.submitDir)
+  command = 'xAH_run.py --files {0:s}  --inputRucio --config {1:s} --submitDir {2:s}'.format(sample, config, args.submitDir)
   if args.overwrite:
     command += ' --force'
-  command += ' prun --optGridOutputSampleName {}'.format(optGridOutputSampleName) + "_"+ args.descriptor
+  command += ' prun --optGridNFilesPerJob 3 --optGridOutputSampleName {}'.format(optGridOutputSampleName) + "_"+ args.descriptor
 
   print('submitting {0:s}'.format(sample))
   print('running: {0:s}'.format(command))
