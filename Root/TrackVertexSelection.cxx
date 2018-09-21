@@ -179,21 +179,58 @@ EL::StatusCode TrackVertexSelection :: initialize ()
 
   // initialize and configure the track selection tool
   //------------------------------------------------------
+
   m_trkSelection = new InDet::InDetTrackSelectionTool("TrackSelection");
+  Info("Initialize()", ("Initializing the track selection tool with default selection " + m_cutLevel).c_str());
   ANA_CHECK( m_trkSelection->setProperty("CutLevel", m_cutLevel.c_str()) );
+
+  if (m_minPt > -1) {
+  Info("Initialize()", "Initializing the track selection with pt cut %4.3f", m_minPt); 
   ANA_CHECK( m_trkSelection->setProperty("minPt", static_cast<double>(m_minPt)*1000) ); 
+  }
+
+  if (m_maxAbsEta < 1e8) {
+  Info("Initialize()", "Initializing the track selection with eta cut %4.3f", m_maxAbsEta);
   ANA_CHECK( m_trkSelection->setProperty("maxAbsEta", static_cast<double>(m_maxAbsEta)) ); 
-  // ANA_CHECK( m_trkSelection->setProperty("minPt", 400), "failed to set minPt property"); 
-  // ANA_CHECK( m_trkSelection->setProperty("maxAbsEta", 2.5), "failed to set maxAbsEta property"); 
-  ANA_CHECK( m_trkSelection->setProperty("maxZ0SinTheta", static_cast<double>(m_maxZ0SinTheta)) ); 
+  }
+
+  if (m_maxZ0SinTheta < 1e8) {
+  Info("Initialize()", "Initializing the track selection with Z0SinTheta cut %4.3f", m_maxZ0SinTheta);
+  ANA_CHECK( m_trkSelection->setProperty("maxZ0SinTheta", static_cast<double>(m_maxZ0SinTheta)) );
+  }
+
+  if (m_maxD0 < 1e8) {
+  Info("Initialize()", "Initializing the track selection with maxD0 %4.3f", m_maxD0); 
   ANA_CHECK( m_trkSelection->setProperty("maxD0", static_cast<double>(m_maxD0)) );
+  }
+
+  if (m_maxZ0 < 1e8) {
+  Info("Initialize()", "Initializing the track selection with maxZ0 %4.3f", m_maxZ0); 
   ANA_CHECK( m_trkSelection->setProperty("maxZ0", static_cast<double>(m_maxZ0)) );
+  }
+
+  if (m_minNPixelHits > -1) {
+  Info("Initialize()", "Initializing the track selection with minNPixelHits %03d", m_minNPixelHits);
   ANA_CHECK( m_trkSelection->setProperty("minNPixelHits", static_cast<int>(m_minNPixelHits)) ); 
+  }
+
+  if (m_minNSctHits > -1) {
+  Info("Initialize()", "Initializing the track selection with minNSctHits %03d", m_minNSctHits); 
   ANA_CHECK( m_trkSelection->setProperty("minNSctHits", static_cast<int>(m_minNSctHits)) ); 
+  }
+
+  if (m_minNSiHits > -1) {
+  Info("Initialize()", "Initializing the track selection with minNSiHits %03d", m_minNSiHits); 
   ANA_CHECK( m_trkSelection->setProperty("minNSiHits", static_cast<int>(m_minNSiHits)) ); 
+  }
+
+  if (m_minNTrtHits > -1){
+  Info("Initialize", "Initializing the track selection with minNTrtHits %03d", m_minNTrtHits);
   ANA_CHECK( m_trkSelection->setProperty("maxTrtEtaAcceptance", 0.0) ); 
   ANA_CHECK( m_trkSelection->setProperty("maxEtaForTrtHitCuts", 2.0) ); 
-  if (m_minNTrtHits =! -1) ANA_CHECK( m_trkSelection->setProperty("minNTrtHits", static_cast<int>(m_minNTrtHits)) ); 
+  ANA_CHECK( m_trkSelection->setProperty("minNTrtHits", static_cast<int>(m_minNTrtHits)) ); 
+  }
+
   ANA_CHECK( m_trkSelection->initialize()); 
 
   m_event = wk()->xaodEvent();
@@ -345,6 +382,7 @@ EL::StatusCode TrackVertexSelection :: finalize ()
   Info("finalize()", "Deleting tool instances...");
 
   if ( m_trkSelection ) {
+    ANA_CHECK(m_trkSelection->finalize() );
     delete m_trkSelection; m_trkSelection = nullptr;
   }
 
