@@ -26,9 +26,12 @@ class EoverPAnalysis : public xAH::Algorithm
     // configuration variables
     std::string m_detailStr;
 
+
+
+
     // save output tree of key variables
     bool m_fillOutputTree = false;
-
+;
     // track isolation settings
     double m_trkIsoDRmax = .4;
     double m_trkIsoPfrac = 0.;
@@ -53,7 +56,7 @@ class EoverPAnalysis : public xAH::Algorithm
     double m_trkEtamax = 1e8; 
 
     // make plots with Tile specific cuts
-    bool m_doTileCuts = false;
+    bool m_applyTileCuts = false;
     double m_LarEmax = 1e8;
     double m_TileEfracmin = -1;
 
@@ -102,6 +105,59 @@ class EoverPAnalysis : public xAH::Algorithm
     std::string m_trkPtReweightingFile = "pt_reweighting.root";
 
   private:
+
+    // variables to dump to the output ttree
+    double trk_etaID;
+    double trk_phiID;
+
+    uint8_t trk_nTRT;
+
+    double trk_pt;
+    double trk_p;
+
+    double trk_d0;
+    double trk_z0sintheta;
+
+    double trk_etaEMB2;
+    double trk_phiEMB2;
+    
+    double trk_etaEME2;
+    double trk_phiEME2;
+
+    double trk_nearest_dR;
+
+    double trkWeight;
+
+    double trk_sumEPos_Lar_100;
+    double trk_sumEPos_Lar_200;
+    double trk_sumE_Lar_200;
+    double trk_sumE_Lar_100;
+
+    double  trk_sumEPos_Tile_200;
+    double  trk_sumEPos_Tile_100;
+    double  trk_sumE_Tile_200;
+    double  trk_sumE_Tile_100;
+
+    double  trk_sumEPos_Total_200;
+    double  trk_sumEPos_Total_100;
+    double  trk_sumE_Total_200;
+    double  trk_sumE_Total_100;
+
+    double  trk_TileEfrac_200;
+    double  trk_TileEfrac_100;
+
+    double trk_E_EM_100;
+    double trk_E_EM_200;
+    double trk_E_HAD_100; 
+    double trk_E_HAD_200;
+    double trk_E_Total_100;
+    double trk_E_Total_200;
+
+    double trk_NPV_2;
+    double trk_NPV_4;
+    double trk_actualmu;
+    double trk_averagemu;
+    double trk_corrected_averagemu;
 
     // cutflow
     TH1D* m_cutflowHist; //!
@@ -230,15 +286,6 @@ class EoverPAnalysis : public xAH::Algorithm
     TTree *m_tree; //!
     unsigned long long m_eventNumber; //!
     int m_trkIndex; //!
-    double m_trkEta; //!
-    double m_trkPhi; //!
-    double m_trkP; //!
-    double m_Etot; //!
-    int m_etaBin; //!
-    int m_phiBin; //!
-    int m_pBin; //!
-    double m_eopRaw; //!
-    double m_eopBg; //!
 
     // this is a standard constructor
     EoverPAnalysis (std::string className = "EoverPAnalysis");

@@ -10,6 +10,7 @@
 #include "xAODAnaHelpers/HelperFunctions.h"
 #include <EoverPAnalysis/EoverPAnalysis.h>
 #include "AsgTools/MessageCheck.h"
+#include "TMath.h"
 
 // this is needed to distribute the algorithm to the workers
 ClassImp(EoverPAnalysis)
@@ -82,15 +83,7 @@ ClassImp(EoverPAnalysis)
     m_plots_eop_etaG19L23(nullptr),
     m_tree(nullptr),
     m_eventNumber(0),
-    m_trkIndex(0),
-    m_trkEta(0.0),
-    m_trkPhi(0.0),
-    m_trkP(0.0),
-    m_Etot(0.0),
-    m_etaBin(0),
-    m_pBin(0),
-    m_eopRaw(0.0),
-    m_eopBg(0.0)
+    m_trkIndex(0)
 {
   m_inTrackContainerName    = "";
   m_detailStr               = "";
@@ -244,18 +237,23 @@ EL::StatusCode EoverPAnalysis :: histInitialize ()
     m_plots_eop_etaG15L18 -> record( wk() );
     m_plots_eop_etaG18L19 -> record( wk() );
     m_plots_eop_etaG19L23 -> record( wk() );
+  }
 
+  if(m_useCutFlow) {
+    TFile *file = wk()->getOutputFile ("cutflow");
+    m_trk_cutflowHist_1  = (TH1D*)file->Get("cutflow_trks_1");
+    m_trk_cutflow_eop_all_bin = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop all");
+    m_trk_cutflow_eop_extrapol_bin = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop pass trk extrapol");
+    m_trk_cutflow_eop_trk1etaphi_bin = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop pass trk1 eta,phi<1000");
+    m_trk_cutflow_eop_pass_iso_bin  = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop pass trk iso");
+    m_trk_cutflow_eop_pass_p_bin = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop pass trk p cuts");
+    m_trk_cutflow_eop_pass_eta_bin = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop pass trk eta cuts");
+    m_trk_cutflow_eop_pass_larEmax_bin = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop pass larEmax");
+    m_trk_cutflow_eop_pass_tileEfrac_bin = m_trk_cutflowHist_1->GetXaxis()->FindBin("eop pass tileEfrac");
   }
 
   m_trk_cutflowHist_eop = new TH1D(std::string(m_name+"cutflow_trks_eop").c_str(), "cutflow_trks_1", 1, 1, 2);
   m_trk_cutflowHist_eop->SetCanExtend(TH1::kAllAxes);
-  m_trk_cutflowHist_eop->GetXaxis()->FindBin("eop all");
-  m_trk_cutflowHist_eop->GetXaxis()->FindBin("eop pass trk p cuts");
-  m_trk_cutflowHist_eop->GetXaxis()->FindBin("eop pass trk eta cuts");
-  m_trk_cutflowHist_eop->GetXaxis()->FindBin("eop pass trk iso");
-  m_trk_cutflowHist_eop->GetXaxis()->FindBin("eop pass larEmax");
-  m_trk_cutflowHist_eop->GetXaxis()->FindBin("eop pass tileEfrac");
-
   wk()->addOutput(m_trk_cutflowHist_eop);
 
   int nBinsTrkN = 200; double minTrkN = -0.5; double maxTrkN = 199.5;
@@ -326,6 +324,7 @@ EL::StatusCode EoverPAnalysis :: initialize ()
 
   if (m_fillOutputTree) {
     // setup the tree output
+    ANA_MSG_DEBUG("Registering Output Tree");
     TFile* treeFile = wk()->getOutputFile ("tree");
     treeFile->mkdir(m_name.c_str());
     treeFile->cd(m_name.c_str());
@@ -342,14 +341,44 @@ EL::StatusCode EoverPAnalysis :: initialize ()
 
     m_tree->Branch("eventNumber",   &m_eventNumber,   "EventNumber/l");
     m_tree->Branch("trkIndex",      &m_trkIndex,      "TrackIndex/I");
-    m_tree->Branch("trkEta",        &m_trkEta,        "TrackEta/D");
-    m_tree->Branch("trkPhi",        &m_trkPhi,        "TrackPhi/D");
-    m_tree->Branch("trkP",          &m_trkP,          "TrackP/D");
-    m_tree->Branch("totalE",        &m_Etot,          "TotalMatchedEnergy/D");
-    m_tree->Branch("etaBin",        &m_etaBin,        "EtaBin/I");
-    m_tree->Branch("pBin",          &m_pBin,          "PBin/I");
-    m_tree->Branch("eopRaw",        &m_eopRaw,        "EopRaw/D");
-    m_tree->Branch("eopBg",         &m_eopBg,         "EopBg/D");
+    m_tree->Branch("trk_etaID", &trk_etaID,"trk_etaID/D");
+    m_tree->Branch("trk_phiID", &trk_phiID,"trk_phiID/D");
+    m_tree->Branch("trk_pt", &trk_pt,"trk_pt/D");
+    m_tree->Branch("trk_d0", &trk_d0,"trk_d0/D");
+    m_tree->Branch("trk_nTRT", &trk_nTRT);
+    m_tree->Branch("trk_z0sintheta", &trk_z0sintheta, "trk_z0sintheta/D");
+    m_tree->Branch("trk_p", &trk_p,"trk_p/D");
+    m_tree->Branch("trk_etaEMB2", &trk_etaEMB2,"trk_etaEMB2/D");
+    m_tree->Branch("trk_phiEMB2", &trk_phiEMB2,"trk_phiEMB2/D");
+    m_tree->Branch("trk_etaEME2", &trk_etaEME2,"trk_etaEME2/D");
+    m_tree->Branch("trk_phiEME2", &trk_phiEME2,"trk_phiEME2/D");
+    m_tree->Branch("trk_nearest_dR", &trk_nearest_dR,"trk_nearest_dR/D");
+    m_tree->Branch("trkWeight", &trkWeight,"trkWeight/D");
+    m_tree->Branch("trk_sumEPos_Lar_200", & trk_sumEPos_Lar_200, "trk_sumEPos_Lar_200/D"); 
+    m_tree->Branch("trk_sumEPos_Lar_100", &trk_sumEPos_Lar_100,"trk_sumEPos_Lar_100/D");
+    m_tree->Branch("trk_sumE_Lar_200", &trk_sumE_Lar_200,"trk_sumE_Lar_200/D");
+    m_tree->Branch("trk_sumE_Lar_100", &trk_sumE_Lar_100,"trk_sumE_Lar_100/D");
+    m_tree->Branch("trk_sumEPos_Tile_200", &trk_sumEPos_Tile_200,"trk_sumEPos_Tile_200/D");
+    m_tree->Branch("trk_sumEPos_Tile_100", &trk_sumEPos_Tile_100,"trk_sumEPos_Tile_100/D");
+    m_tree->Branch("trk_sumE_Tile_200", &trk_sumE_Tile_200,"trk_sumE_Tile_200/D");
+    m_tree->Branch("trk_sumE_Tile_100", &trk_sumE_Tile_100,"trk_sumE_Tile_100/D");
+    m_tree->Branch("trk_sumEPos_Total_200", &trk_sumEPos_Total_200,"trk_sumEPos_Total_200/D");
+    m_tree->Branch("trk_sumEPos_Total_100", &trk_sumEPos_Total_100,"trk_sumEPos_Total_100/D");
+    m_tree->Branch("trk_sumE_Total_200", &trk_sumE_Total_200,"trk_sumE_Total_200/D");
+    m_tree->Branch("trk_sumE_Total_100", &trk_sumE_Total_100,"trk_sumE_Total_100/D");
+    m_tree->Branch("trk_TileEfrac_200", &trk_TileEfrac_200,"trk_TileEfrac_200/D");
+    m_tree->Branch("trk_TileEfrac_100", &trk_TileEfrac_100,"trk_TileEfrac_100/D");
+    m_tree->Branch("trk_E_EM_100", &trk_E_EM_100,"trk_E_EM_100/D");
+    m_tree->Branch("trk_E_EM_200", &trk_E_EM_200,"trk_E_EM_200/D");
+    m_tree->Branch("trk_E_HAD_100", &trk_E_HAD_100, "trk_E_HAD_100/D"); 
+    m_tree->Branch("trk_E_HAD_200", &trk_E_HAD_200,"trk_E_HAD_200/D");
+    m_tree->Branch("trk_E_Total_100", &trk_E_Total_100,"trk_E_Total_100/D");
+    m_tree->Branch("trk_E_Total_200", &trk_E_Total_200,"trk_E_Total_200/D");
+    m_tree->Branch("trk_NPV_2", &trk_NPV_2,"trk_NPV_2/D");
+    m_tree->Branch("trk_NPV_4", &trk_NPV_4,"trk_NPV_4/D");
+    m_tree->Branch("trk_actualmu", &trk_actualmu,"trk_actualmu/D");
+    m_tree->Branch("trk_averagemu", &trk_averagemu,"trk_averagemu/D");
+    m_tree->Branch("trk_corrected_averagemu", &trk_corrected_averagemu,"trk_corrected_averagemu/D");
   }
 
   if(m_useCutFlow) {
@@ -429,6 +458,7 @@ EL::StatusCode EoverPAnalysis :: execute ()
       eventWeight *= pileupWeight;
     }
   }
+  else ANA_MSG_DEBUG("No Event Weight Available");
 
   m_numEvent++;
 
@@ -456,14 +486,6 @@ EL::StatusCode EoverPAnalysis :: execute ()
     // reset tree variables
     m_eventNumber = -1;
     m_trkIndex = -1;
-    m_trkEta = -9999999;
-    m_trkPhi = -9999999;
-    m_trkP = -9999999;
-    m_Etot = -9999999;
-    m_etaBin = -1;
-    m_pBin = -1;
-    m_eopRaw = -9999999;
-    m_eopBg = -9999999;
   }
 
   const xAOD::VertexContainer *vtxs(nullptr);
@@ -483,30 +505,40 @@ EL::StatusCode EoverPAnalysis :: execute ()
   xAOD::TrackParticleContainer::const_iterator trk2_end = trks->end();
   // loop over all tracks only once
   for( ; trk_itr != trk_end; ++trk_itr ) {
-
+    ANA_MSG_DEBUG("Beginning track loop");
+    m_trk_cutflowHist_eop->Fill("eop all", 1.0);
     m_trk_cutflow_eop_all++;
     m_trk_n_all_tmp++;
 
     const xAOD::TrackParticle* trk = (*trk_itr);
 
     if (trk->auxdata<int>("CALO_extrapolation") == 0) continue;
-
+    m_trk_cutflowHist_eop->Fill("Has calo extrapolation", 1.0);
     m_trk_cutflow_eop_extrapol++;
     m_trk_n_pass_extrapol_tmp++;
 
-    double trk_pt = trk->pt()/1e3;
-    double trk_p = 0;
+    trk_pt = trk->pt()/1e3;
+    trk_p = 0.0;
+
+    trk_d0 = trk->d0();
+    trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta());
+
     if (fabs(trk->qOverP())>0.) trk_p = (1./fabs(trk->qOverP()))/1e3; 
+
     // coordinates of the track in the ID
-    double trk_etaID = trk->eta();
-    double trk_phiID = trk->phi();
+    trk_etaID = trk->eta();
+    trk_phiID = trk->phi();
+
     // coordinates of the track extrapolated to the calorimeter
     // EMB2
-    double trk_etaEMB2 = trk->auxdata<float>("CALO_trkEta_EMB2");
-    double trk_phiEMB2 = trk->auxdata<float>("CALO_trkPhi_EMB2");
+    trk_etaEMB2 = trk->auxdata<float>("CALO_trkEta_EMB2");
+    trk_phiEMB2 = trk->auxdata<float>("CALO_trkPhi_EMB2");
+
     // EME2
-    double trk_etaEME2 = trk->auxdata<float>("CALO_trkEta_EME2");
-    double trk_phiEME2 = trk->auxdata<float>("CALO_trkPhi_EME2");
+    trk_etaEME2 = trk->auxdata<float>("CALO_trkEta_EME2");
+    trk_phiEME2 = trk->auxdata<float>("CALO_trkPhi_EME2");
+
+    trk_nearest_dR = 999999.0; //how close was the nearest track?
 
     // check that the track is extrapolated to either EMB2 or EME2
     // (if not then trk_eta = trk_phi = -999999999)
@@ -514,6 +546,7 @@ EL::StatusCode EoverPAnalysis :: execute ()
          (fabs(trk_etaEME2) > 1000.0 || fabs(trk_phiEME2) > 1000.0) )
       continue;
 
+    m_trk_cutflowHist_eop->Fill("Extrapolated to EMB2 or EME2", 1.0);
     m_trk_cutflow_eop_trk1etaphi++;
     m_trk_n_pass_trk1etaphi_tmp++;
 
@@ -533,6 +566,7 @@ EL::StatusCode EoverPAnalysis :: execute ()
           double trk2_phiEMB2 = trk2->auxdata<float>("CALO_trkPhi_EMB2");
           if (fabs(trk2_etaEMB2) < (double)1000.0 && fabs(trk2_phiEMB2) < (double)1000.0) {
             double trk_trk2_dR_EMB2 = deltaR(trk_etaEMB2, trk_phiEMB2, trk2_etaEMB2, trk2_phiEMB2);
+            if (trk_trk2_dR_EMB2 < trk_nearest_dR) trk_nearest_dR = trk_trk2_dR_EMB2;
             if (trk_trk2_dR_EMB2 <= m_trkIsoDRmax) trk_not_isolated_EMB2 = true;
           }
         }
@@ -544,6 +578,7 @@ EL::StatusCode EoverPAnalysis :: execute ()
 
           if (fabs(trk2_etaEME2) < (double)1000.0 && fabs(trk2_phiEME2) < (double)1000.0) {
             double trk_trk2_dR_EME2 = deltaR(trk_etaEME2, trk_phiEME2, trk2_etaEME2, trk2_phiEME2);
+            if (trk_trk2_dR_EME2 < trk_nearest_dR) trk_nearest_dR = trk_trk2_dR_EME2;
             if (trk_trk2_dR_EME2 <= m_trkIsoDRmax) trk_not_isolated_EME2 = true;
           }
         }
@@ -562,6 +597,7 @@ EL::StatusCode EoverPAnalysis :: execute ()
     if (trk_not_isolated_EMB2) continue;
     if (trk_not_isolated_EME2) continue;
 
+    m_trk_cutflowHist_eop->Fill("Pass Isolation", 1.0);
     m_trk_cutflow_eop_pass_iso++;
     m_trk_n_pass_iso_tmp++;
 
@@ -590,6 +626,8 @@ EL::StatusCode EoverPAnalysis :: execute ()
       if (trk_p < m_trkPmin) continue;
       if (trk_p >= m_trkPmax) continue;
     }
+
+    m_trk_cutflowHist_eop->Fill("Pass max and min pt cut", 1.0);
     m_trk_cutflow_eop_pass_p++;
     m_trk_n_pass_p_tmp++;
 
@@ -599,89 +637,119 @@ EL::StatusCode EoverPAnalysis :: execute ()
       if (fabs(trk_etaID) >= m_trkEtamax) continue;
       // if ((double)fabs(trk_etaID) >= (double)2.3) continue;
     }
+    m_trk_cutflowHist_eop->Fill("Pass Eta cut", 1.0);
     m_trk_cutflow_eop_pass_eta++;
     m_trk_n_pass_eta_tmp++;
 
-    double trkWeight = eventWeight;
+    trkWeight = eventWeight;
     if (m_doTrkPtReweighting && eventInfo->isAvailable< float >( "mcEventWeight" ) ) {
       if (trk_pt > 0. && trk_pt < 30.) {
         trkWeight *= m_ptHist->GetBinContent(m_ptHist->FindBin(trk_pt));
       }
     }
-
-    if (m_doTileCuts) {
-
-      // check LAr energy loss requirement
-      double trk_sumE_Lar_200 = 0.; 
-      for (unsigned int i=0; i<m_layer_lar.size(); i++) {
-        double trk_E_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_lar[i]+"_200"))/1e3; 
-        if (trk_E_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
-          trk_sumE_Lar_200 += trk_E_tmp;
-      }
-      if (trk_sumE_Lar_200 > m_LarEmax) continue;
-
-      m_trk_cutflow_eop_pass_larEmax++;
-      m_trk_n_pass_larEmax_tmp++;
-
-      // check E(tile)/E(total) requirement
-      double trk_sumE_Tile_200 = 0.; 
-      for (unsigned int i=0; i<m_layer_tile.size(); i++) {
-        double trk_E_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_tile[i]+"_200"))/1e3; 
-        if (trk_E_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
-          trk_sumE_Tile_200 += trk_E_tmp;
-      }
-      double trk_sumE_Total_200 = 0.;
-      for (unsigned int i=0; i<m_layer.size(); i++) { 
-        double trk_E_200_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_200"))/1e3; 
-        if (trk_E_200_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
-          trk_sumE_Total_200 += trk_E_200_tmp; 
-      }
-      double trk_TileEfrac_200 = 0.;
-      if (trk_sumE_Total_200 > 0.)  
-        trk_TileEfrac_200 = trk_sumE_Tile_200/trk_sumE_Total_200;
-
-      // Make all the histograms for different TileEfrac selections
-      if (m_doGlobalTileEfracRanges && trk_TileEfrac_200 >= 0. && trk_TileEfrac_200 < 1.) {
-        if (m_doGlobalTileEfracRanges && trk_TileEfrac_200 == 0.)
-          ANA_CHECK( m_plots_eop_TileEfrac000->execute(trk, vtxs, eventInfo, trkWeight));
-        if (trk_TileEfrac_200 >= .1) {
-          ANA_CHECK( m_plots_eop_TileEfrac010->execute(trk, vtxs, eventInfo, trkWeight));
-        }
-        if (trk_TileEfrac_200 >= .3) {
-          ANA_CHECK( m_plots_eop_TileEfrac030->execute(trk, vtxs, eventInfo, trkWeight));
-        }
-        if (trk_TileEfrac_200 >= .5) {
-          ANA_CHECK( m_plots_eop_TileEfrac050->execute(trk, vtxs, eventInfo, trkWeight));
-        }
-        if (trk_TileEfrac_200 >= .6) {
-          ANA_CHECK( m_plots_eop_TileEfrac060->execute(trk, vtxs, eventInfo, trkWeight));
-        }
-        if (trk_TileEfrac_200 >= .7) {
-          ANA_CHECK( m_plots_eop_TileEfrac070->execute(trk, vtxs, eventInfo, trkWeight));
-        }
-        if (trk_TileEfrac_200 >= .75) {
-          ANA_CHECK( m_plots_eop_TileEfrac075->execute(trk, vtxs, eventInfo, trkWeight));
-        }
-        if (trk_TileEfrac_200 >= .8) {
-          ANA_CHECK( m_plots_eop_TileEfrac080->execute(trk, vtxs, eventInfo, trkWeight));
-        }
-      }
-
-      // Default TileEfrac cut
-      if (trk_TileEfrac_200 < 0. || trk_TileEfrac_200 >= 1.0 || trk_TileEfrac_200 < m_TileEfracmin) continue;
-      m_trk_cutflow_eop_pass_tileEfrac++;
-      m_trk_n_pass_tileEfrac_tmp++;
+    // check LAr energy loss requirement
+    trk_sumEPos_Lar_100 = 0.; 
+    trk_sumEPos_Lar_200 = 0.; 
+    trk_sumE_Lar_200 = 0.;
+    trk_sumE_Lar_100 = 0.;
+    for (unsigned int i=0; i<m_layer_lar.size(); i++) {
+      double trk_E_tmp_200 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_lar[i]+"_200"))/1e3; 
+      double trk_E_tmp_100 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_lar[i]+"_100"))/1e3; 
+      trk_sumE_Lar_200 += trk_E_tmp_200;
+      trk_sumE_Lar_100 += trk_E_tmp_100;
+      if (trk_E_tmp_200 > 0.) // only include E > 0 (i.e. not calorimeter noise)
+        trk_sumEPos_Lar_200 += trk_E_tmp_200;
+      if (trk_E_tmp_100 > 0.) // only include E > 0 (i.e. not calorimeter noise)
+        trk_sumEPos_Lar_100 += trk_E_tmp_100;
     }
 
-    // cluster energy associated with the track
-    double trk_E_EM_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3; 
-    double trk_E_EM_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3; 
-    double trk_E_HAD_100 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_100"))/1e3; 
-    double trk_E_HAD_200 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_200"))/1e3; 
-    double trk_E_Total_100 = trk_E_EM_100 + trk_E_HAD_100;
-    double trk_E_Total_200 = trk_E_EM_200 + trk_E_HAD_200;
+    if ((m_applyTileCuts) and (trk_sumE_Lar_200 > m_LarEmax)) continue;
 
-    std::vector<double> PbinsArray = {0};
+    m_trk_cutflowHist_eop->Fill("Pass LarMax cut ", 1.0);
+    m_trk_cutflow_eop_pass_larEmax++;
+    m_trk_n_pass_larEmax_tmp++;
+
+    // check E(tile)/E(total) requirement
+    trk_sumEPos_Tile_200 = 0.; 
+    trk_sumEPos_Tile_100 = 0.; 
+    trk_sumE_Tile_200 = 0.;
+    trk_sumE_Tile_100 = 0.;
+    for (unsigned int i=0; i<m_layer_tile.size(); i++) {
+      double trk_E_tmp_200 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_tile[i]+"_200"))/1e3; 
+      double trk_E_tmp_100 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_tile[i]+"_100"))/1e3; 
+      trk_sumE_Tile_200 += trk_E_tmp_200;
+      trk_sumE_Tile_100 += trk_E_tmp_100;
+      if (trk_E_tmp_200 > 0.) // only include E > 0 (i.e. not calorimeter noise)
+        trk_sumEPos_Tile_200 += trk_E_tmp_200;
+      if (trk_E_tmp_100 > 0.) // only include E > 0 (i.e. not calorimeter noise)
+        trk_sumEPos_Tile_100 += trk_E_tmp_100;
+    }
+
+    trk_sumEPos_Total_200 = 0.;
+    trk_sumEPos_Total_100 = 0.;
+    trk_sumE_Total_200 = 0.;
+    trk_sumE_Total_100 = 0.;
+    for (unsigned int i=0; i<m_layer.size(); i++) { 
+      double trk_E_200_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_200"))/1e3; 
+      double trk_E_100_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_100"))/1e3; 
+      trk_sumE_Total_200 += trk_E_200_tmp;
+      trk_sumE_Total_100 += trk_E_100_tmp;
+      if (trk_E_200_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
+        trk_sumEPos_Total_200 += trk_E_200_tmp; 
+      if (trk_E_100_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
+        trk_sumEPos_Total_100 += trk_E_100_tmp; 
+    }
+
+    trk_TileEfrac_200 = 0.;
+    if (trk_sumE_Total_200 > 0.)  
+      trk_TileEfrac_200 = trk_sumE_Tile_200/trk_sumE_Total_200;
+
+    trk_TileEfrac_100 = 0.;
+    if (trk_sumE_Total_100 > 0.)  
+      trk_TileEfrac_100 = trk_sumE_Tile_100/trk_sumE_Total_100;
+
+    // Make all the histograms for different TileEfrac selections
+    if (m_doGlobalTileEfracRanges && trk_TileEfrac_200 >= 0. && trk_TileEfrac_200 < 1.) {
+      if (m_doGlobalTileEfracRanges && trk_TileEfrac_200 == 0.)
+        ANA_CHECK( m_plots_eop_TileEfrac000->execute(trk, vtxs, eventInfo, trkWeight));
+      if (trk_TileEfrac_200 >= .1) {
+        ANA_CHECK( m_plots_eop_TileEfrac010->execute(trk, vtxs, eventInfo, trkWeight));
+      }
+      if (trk_TileEfrac_200 >= .3) {
+        ANA_CHECK( m_plots_eop_TileEfrac030->execute(trk, vtxs, eventInfo, trkWeight));
+      }
+      if (trk_TileEfrac_200 >= .5) {
+        ANA_CHECK( m_plots_eop_TileEfrac050->execute(trk, vtxs, eventInfo, trkWeight));
+      }
+      if (trk_TileEfrac_200 >= .6) {
+        ANA_CHECK( m_plots_eop_TileEfrac060->execute(trk, vtxs, eventInfo, trkWeight));
+      }
+      if (trk_TileEfrac_200 >= .7) {
+        ANA_CHECK( m_plots_eop_TileEfrac070->execute(trk, vtxs, eventInfo, trkWeight));
+      }
+      if (trk_TileEfrac_200 >= .75) {
+        ANA_CHECK( m_plots_eop_TileEfrac075->execute(trk, vtxs, eventInfo, trkWeight));
+      }
+      if (trk_TileEfrac_200 >= .8) {
+        ANA_CHECK( m_plots_eop_TileEfrac080->execute(trk, vtxs, eventInfo, trkWeight));
+      }
+    }
+
+    // Default TileEfrac cut
+    if ((m_applyTileCuts) and  (trk_TileEfrac_200 < 0. || trk_TileEfrac_200 >= 1.0 || trk_TileEfrac_200 < m_TileEfracmin)) continue;
+    m_trk_cutflowHist_eop->Fill("Pass tile Efrac cut", 1.0);
+    m_trk_cutflow_eop_pass_tileEfrac++;
+    m_trk_n_pass_tileEfrac_tmp++;
+
+  // cluster energy associated with the track
+  trk_E_EM_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3; 
+  trk_E_EM_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3; 
+  trk_E_HAD_100 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_100"))/1e3; 
+  trk_E_HAD_200 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_200"))/1e3; 
+  trk_E_Total_100 = trk_E_EM_100 + trk_E_HAD_100;
+  trk_E_Total_200 = trk_E_EM_200 + trk_E_HAD_200;
+
+  std::vector<double> PbinsArray = {0};
     unsigned int nPbinsArray = 0;
     if (m_doPbinsArray){
       PbinsArray = str2vec(m_PbinsArray);
@@ -717,20 +785,28 @@ EL::StatusCode EoverPAnalysis :: execute ()
       // set ttree variables
       m_eventNumber = eventInfo->eventNumber();
       m_trkIndex = m_trk_n_all_tmp;
-      m_trkEta = trk_etaID;
-      m_trkPhi = trk_phiID;
-      m_trkP = trk_p;
-      m_Etot = trk_E_Total_200;
-      m_etaBin = trk_eta_i;
-      m_pBin = trk_p_i;
-      m_eopRaw = trk_E_Total_200/trk_p;
-      if (trk_E_EM_100 < 1.1 && trk_E_HAD_100/trk_p > 0.4 && trk_E_HAD_100/trk_p < 0.9) {
-        m_eopBg = (trk_E_EM_200 - trk_E_EM_100)/trk_p;
-      } else {
-        m_eopBg = -9999999;
+      if (!trk->summaryValue(trk_nTRT, xAOD::numberOfTRTHits))ANA_MSG_ERROR("TRT hits not filled");
+      ANA_MSG_DEBUG(TString("The number of TRT hits was " + std::to_string (trk_nTRT)));
+
+      trk_NPV_2 = HelperFunctions::countPrimaryVertices(vtxs, 2);
+      trk_NPV_4 = HelperFunctions::countPrimaryVertices(vtxs, 4);
+      trk_averagemu = -1;
+      trk_actualmu = -1;
+      trk_corrected_averagemu = -1;
+
+      // get pileup
+      if( eventInfo->isAvailable< float >( "actualInteractionsPerCrossing" ) ) {
+        trk_actualmu = eventInfo->actualInteractionsPerCrossing();
       }
+      if( eventInfo->isAvailable< float >( "corrected_averageInteractionsPerCrossing" ) && !eventInfo->eventType( xAOD::EventInfo::IS_SIMULATION )) 
+        trk_corrected_averagemu = eventInfo->auxdata< float >( "corrected_averageInteractionsPerCrossing" );
+      else if( eventInfo->isAvailable< float >( "averageInteractionsPerCrossing" ) )
+        trk_averagemu = eventInfo->averageInteractionsPerCrossing();
+
+      ANA_MSG_DEBUG("Filling Tree");
       m_tree->Fill();
     }
+    else ANA_MSG_DEBUG("Not Filling Tree");
 
     // fill eop histograms
     ANA_CHECK( m_plots_eop -> execute(trk, vtxs, eventInfo, trkWeight));
@@ -841,14 +917,6 @@ EL::StatusCode EoverPAnalysis :: finalize () {
 
 EL::StatusCode EoverPAnalysis :: histFinalize ()
 {
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_all_bin, m_trk_cutflow_eop_all );
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_extrapol_bin, m_trk_cutflow_eop_extrapol );
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_trk1etaphi_bin, m_trk_cutflow_eop_trk1etaphi );
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_pass_iso_bin, m_trk_cutflow_eop_pass_iso );
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_pass_p_bin, m_trk_cutflow_eop_pass_p );
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_pass_eta_bin, m_trk_cutflow_eop_pass_eta );
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_pass_larEmax_bin, m_trk_cutflow_eop_pass_larEmax );
-  m_trk_cutflowHist_eop->SetBinContent( m_trk_cutflow_eop_pass_tileEfrac_bin, m_trk_cutflow_eop_pass_tileEfrac );
 
   // clean up memory
   if(m_plots_eop) delete m_plots_eop;
