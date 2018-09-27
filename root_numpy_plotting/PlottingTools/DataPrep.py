@@ -29,7 +29,6 @@ def getIsData(filename):
 
 def GetData(config_input):
     '''a function used for multiprocessing. It makes all of the selections used by the analysis'''
-    print "Importing root_numpy for a process"
     import root_numpy as rnp
     partition = config_input[0]
     configuration_dictionary = config_input[1]
@@ -39,17 +38,18 @@ def GetData(config_input):
     variableFunctions = configuration_dictionary["variables"]
     filename = configuration_dictionary["filename"]
     treename = configuration_dictionary["treename"]
+    verbose = configuration_dictionary["verbose"]
 
     isData = getIsData(filename)
     bare_branches += weightFunction.branches
     branches = branchDresser(bare_branches)
-    print branches
+    if verbose: print branches
 
-    print "Reading from file " + filename
+    if verbose: print "Reading from file " + filename
     f = TFile(filename, "READ")
     t = f.Get(treename)
     data = rnp.tree2array(t, branches, start = partition[0], stop = partition[1])
-    print "Got the data for parition " + str(partition)
+    if verbose: print "Got the data for parition " + str(partition)
     f.Close()
     del f
     del t
@@ -62,20 +62,20 @@ def GetData(config_input):
     weights = weightFunction.eval(data, isData)
     if not isData:
         xsec_weight = getXSectionWeight(filename)
-        print("X Section Weight Set To " + str(xsec_weight))
+        if verbose: print("X Section Weight Set To " + str(xsec_weight))
         weights = weights * xsec_weight
     variable_dict["weights"] = weights
 
     ##calculate everything we need in one go!
     for variableFunction in variableFunctions:
-        print("calculating variables for " + variableFunction.name)
+        if verbose: print("calculating variables for " + variableFunction.name)
         variable = variableFunction.eval(data)
         variable_dict[variableFunction.name] = variable
 
     #selection_dict is a dictionary of numpy arrays that have dimension # of events
     #each entry in the numpy array tells you if the event passed the selection
     for selection in selections:
-        print("calculating selection " + selection.name)
+        if verbose: print("calculating selection " + selection.name)
         if not selection.name in selection_dict:
             pass_selection = selection.eval(data)
             selection_dict[selection.name] = pass_selection
@@ -87,8 +87,8 @@ def GetData(config_input):
     return return_dict
 
 def FetchResults(submission_batch, NThreads):
-    print("Prepping the pool with " + str(NThreads) + " pools")
-    print("You this many CPUs to work with: " + str(cpu_count()))
+    if verbose: print("Prepping the pool with " + str(NThreads) + " pools")
+    if verbose: print("You this many CPUs to work with: " + str(cpu_count()))
     p = Pool(NThreads)
     results = p.map(GetData, submission_batch)
     p.close() #close the pools to save memory. Open them only when we need them

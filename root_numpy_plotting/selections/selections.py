@@ -18,10 +18,10 @@ def acceptanceCalculator(trk, min_cut, max_cut):
 
     return (upper_in_acceptance_EMB | upper_in_acceptance_EME) & (lower_in_acceptance_EMB | lower_in_acceptance_EME)
 
-def Eta0_5(trk):
-    return acceptanceCalculator(trk, 0.0, 0.5)
+def Eta0_6(trk):
+    return acceptanceCalculator(trk, 0.0, 0.6)
 branches = ["trk_etaEMB2", "trk_etaEME2"]
-sel_Eta0_5 = calculation(Eta0_5, branches)
+sel_Eta0_6 = calculation(Eta0_6, branches)
 
 def NTRT20(trk):
     return trk["trk_nTRT"] >= 20

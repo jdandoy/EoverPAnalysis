@@ -1,4 +1,5 @@
 from calculation.calculation import calculation, calculationDataMC
+import numpy as np
 
 def trkPt(trk):
     return trk["trk_pt"]
@@ -8,7 +9,7 @@ calc_trkPt = calculation(trkPt, branches)
 def trkNPV2(trk):
     return trk["trk_NPV_2"]
 branches = ["trk_NPV_2"]
-calc_trkPt = calculation(trkPt, branches)
+calc_trkNPV2 = calculation(trkNPV2, branches)
 
 def trkNPV4(trk):
     return trk["trk_NPV_4"]
