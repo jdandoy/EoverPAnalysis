@@ -9,9 +9,15 @@ import ROOT
 
 from DataPrep import FetchResults, FetchResultsSingleProcessor
 
+import pyximport
+pyximport.install(setup_args={"include_dirs":np.get_include()},
+                  reload_support=True)
+
+
+from util import getWeightsFromBins
+
 def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
     '''normalize the weights to the histogram'''
-    weights = np.ones(len(variable_in_histogram))
     low_edges = []
     high_edges = []
     normalizations = []
@@ -21,15 +27,11 @@ def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
         high_edges.append(histogram.GetBinLowEdge(bin + 1))
         normalizations.append(histogram.GetBinContent(bin))
 
-    low_edges = np.array(low_edges)
-    high_edges = np.array(high_edges)
-    normalizations = np.array(normalizations)
-
-
+    low_edges = np.array(low_edges, np.float)
+    high_edges = np.array(high_edges, np.float)
+    hist_weights = np.array(normalizations, np.float)
     ##There must be a very clever way to implement this in root numpy... I'm sure of it!
-    for low_edge, high_edge, normalization in zip(low_edges, high_edges, normalizations):
-        selection = (variable_in_histogram <= high_edge) & (variable_in_histogram > low_edge)
-        weights[selection] *= normalization
+    weights = getWeightsFromBins(variable_in_histogram, low_edges, high_edges, hist_weights)
 
     return weights
 
