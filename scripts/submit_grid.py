@@ -43,6 +43,9 @@ for sample in samples:
     command += ' --force'
   command += ' prun --optGridNFilesPerJob 3 --optGridOutputSampleName {}'.format(optGridOutputSampleName) + "_"+ args.descriptor
 
+  #if ("data" in sample or "Data" in sample):
+  #    command += ' --optGridNFilesPerJob 40 '
+
   print('submitting {0:s}'.format(sample))
   print('running: {0:s}'.format(command))
   subprocess.call(command, shell=True)
