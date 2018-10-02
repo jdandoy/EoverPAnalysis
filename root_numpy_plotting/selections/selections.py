@@ -6,6 +6,11 @@ def NoSelection(trk):
 branches = []
 sel_NoSelection = calculation(NoSelection, branches)
 
+def Lar1GeV(trk):
+    return trk["trk_sumEPos_Lar_200"] > 1.0
+branches = ["trk_sumEPos_Lar_200"]
+sel_Lar1GeV = calculation(Lar1GeV, branches)
+
 def acceptanceCalculator(trk, min_cut, max_cut):
     trk_etaEMB = np.abs(trk["trk_etaEMB2"])
     trk_etaEME = np.abs(trk["trk_etaEME2"])
@@ -22,6 +27,11 @@ def Eta0_6(trk):
     return acceptanceCalculator(trk, 0.0, 0.6)
 branches = ["trk_etaEMB2", "trk_etaEME2"]
 sel_Eta0_6 = calculation(Eta0_6, branches)
+
+def NTRT15(trk):
+    return trk["trk_nTRT"] >= 15
+branches = ["trk_nTRT"]
+sel_NTRT15 = calculation(NTRT15, branches)
 
 def NTRT20(trk):
     return trk["trk_nTRT"] >= 20
