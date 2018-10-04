@@ -424,8 +424,8 @@ class Plotter:
         description_string = "Histogram"
         for variable in variables:
             description_string += variable.name
-        for selection in list_selections:
-            description_string += selection.name
+        for sel in list_selections:
+            description_string += sel.name
 
         #First go and get all of the histograms that we need
         histogram_dictionary = {}
