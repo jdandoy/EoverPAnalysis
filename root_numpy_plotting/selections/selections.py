@@ -33,6 +33,11 @@ def EM2AcceptanceCalculator(trk, min_cut, max_cut):
 
     return (upper_in_acceptance_EMB | upper_in_acceptance_EME) & (lower_in_acceptance_EMB | lower_in_acceptance_EME)
 
+def NonZeroEnergy(trk):
+    return np.logical_not(np.abs(trk["trk_E_Total_200"]) < 1e-10)
+branches = ["trk_E_Total_200"]
+sel_NonZeroEnergy = calculation(NonZeroEnergy, branches)
+
 def ELessEqual0(trk):
     return trk["trk_E_Total_200"] <= 1e-10
 branches = ["trk_E_Total_200"]
@@ -54,14 +59,25 @@ def IDEta0_6(trk):
 branches = ["trk_etaID"]
 sel_IDEta0_6 = calculation(IDEta0_6, branches)
 
+def IDEta1_9and2_3(trk):
+    return IDAcceptanceCalculator(trk, 1.9, 2.3)
+branches = ["trk_etaID"]
+sel_IDEta1_9and2_3 = calculation(IDEta1_9and2_3, branches)
+
 def PBetween1_2and1_8(trk):
     return (1.2 < trk["trk_p"]) & (trk["trk_p"] < 1.8)
+branches = ["trk_p"]
+sel_PBetween1_2and1_8 = calculation(PBetween1_2and1_8, branches)
 
 def PBetween2_2and2_8(trk):
     return (2.2 < trk["trk_p"]) & (trk["trk_p"] < 2.8)
+branches = ["trk_p"]
+sel_PBetween2_2and2_8 = calculation(PBetween2_2and2_8, branches)
 
 def PBetween2_8and3_6(trk):
     return (2.8 < trk["trk_p"]) & (trk["trk_p"] < 3.6)
+branches = ["trk_p"]
+sel_PBetween2_8and3_6 = calculation(PBetween2_8and3_6, branches)
 
 def NTRT15(trk):
     return trk["trk_nTRT"] >= 15

@@ -2,7 +2,7 @@ from atlasplots import atlas_style as astyle
 astyle.SetAtlasStyle()
 import numpy as np
 from variables.variables import calc_weight
-import array
+from array import array
 from root_numpy import fill_hist
 import ROOT
 from DataPrep import GetData
@@ -102,7 +102,7 @@ def cleanUpHistograms(h):
 MCColor = ROOT.kRed
 DataColor = ROOT.kBlack
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = None, extra_desy = None):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000):
     ''' Draw the data vs MC ratio for the MC and data histograms'''
 
     MCHist = histogram_dict[MCKey]
@@ -135,6 +135,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
         if content < minimum_bin and minimum_bin > 0.0:
             minimum_bin = content
 
+    title_offset = 0.7
 
     if doLogy:
         filename += "logy"
@@ -142,14 +143,15 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     if doLogy:
         if minimum_bin <= 0.0:
             minimum_bin = 0.011
-        MCHist.SetMaximum(maximum_bin * 500)
+        MCHist.SetMaximum(maximum_bin * scale_factor)
         MCHist.SetMinimum(minimum_bin * 1.0)
 
     else:
         MCHist.SetMaximum(maximum_bin * 1.8)
-        MCHist.SetMinimum(0.0001)
+        MCHist.SetMinimum(minimum_bin * 0.8)
 
 
+    MCHist.GetYaxis().SetTitleOffset(title_offset)
     MCHist.Draw("HIST")
     DataHist.Draw("SAME")
 
@@ -159,10 +161,18 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     legend.Draw()
 
     if extra_description:
-        pass
+        if not type(extra_description) == list:
+            DrawText(extra_desx, extra_desy, extra_description)
+        else:
+            top = extra_desy
+            for descr in extra_description:
+                DrawText(extra_desx, top, descr)
+                top -= 0.08
 
     if doLogy:
         top_pad.SetLogy()
+    if doLogx:
+        top_pad.SetLogx()
 
     ROOT.gROOT.SetStyle("ATLAS")
     astyle.ATLASLabel(0.2, 0.87, "Internal")
@@ -172,6 +182,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
 
     canvas.cd()
     bottom_pad = ROOT.TPad("pad2", "pad2", 0, 0.01, 1, 0.3)
+    if doLogx:
+        bottom_pad.SetLogx()
     #bottom_pad.SetRightMargin(0.15)
     bottom_pad.Draw()
     bottom_pad.cd()
@@ -196,7 +208,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     data_ratio.SetMinimum(ratio_min + 0.0001)
     data_ratio.GetXaxis().SetTitleSize(MCHist_label_size*scale_ratio)
     data_ratio.GetYaxis().SetTitleSize(MCHist_label_size*scale_ratio)
-    data_ratio.GetYaxis().SetTitleOffset(0.25)
+    data_ratio.GetYaxis().SetTitleOffset(title_offset/scale_ratio)
     data_ratio.GetYaxis().SetNdivisions(405);
     data_ratio.SetMaximum(ratio_max - 0.0001)
     data_ratio.SetMinimum(ratio_min + 0.0001)
@@ -283,8 +295,12 @@ def DivideHistograms(hist_dict1, hist_dict2):
 
     return_dict = {}
     for channel in dict1_keys:
-        Hist_clone1 = dict1_keys[channel].Clone(channel + "divided")
-        return_dict[channel] = Hist_clone1.Divide(dict2_keys[channel])
+        Hist_clone1 = hist_dict1[channel].Clone(channel + "divided")
+        Hist_clone1.GetXaxis().SetTitle(hist_dict1[channel].GetXaxis().GetTitle())
+        Hist_clone1.GetYaxis().SetTitle(hist_dict1[channel].GetYaxis().GetTitle())
+        Hist_clone1.Divide(hist_dict2[channel])
+        return_dict[channel] = Hist_clone1
+
 
     return return_dict
 
@@ -310,10 +326,11 @@ class Plotter:
             self.channelLabels[channel] = dictionary[channel][0]
 
     def CheckForNormalizationWeights(self, channel, filename):
-        if channel not in self.NormalizationWeightsDictionary: 
-            print "nor normalization weights found for channel " + filename
+        if channel not in self.NormalizationWeightsDictionary:
+            print "no normalization weights found for channel " + filename
             return False
         if filename not in self.NormalizationWeightsDictionary[channel]: raise ValueError("There should have been a set of normalization weights for this file")
+        print "Found renormalization weights for file " + filename
 
         return True
 
@@ -416,7 +433,7 @@ class Plotter:
             self.NormalizationWeightsDictionary[ChannelToNormalize][filename] *= normalization
 
 
-    def GetHistograms(self, variable, list_selections = [], bins = 1, range_low = 0, range_high=1,  xlabel ="", ylabel = ""):
+    def GetHistograms(self, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", normalize = False):
         '''given a variable, Draw the histogram for the given variable'''
         variableNameToFill = variable.name
         variables = [variable]
@@ -431,11 +448,11 @@ class Plotter:
         histogram_dictionary = {}
         LegendLabels = {}
         for channel in self.channels:
-            if type(bins) == list:
-                bins = array('d',bins)
-                histogram_dictionary[channel] = ROOT.TH1D(description_string, description_string, len(bins)-1, bins)
+            if (type(bins) == list):
+                bins_array = array('d',bins)
+                histogram_dictionary[channel] = ROOT.TH1D(description_string, description_string, len(bins_array)-1, bins_array)
             else:
-                histogram_dictionary[channel] = ROOT.TH1D(description_string, description_string, bins, range_low, range_high)
+                histogram_dictionary[channel] = ROOT.TH1D(description_string, description_string, bins, range_low + 0.0000001, range_high - 0.000001)
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
             histogram_dictionary[channel].Sumw2()
@@ -485,6 +502,9 @@ class Plotter:
                 #for the events that pass the selections, fill the events into the histograms
                 to_fill = variable_dict[variableNameToFill][total_selection]
                 to_weight = weights[total_selection]
+
+                if normalize:
+                    to_weight = to_weight/np.sum(to_weight)
                 if self.verbose: print(len(to_fill))
                 if self.verbose: print(len(to_weight))
                 if self.verbose: print to_fill
