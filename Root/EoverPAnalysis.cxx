@@ -586,10 +586,10 @@ EL::StatusCode EoverPAnalysis :: execute ()
         const xAOD::TrackParticle* trk2 = (*trk2_itr);
 
         //EMB2
-        if (fabs(trk_etaEMB2) < (float)1000.0 && fabs(trk_phiEMB2) < (double)1000.0) {
+        if (fabs(trk_etaEMB2) < (float)1000.0 && fabs(trk_phiEMB2) < (float)1000.0) {
           float trk2_etaEMB2 = trk2->auxdata<float>("CALO_trkEta_EMB2");
           float trk2_phiEMB2 = trk2->auxdata<float>("CALO_trkPhi_EMB2");
-          if (fabs(trk2_etaEMB2) < (float)1000.0 && fabs(trk2_phiEMB2) < (double)1000.0) {
+          if (fabs(trk2_etaEMB2) < (float)1000.0 && fabs(trk2_phiEMB2) < (float)1000.0) {
             float trk_trk2_dR_EMB2 = deltaR(trk_etaEMB2, trk_phiEMB2, trk2_etaEMB2, trk2_phiEMB2);
             if (trk_trk2_dR_EMB2 < trk_nearest_dR) trk_nearest_dR = trk_trk2_dR_EMB2;
             if (trk_trk2_dR_EMB2 <= m_trkIsoDRmax) trk_not_isolated_EMB2 = true;
@@ -597,11 +597,11 @@ EL::StatusCode EoverPAnalysis :: execute ()
         }
 
         //EME2
-        if (fabs(trk_etaEME2) < (float)1000.0 && fabs(trk_phiEME2) < (double)1000.0) {
+        if (fabs(trk_etaEME2) < (float)1000.0 && fabs(trk_phiEME2) < (float)1000.0) {
           float trk2_etaEME2 = trk2->auxdata<float>("CALO_trkEta_EME2");
           float trk2_phiEME2 = trk2->auxdata<float>("CALO_trkPhi_EME2");
 
-          if (fabs(trk2_etaEME2) < (float)1000.0 && fabs(trk2_phiEME2) < (double)1000.0) {
+          if (fabs(trk2_etaEME2) < (float)1000.0 && fabs(trk2_phiEME2) < (float)1000.0) {
             float trk_trk2_dR_EME2 = deltaR(trk_etaEME2, trk_phiEME2, trk2_etaEME2, trk2_phiEME2);
             if (trk_trk2_dR_EME2 < trk_nearest_dR) trk_nearest_dR = trk_trk2_dR_EME2;
             if (trk_trk2_dR_EME2 <= m_trkIsoDRmax) trk_not_isolated_EME2 = true;
