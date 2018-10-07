@@ -72,7 +72,7 @@ TProfile* HistogramManagerD::book(std::string name, std::string title,
 {
   TProfile* tmp = new TProfile( (name + title).c_str(), title.c_str(), xbins, xlow, xhigh, ylow, yhigh, option.c_str());
   SetLabel(tmp, xlabel, ylabel);
-  //this->Sumw2(tmp);
+  this->Sumw2(tmp);
   this->record(tmp);
   return tmp;
 }
@@ -84,7 +84,7 @@ TProfile* HistogramManagerD::book(std::string name, std::string title,
 {
   TProfile* tmp = new TProfile( (name + title).c_str(), title.c_str(), xbins, xbinsArr, ylow, yhigh, option.c_str());
   SetLabel(tmp, xlabel, ylabel);
-  //this->Sumw2(tmp);
+  this->Sumw2(tmp);
   this->record(tmp);
   return tmp;
 }
