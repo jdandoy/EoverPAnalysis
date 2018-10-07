@@ -11,6 +11,7 @@ ctypedef fused float_or_int_array:
 cpdef getWeightsFromBins(float_or_int_array variable_in_histogram, float_or_int_array low_edges, float_or_int_array high_edges, np.ndarray[FLOATDTYPE_t, ndim = 1] normalization):
     cdef int maxbin = low_edges.shape[0]
     cdef int tracks = variable_in_histogram.shape[0]
+    cdef int i, j
     cdef np.ndarray[FLOATDTYPE_t, ndim =1] weights = np.ones(tracks, dtype = np.float)
 
     for i in range(maxbin):

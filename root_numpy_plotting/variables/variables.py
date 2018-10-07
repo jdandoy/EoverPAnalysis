@@ -11,6 +11,11 @@ def trkEtaID(trk):
 branches = ["trk_etaID"]
 calc_trkEta = calculation(trkEtaID, branches)
 
+def trkEtaID_ABS(trk):
+    return np.abs(trk["trk_etaID"])
+branches = ["trk_etaID"]
+calc_trkEta_ABS = calculation(trkEtaID_ABS, branches)
+
 def trkEtaECAL(trk):
     trk_etaEMB = np.abs(trk["trk_etaEMB2"])
     trk_etaEME = np.abs(trk["trk_etaEME2"])
@@ -30,10 +35,15 @@ def trkEtaECAL(trk):
     if np.any(np.logical_not(hasEMB | hasEME)):
         print(np.sum( 1 * np.logical_not(hasEMB | hasEME)))
         raise ValueError("one of the trakc did not have an extrapolation to the electromagnetic calorimeter")
-
     return trkEtaECAL
+
 branches = ["trk_etaEMB2","trk_etaEME2"]
 calc_trkEtaECAL = calculation(trkEtaECAL, branches)
+
+def trkNearestNeighbourEM2(trk):
+    return trk["trk_nearest_dR"]
+branches = ["trk_nearest_dR"]
+calc_trkNearestNeighbourEM2 =  calculation(trkNearestNeighbourEM2, branches)
 
 def trkNPV2(trk):
     return trk["trk_NPV_2"]

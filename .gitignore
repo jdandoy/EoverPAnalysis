@@ -39,7 +39,9 @@ Thumbs.db
 \#*
 .\#*
 *~
-
 # ROOT files #
 #############
 *.root
+
+# ipynb files #
+.ipynb_checkpoints
