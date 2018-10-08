@@ -8,6 +8,8 @@ atlas_subdir( EoverPAnalysis )
 # Declare the package's dependencies:
 atlas_depends_on_subdirs( PUBLIC
                           xAODAnaHelpers
+                          Control/AthLinks
+                          Control/AthContainers
                           AsgExternal/Asg_FastJet
                           PhysicsAnalysis/D3PDTools/EventLoop
                           PhysicsAnalysis/D3PDTools/AnaAlgorithm

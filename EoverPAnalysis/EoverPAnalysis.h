@@ -8,6 +8,8 @@
 
 #include "xAODTracking/VertexContainer.h"
 #include "xAODTracking/TrackParticleContainer.h"
+#include "xAODTruth/TruthParticle.h"
+
 
 // Histograms
 #include "EoverPAnalysis/EoverPHists.h"
@@ -31,7 +33,6 @@ class EoverPAnalysis : public xAH::Algorithm
 
     // save output tree of key variables
     bool m_fillOutputTree = false;
-;
     // track isolation settings
     double m_trkIsoDRmax = .4;
     double m_trkIsoPfrac = 0.;
@@ -107,57 +108,64 @@ class EoverPAnalysis : public xAH::Algorithm
   private:
 
     // variables to dump to the output ttree
-    double trk_etaID;
-    double trk_phiID;
+    float trk_etaID;
+    float trk_phiID;
 
     uint8_t trk_nTRT;
+    int trk_truthPdgId;
 
-    double trk_pt;
-    double trk_p;
+    float trk_truthEnergy;
+    float trk_truthP;
 
-    double trk_d0;
-    double trk_z0sintheta;
+    TLorentzVector truthPartVec;
 
-    double trk_etaEMB2;
-    double trk_phiEMB2;
+    float trk_pt;
+    float trk_p;
+
+    float trk_d0;
+    float trk_z0sintheta;
+
+    float trk_etaEMB2;
+    float trk_phiEMB2;
     
-    double trk_etaEME2;
-    double trk_phiEME2;
+    float trk_etaEME2;
+    float trk_phiEME2;
 
-    double trk_nearest_dR;
+    float trk_nearest_dR;
 
-    double trkWeight;
+    float trkWeight;
 
-    double trk_sumEPos_Lar_100;
-    double trk_sumEPos_Lar_200;
-    double trk_sumE_Lar_200;
-    double trk_sumE_Lar_100;
+    float trk_sumEPos_Lar_100;
+    float trk_sumEPos_Lar_200;
+    float trk_sumE_Lar_200;
+    float trk_sumE_Lar_100;
 
-    double  trk_sumEPos_Tile_200;
-    double  trk_sumEPos_Tile_100;
-    double  trk_sumE_Tile_200;
-    double  trk_sumE_Tile_100;
+    float  trk_sumEPos_Tile_200;
+    float  trk_sumEPos_Tile_100;
+    float  trk_sumE_Tile_200;
+    float  trk_sumE_Tile_100;
 
-    double  trk_sumEPos_Total_200;
-    double  trk_sumEPos_Total_100;
-    double  trk_sumE_Total_200;
-    double  trk_sumE_Total_100;
+    float  trk_sumEPos_Total_200;
+    float  trk_sumEPos_Total_100;
+    float  trk_sumE_Total_200;
+    float  trk_sumE_Total_100;
 
-    double  trk_TileEfrac_200;
-    double  trk_TileEfrac_100;
+    float  trk_TileEfrac_200;
+    float  trk_TileEfrac_100;
 
-    double trk_E_EM_100;
-    double trk_E_EM_200;
-    double trk_E_HAD_100; 
-    double trk_E_HAD_200;
-    double trk_E_Total_100;
-    double trk_E_Total_200;
+    float trk_E_EM_100;
+    float trk_E_EM_200;
+    float trk_E_HAD_100; 
+    float trk_E_HAD_200;
+    float trk_E_Total_100;
+    float trk_E_Total_200;
 
-    double trk_NPV_2;
-    double trk_NPV_4;
-    double trk_actualmu;
-    double trk_averagemu;
-    double trk_corrected_averagemu;
+    uint8_t trk_NPV_2;
+    uint8_t trk_NPV_4;
+    char trk_charge;
+    float trk_actualmu;
+    float trk_averagemu;
+    float trk_corrected_averagemu;
 
     // cutflow
     TH1D* m_cutflowHist; //!
@@ -285,7 +293,7 @@ class EoverPAnalysis : public xAH::Algorithm
     // tree for saving some key variables
     TTree *m_tree; //!
     unsigned long long m_eventNumber; //!
-    int m_trkIndex; //!
+    uint8_t m_trkIndex; //!
 
     // this is a standard constructor
     EoverPAnalysis (std::string className = "EoverPAnalysis");
@@ -300,6 +308,7 @@ class EoverPAnalysis : public xAH::Algorithm
     virtual EL::StatusCode postExecute ();
     virtual EL::StatusCode finalize ();
     virtual EL::StatusCode histFinalize ();
+    const xAOD::TruthParticle* getTruthPtr(const xAOD::TrackParticle* trackParticle); 
 
     double deltaR (double trk_eta, double trk_phi, double trk2_eta, double trk2_phi);
 
