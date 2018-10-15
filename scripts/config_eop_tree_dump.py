@@ -6,18 +6,26 @@ c = xAH_config()
 
 # input containers
 trks = "InDetTrackParticles"
+trks_loose = trks + "Loose"
+trks_tight = trks + "Tight"
+trks_loose_isolated = trks_loose + "Isolated"
+trks_tight_isolated = trks_tight + "Isolated"
+trks_loose_isolated_vertex = trks_loose_isolated + "VertexAssociated"
+trks_tight_isolated_vertex = trks_tight_isolated + "VertexAssociated"
 
-# selected version
-trks_loose = trks+"Loose"
 
 ''' Set up all the algorithms '''
 c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
-                                 "m_applyGRLCut": False,
+                                 "m_applyGRLCut": True,
                                  "m_doPUreweighting": False,
                                  "m_applyPrimaryVertexCut": True,
-                                 "m_applyEventCleaningCut": False,
+                                 "m_applyEventCleaningCut": True,
                                  "m_applyCoreFlagsCut": False,
-                                 "m_applyTriggerCut":False,
+                                 "m_applyTriggerCut": False,
+                                 #"m_useCutflow": True,
+                                 "m_GRLxml": "EoverPAnalysis/data17_13TeV.periodN_DetStatus-v98-pro21-16_Unknown_PHYS_StandardGRL_All_Good_25ns_ignore_GLOBAL_LOWMU_for_specific_run341294.xml",
+                                 "m_lumiCalcFileNames": "EoverPAnalysis/ilumicalc_histograms_HLT_mb_sptrk_341294_OflLumi-13TeV-010.root",
+                                 "m_PRWFileNames": "EoverPAnalysis/ntup_prw_36102_JZ012.root",
                                  "m_triggerSelection": "HLT_mb_sptrk",
                                  "m_PVNTrack": 2,
                                  "m_useMetaData": False,
@@ -28,112 +36,70 @@ c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
 c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
                             "m_inContainerName": trks,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
-                            "m_msgLevel": "info"})
+                            "m_msgLevel": "debug"})
 
-''' Select tracks passing the "LoosePrimary" Tracking CP Recommendations (Moriond 2017)'''
-c.setalg("TrackVertexSelection", {"m_name": "TrackSel_LoosePrimary",
-                                  "m_inContainerName": trks,
-                                  "m_decorateSelectedObjects": False,
-                                  "m_createSelectedContainer": True,
-                                  "m_pass_min": 1,
+
+'''track selection algorithm'''
+c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_loose,
+                                  "m_inputTrackContainer": trks,
                                   "m_minPt": 0.5,
-                                  "m_cutLevel": "Loose",
-                                  "m_outContainerName": trks_loose,
-                                  "m_useCutFlow": True,
-                                  "m_msgLevel": "info"})
+                                  "m_CutLevel": "Loose",
+                                  "m_outputTrackContainer": trks_loose,
+                                  "m_msgLevel": "debug"})
 
 ''' Fill histograms with tracking details, after LoosePrimary selection '''
-c.setalg("TrackHistsAlgo", {"m_name": "Tracks_LoosePrimary",
+c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose,
                             "m_inContainerName": trks_loose,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
-                            "m_msgLevel": "info"})
+                            "m_msgLevel": "debug"})
 
-#''' Select tracks passing the "LoosePrimary" Tracking CP Recommendations (Moriond 2016), with nTRT > 20'''
-# https://twiki.cern.ch/twiki/bin/view/AtlasProtected/TrackingCPMoriond2016
-#c.setalg("TrackVertexSelection", {"m_name": "TrackSel_LoosePrimary_nTRTG20",
-#                                   "m_inContainerName": trks,
-#                                   "m_decorateSelectedObjects": False,
-#                                   "m_createSelectedContainer": True,
-#                                   "m_pass_min": 1,
-#                                   "m_cutLevel": "LoosePrimary",
-#                                   "m_minPt": 0.4,
-#                                   "m_maxAbsEta": 2.5,
-#                                   "m_maxD0": 2.0,
-#                                   "m_maxZ0SinTheta": 3.0,
-#                                   "m_minNTrtHits": 20,
-#                                   "m_outContainerName": trks_loose_ntrtG20,
-#                                   "m_useCutFlow": False,
-#                                   "m_debug": False})
+c.setalg("TrackExtrapolationIsolationTool", {"m_name": "TrackIso_" + trks_loose,
+                                        "m_inputTrackContainer": trks_loose,
+                                        "m_outputTrackContainer": trks_loose_isolated,
+                                        "m_trkIsoDRmax": 0.4,
+                                        "m_msgLevel": "debug"})
 
-#''' Fill histograms with tracking details, after LoosePrimary and with TRT selection '''
-#c.setalg("TrackHistsAlgo", {"m_name": "Tracks_LoosePrimaryTRT",
-#                             "m_inContainerName": trks_loose_ntrtG20,
-#                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
-#                             "m_debug": False})
+''' Fill histograms with tracking details, after LoosePrimary selection '''
+c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated,
+                            "m_inContainerName": trks_loose_isolated,
+                            "m_detailStr": "2D IPDetails HitCounts Chi2Details",
+                            "m_msgLevel": "debug"})
 
-# ''' Select tracks passing the "TightPrimary" Tracking CP Recommendations (Moriond 2016)'''
-# # https://twiki.cern.ch/twiki/bin/view/AtlasProtected/TrackingCPMoriond2016
-# c.setalg("TrackVertexSelection", {"m_name": "TrackSel_TightPrimary",
-#                                   "m_inContainerName": trks,
-#                                   "m_decorateSelectedObjects": False,
-#                                   "m_createSelectedContainer": True,
-#                                   "m_pass_min": 1,
-#                                   "m_cutLevel": "TightPrimary",
-#                                   "m_minPt": 0.4,
-#                                   "m_maxAbsEta": 2.5,
-#                                   "m_maxD0": 2.0,
-#                                   "m_maxZ0SinTheta": 3.0,
-#                                   "m_minNTrtHits": -1,
-#                                   "m_outContainerName": trks_tight,
-#                                   "m_useCutFlow": False,
-#                                   "m_debug": False})
-#
-# ''' Fill histograms with tracking details, after TightPrimary selection '''
-# c.setalg("TrackHistsAlgo", {"m_name": "Tracks_TightPrimary",
-#                             "m_inContainerName": trks_tight,
-#                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
-#                             "m_debug": False})
-#
+c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_tight_isolated ,
+                                    "m_inputTrackContainer": trks_loose_isolated,
+                                    "m_outputTrackContainer": trks_tight_isolated,
+                                    "m_CutLevel": "TightPrimary",
+                                    "m_msgLevel": "debug"})
 
-#### Make E/p plots
+''' Fill histograms with tracking details, after LoosePrimary selection '''
+c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated,
+                            "m_inContainerName": trks_tight_isolated,
+                            "m_detailStr": "2D IPDetails HitCounts Chi2Details",
+                            "m_msgLevel": "debug"})
 
-for track_container in [trks_loose]:
+c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociationTool",\
+                                            "m_inputTrackContainer": trks_loose_isolated,\
+                                            "m_outputTrackContainer": trks_loose_isolated_vertex,\
+                                            "m_dzSinTheta_cut": 1.5,
+                                            "m_d0_cut": 1.5,
+                                            "m_msgLevel": "debug",
+                                            })
+
+c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociatedTool",\
+                                            "m_inputTrackContainer": trks_tight_isolated,\
+                                            "m_outputTrackContainer": trks_tight_isolated_vertex,\
+                                            "m_dzSinTheta_cut":1.5,
+                                            "m_d0_cut":1.5,
+                                            "m_msgLevel": "debug",
+                                            })
+
+#### Make E/p ttree
+for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_tight_isolated, trks_tight_isolated_vertex]:
     for energy_calib in ["ClusterEnergy", "ClusterEnergyLCW", "CellEnergy"]:
         ''' E/p histograms with LoosePrimary track selection'''
-        c.setalg("EoverPAnalysis", {"m_name": "EoverP_"+energy_calib + track_container,
-                                    "m_fillOutputTree": True,
+        c.setalg("EoverPTreeAlgo", {"m_name": "EoverP_"+energy_calib + track_container,
                                     "m_inTrackContainerName": track_container,
                                     "m_energyCalib": energy_calib, # ClusterEnergy, ClusterEnergyLCW, or CellEnergy
-                                    "m_LarEmax": 1.0, #This selection is applied if m_applyTileCuts is true
-                                    "m_applyTileCuts": False, #whether or not to cut on TileEfracMin
-                                    "m_TileEfracmin": 0.7, #the fraction of energy that should be deposited in the tile calorimeter
-                                    "m_doGlobalTileEfracRanges": False, #plots of different TileEfrac selections that could be applied
-                                    "m_doGlobalEtaRanges": False, #plots with eta < 0.5, 0.5 < eta < 0.7, and eta < 0.7
-                                    "m_doExtraEtaEnergyBinHists": False, 
-                                    "m_doGlobalExtraRanges": False,
-                                    "m_doGlobalEnergyRanges": False,
-                                    "m_doCaloTotal": False,
-                                    "m_doCaloEM": False,
-                                    "m_doCaloHAD": False,
-                                    "m_doBgSubtr" : False,
-                                    "m_doTileLayer": False,
-                                    "m_trkIsoDRmax": .4,
-                                    "m_trkIsoPfrac": .0,
-                                    "m_doTrkPcut": False,
-                                    "m_trkPmin": 1.0,
-                                    "m_trkPmax": 1e8,
-                                    "m_doTrkEtacut": False,
-                                    "m_trkEtamin": 0.,
-                                    "m_trkEtamax": 1.7,
-                                    "m_doTrkPtReweighting": False, # do_trkPtRewighting,
-                                    "m_trkPtReweightingFile": "",
-                                    "m_Pbins": "500, 0, 50",
-                                    "m_doPbinsArray": False,
-                                    "m_Etabins": "50, 0., 2.5",
-                                    "m_doEtabinsArray": False,
-                                    "m_doProfileEta": False,
-                                    "m_doProfileP": False,
-                                    "m_detailStr": "all",
-                                    "m_useCutFlow": False,
-                                    "m_msgLevel": "info"})
+                                    "m_useCutFlow": True,
+                                    "m_msgLevel": "debug"})
 
