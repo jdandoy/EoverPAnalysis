@@ -45,3 +45,6 @@ Thumbs.db
 
 # ipynb files #
 .ipynb_checkpoints
+
+# swp files #
+*.swp
