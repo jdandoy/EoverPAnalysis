@@ -112,7 +112,7 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
 
     trk1_nearest_dR = 999999.0; //how close was the nearest track?
 
-    //Is the track isolated in the EMB2 or EME2?
+    //These values will be set to true if the track is not isolated
     bool trk1_not_isolated_EMB2 = false;
     bool trk1_not_isolated_EME2 = false;
 
@@ -135,12 +135,30 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
 
       //Do the tracks have an extrapolation to EMB?
       if (trk1_hasEMB2 && trk2_hasEMB2) {
-        //the distance between track 1 and track 2 in the EMB?
+        //the distance between track 1 and track 2 in the EMB
         float trk1_trk2_dR_EMB2 = deltaR(trk1_etaEMB2, trk1_phiEMB2, trk2_etaEMB2, trk2_phiEMB2);
         // was this the nearest track? is the track isolated?
         if (trk1_trk2_dR_EMB2 < trk1_nearest_dR) trk1_nearest_dR = trk1_trk2_dR_EMB2;
         if (trk1_trk2_dR_EMB2 <= m_trkIsoDRmax) trk1_not_isolated_EMB2 = true;
       } //tracks have extrapolation to EMB
+
+      //Does track 1 have an EMB extrapolation, and track 2 an EME?
+      //This is to make sure that the tracks are isolated in the calorimeter cracks between the EME and EMB
+      if (trk1_hasEMB2 && trk2_hasEME2){
+        float trk1_EMB_trk2_EME_dR = deltaR(trk1_etaEMB2, trk1_phiEMB2, trk2_etaEME2, trk2_phiEME2);
+        // was this the nearest track? Is the track isolated?
+        if (trk1_EMB_trk2_EME_dR < trk1_nearest_dR) trk1_nearest_dR = trk1_EMB_trk2_EME_dR;
+        if (trk1_EMB_trk2_EME_dR < m_trkIsoDRmax) trk1_not_isolated_EMB2 = true; //the track is in the EMB, and it is not isolated
+      }
+
+      //does track 1 have an EME extrapolation, and track 2 an EMB?
+      //This is to make sure that the tracks are isolated in the calorimeter cracks between the EME and EMB
+      if (trk1_hasEME2 && trk2_hasEMB2){
+        float trk1_EME_trk2_EMB_dR = deltaR(trk1_etaEME2, trk1_phiEME2, trk2_etaEMB2, trk2_phiEMB2);
+        // was this the nearest track? Is the track isolated?
+        if (trk1_EME_trk2_EMB_dR < trk1_nearest_dR) trk1_nearest_dR = trk1_EME_trk2_EMB_dR;
+        if (trk1_EME_trk2_EMB_dR < m_trkIsoDRmax) trk1_not_isolated_EME2 = true;
+      }
 
       //Do the tracks have an extrapoltion to the EME?
       if (trk1_hasEME2 && trk2_hasEME2) {
@@ -150,16 +168,8 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
         if (trk1_trk2_dR_EME2 < trk1_nearest_dR) trk1_nearest_dR = trk1_trk2_dR_EME2;
         if (trk1_trk2_dR_EME2 <= m_trkIsoDRmax) trk1_not_isolated_EME2 = true;
       } //tracks have extrapolation to EME
-
-      // //track isolation - check if trk2 falls within DRmax of trk
-      // if (trk_trk2_dR_min < m_trkIsoDRmax) {  
-      //   // calculate the leading and avg p of the surrounding tracks, 
-      //   // used for TileCal comparisons with Run1
-      //   if (fabs(trk2->qOverP())>0.) surr_trk_sum_p += (1./fabs(trk2->qOverP()))/1e3; 
-      // }
     } // END looping trk2
-    // check track isolation requirement
-    // if (fabs(surr_trk_sum_p/trk_p) > m_trkIsoPfrac) continue;
+
     if (trk1_not_isolated_EMB2) {ANA_MSG_DEBUG("Track failed isolation"); continue;}
     if (trk1_not_isolated_EME2) {ANA_MSG_DEBUG("Track failed isolation"); continue;}
     ANA_MSG_DEBUG("Track passed isolation cut, decorating with dR = " + std::to_string(trk1_nearest_dR));
