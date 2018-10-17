@@ -99,6 +99,8 @@ class EoverPTreeAlgo : public xAH::Algorithm
     uint8_t trk_NPV_2;
     uint8_t trk_NPV_4;
     char trk_charge;
+    char trk_truthFromPileup;
+    char trk_truthIsFake;
     float trk_actualmu;
     float trk_averagemu;
     float trk_corrected_averagemu;

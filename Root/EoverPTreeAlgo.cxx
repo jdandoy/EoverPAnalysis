@@ -123,7 +123,9 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_d0", &trk_d0);
   m_tree->Branch("trk_nTRT", &trk_nTRT);
   m_tree->Branch("trk_charge", &trk_charge);
-  //m_tree->Branch("trk_z0sintheta", &trk_z0sintheta);
+  m_tree->Branch("trk_truthIsFake", &trk_truthIsFake);
+  m_tree->Branch("trk_truthFromPileup", &trk_truthFromPileup);
+  m_tree->Branch("trk_z0sintheta", &trk_z0sintheta);
   m_tree->Branch("trk_p", &trk_p);
   m_tree->Branch("trk_etaEMB2", &trk_etaEMB2);
   m_tree->Branch("trk_phiEMB2", &trk_phiEMB2);
@@ -219,7 +221,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_p = 0.0;
 
     trk_d0 = trk->d0(); //This is the correct d0
-    //trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct z0sin theta impact parameter. I need to fix this later. FOr now, just use the track vertex association tool
+    trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct z0sin theta impact parameter. I need to fix this later. For now, just use the track vertex association tool
 
     if (fabs(trk->qOverP())>0.) trk_p = (1./fabs(trk->qOverP()))/1e3; 
     trk_charge = (trk->qOverP()>0.) ? 1 : -1;
@@ -294,13 +296,29 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
 
     //Get the truth link of the track
     const xAOD::TruthParticle* truthPart = getTruthPtr(trk);
-    trk_truthPdgId = truthPart != nullptr ? truthPart->pdgId() : 0; //Set the value of the pdgId
-    trk_truthEnergy = truthPart != nullptr ? truthPart->e()/1000.0 : -999.0; //Set the value of the truth particle energy
-    if (truthPart != nullptr){
+
+    //Get the truth match probability of the track
+    static SG::AuxElement::ConstAccessor< float > tmpAcc("truthMatchProbability"); //What is the name of the truth match probabily cut variable?
+    float truthProb = tmpAcc(*trk);
+ 
+    //reset the truth information
+    trk_truthPdgId = 0;
+    trk_truthEnergy = -999.0;
+    trk_truthP = -999.0;
+
+    //check if the track passes the truth match probaility cut
+    int m_matchingProbabilityCut = 0.75; //For now there is a hard coded truth matching cut. 
+    //I stole this from https://gitlab.cern.ch/atlas/athena/blob/e81dc8a15b3cb8a5ba9283ae558b37d771028f2d/PhysicsAnalysis/TrackingID/InDetTrackSystematicsTools/InDetTrackSystematicsTools/InDetTrackTruthOriginTool.h
+    if (truthProb < m_matchingProbabilityCut){trk_truthIsFake = 1; trk_truthFromPileup = 0;} //there was no truth match, and the track is a fake
+    else if (!truthPart) {trk_truthFromPileup = 1; trk_truthIsFake = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
+    else { 
+        trk_truthFromPileup = 0;
+        trk_truthIsFake = 0;
+        trk_truthPdgId = truthPart->pdgId();
+        trk_truthEnergy = truthPart->e()/1000.0;
         truthPartVec.SetPtEtaPhiE(truthPart->pt()/1000.0, truthPart->eta(), truthPart->phi(), truthPart->e()/1000.0);
         trk_truthP = truthPartVec.P()/1000.0;
     }
-    else trk_truthP = -999.0; //set the value of the truth particle momentum
 
     // set ttree variables
     m_eventNumber = eventInfo->eventNumber();
