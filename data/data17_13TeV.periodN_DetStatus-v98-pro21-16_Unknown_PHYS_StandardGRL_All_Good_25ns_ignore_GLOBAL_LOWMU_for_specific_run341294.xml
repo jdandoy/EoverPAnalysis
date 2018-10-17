@@ -13,5 +13,5 @@
 <Run>341294</Run>
 <LBRange Start="152" End="248"/>
 </LumiBlockCollection>
-<LumiBlockCollection>
+</NamedLumiRange>
 </LumiRangeCollection>
