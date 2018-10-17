@@ -14,6 +14,7 @@ mkdir source && mkdir run && mkdir build && mkdir run/results
 cd source
 git clone http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers
 git clone http://github.com/luadamek/EoverPAnalysis
+git clone https://github.com/mattleblanc/IDTrackSel.git
 asetup AnalysisBase,21.2.44,here
 cd ../build
 cmake ../source && make
