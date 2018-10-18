@@ -295,29 +295,33 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_E_Total_200 = trk_E_EM_200 + trk_E_HAD_200;
 
     //Get the truth link of the track
-    const xAOD::TruthParticle* truthPart = getTruthPtr(trk);
 
-    //Get the truth match probability of the track
-    static SG::AuxElement::ConstAccessor< float > tmpAcc("truthMatchProbability"); //What is the name of the truth match probabily cut variable?
-    float truthProb = tmpAcc(*trk);
- 
     //reset the truth information
     trk_truthPdgId = 0;
     trk_truthEnergy = -999.0;
     trk_truthP = -999.0;
+    trk_truthIsFake = -1;
+    trk_truthFromPileup = -1;
 
-    //check if the track passes the truth match probaility cut
-    int m_matchingProbabilityCut = 0.75; //For now there is a hard coded truth matching cut. 
-    //I stole this from https://gitlab.cern.ch/atlas/athena/blob/e81dc8a15b3cb8a5ba9283ae558b37d771028f2d/PhysicsAnalysis/TrackingID/InDetTrackSystematicsTools/InDetTrackSystematicsTools/InDetTrackTruthOriginTool.h
-    if (truthProb < m_matchingProbabilityCut){trk_truthIsFake = 1; trk_truthFromPileup = 0;} //there was no truth match, and the track is a fake
-    else if (!truthPart) {trk_truthFromPileup = 1; trk_truthIsFake = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
-    else { 
-        trk_truthFromPileup = 0;
-        trk_truthIsFake = 0;
-        trk_truthPdgId = truthPart->pdgId();
-        trk_truthEnergy = truthPart->e()/1000.0;
-        truthPartVec.SetPtEtaPhiE(truthPart->pt()/1000.0, truthPart->eta(), truthPart->phi(), truthPart->e()/1000.0);
-        trk_truthP = truthPartVec.P()/1000.0;
+    //Get the truth match probability of the track
+    static SG::AuxElement::ConstAccessor< float > tmpAcc("truthMatchProbability"); //What is the name of the truth match probabily cut variable?
+
+    if (tmpAcc.isAvailable(*trk)){
+        const xAOD::TruthParticle* truthPart = getTruthPtr(trk);
+        float truthProb = tmpAcc(*trk);
+        //check if the track passes the truth match probaility cut
+        int m_matchingProbabilityCut = 0.75; //For now there is a hard coded truth matching cut. 
+        //I stole this from https://gitlab.cern.ch/atlas/athena/blob/e81dc8a15b3cb8a5ba9283ae558b37d771028f2d/PhysicsAnalysis/TrackingID/InDetTrackSystematicsTools/InDetTrackSystematicsTools/InDetTrackTruthOriginTool.h
+        if (truthProb < m_matchingProbabilityCut){trk_truthIsFake = 1; trk_truthFromPileup = 0;} //there was no truth match, and the track is a fake
+        else if (!truthPart) {trk_truthFromPileup = 1; trk_truthIsFake = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
+        else { 
+            trk_truthFromPileup = 0;
+            trk_truthIsFake = 0;
+            trk_truthPdgId = truthPart->pdgId();
+            trk_truthEnergy = truthPart->e()/1000.0;
+            truthPartVec.SetPtEtaPhiE(truthPart->pt()/1000.0, truthPart->eta(), truthPart->phi(), truthPart->e()/1000.0);
+            trk_truthP = truthPartVec.P()/1000.0;
+        }
     }
 
     // set ttree variables
