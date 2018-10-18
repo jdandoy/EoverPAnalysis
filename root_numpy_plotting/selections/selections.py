@@ -54,30 +54,56 @@ def ECALEta0_6(trk):
 branches = ["trk_etaEMB2", "trk_etaEME2"]
 sel_ECALEta0_6 = calculation(ECALEta0_6, branches)
 
+#### Here are the eta track selections ###
 def IDEta0_6(trk):
     return IDAcceptanceCalculator(trk, 0.0, 0.6)
 branches = ["trk_etaID"]
 sel_IDEta0_6 = calculation(IDEta0_6, branches)
 
-def IDEta1_9and2_3(trk):
+def IDEta06_11(trk):
+    return IDAcceptanceCalculator(trk, 0.6, 1.1)
+branches = ["trk_etaID"]
+sel_IDEta06_11 = calculation(IDEta06_11, branches)
+
+def IDEta11_14(trk):
+    return IDAcceptanceCalculator(trk, 1.1, 1.4)
+branches = ["trk_etaID"]
+sel_IDEta11_14 = calculation(IDEta11_14, branches)
+
+def IDEta14_15(trk):
+    return IDAcceptanceCalculator(trk, 1.4, 1.5)
+branches = ["trk_etaID"]
+sel_IDEta14_15 = calculation(IDEta14_15, branches)
+
+def IDEta15_18(trk):
+    return IDAcceptanceCalculator(trk, 1.5, 1.8)
+branches = ["trk_etaID"]
+sel_IDEta15_18 = calculation(IDEta15_18, branches)
+
+def IDEta18_23(trk):
+    return IDAcceptanceCalculator(trk, 1.8, 2.3)
+branches = ["trk_etaID"]
+sel_IDEta18_23 = calculation(IDEta18_23, branches)
+
+def IDEta19_23(trk):
     return IDAcceptanceCalculator(trk, 1.9, 2.3)
 branches = ["trk_etaID"]
-sel_IDEta1_9and2_3 = calculation(IDEta1_9and2_3, branches)
+sel_IDEta19_23 = calculation(IDEta19_23, branches)
 
-def PBetween1_2and1_8(trk):
+def PBetween12_18(trk):
     return (1.2 < trk["trk_p"]) & (trk["trk_p"] < 1.8)
 branches = ["trk_p"]
-sel_PBetween1_2and1_8 = calculation(PBetween1_2and1_8, branches)
+sel_PBetween12_18 = calculation(PBetween12_18, branches)
 
-def PBetween2_2and2_8(trk):
+def PBetween22_28(trk):
     return (2.2 < trk["trk_p"]) & (trk["trk_p"] < 2.8)
 branches = ["trk_p"]
-sel_PBetween2_2and2_8 = calculation(PBetween2_2and2_8, branches)
+sel_PBetween22_28 = calculation(PBetween22_28, branches)
 
-def PBetween2_8and3_6(trk):
+def PBetween28_36(trk):
     return (2.8 < trk["trk_p"]) & (trk["trk_p"] < 3.6)
 branches = ["trk_p"]
-sel_PBetween2_8and3_6 = calculation(PBetween2_8and3_6, branches)
+sel_PBetween28_36 = calculation(PBetween28_36, branches)
 
 def NTRT15(trk):
     return trk["trk_nTRT"] >= 15
