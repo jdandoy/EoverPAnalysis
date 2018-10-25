@@ -133,26 +133,26 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_phiEME2", &trk_phiEME2);
   m_tree->Branch("trk_nearest_dR", &trk_nearest_dR);
   m_tree->Branch("trkWeight", &trkWeight);
-  m_tree->Branch("trk_sumEPos_Lar_200", & trk_sumEPos_Lar_200); 
-  m_tree->Branch("trk_sumEPos_Lar_100", &trk_sumEPos_Lar_100);
-  m_tree->Branch("trk_sumE_Lar_200", &trk_sumE_Lar_200);
-  m_tree->Branch("trk_sumE_Lar_100", &trk_sumE_Lar_100);
-  m_tree->Branch("trk_sumEPos_Tile_200", &trk_sumEPos_Tile_200);
-  m_tree->Branch("trk_sumEPos_Tile_100", &trk_sumEPos_Tile_100);
-  m_tree->Branch("trk_sumE_Tile_200", &trk_sumE_Tile_200);
-  m_tree->Branch("trk_sumE_Tile_100", &trk_sumE_Tile_100);
+  m_tree->Branch("trk_sumEPos_EM_200", & trk_sumEPos_EM_200); 
+  m_tree->Branch("trk_sumEPos_EM_100", &trk_sumEPos_EM_100);
+  m_tree->Branch("trk_sumE_EM_200", &trk_sumE_EM_200);
+  m_tree->Branch("trk_sumE_EM_100", &trk_sumE_EM_100);
+  m_tree->Branch("trk_sumEPos_HAD_200", &trk_sumEPos_HAD_200);
+  m_tree->Branch("trk_sumEPos_HAD_100", &trk_sumEPos_HAD_100);
+  m_tree->Branch("trk_sumE_HAD_200", &trk_sumE_HAD_200);
+  m_tree->Branch("trk_sumE_HAD_100", &trk_sumE_HAD_100);
   m_tree->Branch("trk_sumEPos_Total_200", &trk_sumEPos_Total_200);
   m_tree->Branch("trk_sumEPos_Total_100", &trk_sumEPos_Total_100);
   m_tree->Branch("trk_sumE_Total_200", &trk_sumE_Total_200);
   m_tree->Branch("trk_sumE_Total_100", &trk_sumE_Total_100);
-  m_tree->Branch("trk_TileEfrac_200", &trk_TileEfrac_200);
-  m_tree->Branch("trk_TileEfrac_100", &trk_TileEfrac_100);
-  m_tree->Branch("trk_E_EM_100", &trk_E_EM_100);
-  m_tree->Branch("trk_E_EM_200", &trk_E_EM_200);
+  m_tree->Branch("trk_HADEfrac_200", &trk_HADEfrac_200);
+  m_tree->Branch("trk_HADEfrac_100", &trk_HADEfrac_100);
+  m_tree->Branch("trk_E_EM_nopresampler_100", &trk_E_EM_nopresampler_100);
+  m_tree->Branch("trk_E_EM_nopresampler_200", &trk_E_EM_nopresampler_200);
   m_tree->Branch("trk_E_HAD_100", &trk_E_HAD_100); 
   m_tree->Branch("trk_E_HAD_200", &trk_E_HAD_200);
-  m_tree->Branch("trk_E_Total_100", &trk_E_Total_100);
-  m_tree->Branch("trk_E_Total_200", &trk_E_Total_200);
+  m_tree->Branch("trk_E_Total_nopresampler_100", &trk_E_Total_nopresampler_100);
+  m_tree->Branch("trk_E_Total_nopresampler_200", &trk_E_Total_nopresampler_200);
   m_tree->Branch("trk_NPV_2", &trk_NPV_2);
   m_tree->Branch("trk_NPV_4", &trk_NPV_4);
   m_tree->Branch("trk_truthPdgId", &trk_truthPdgId);
@@ -234,35 +234,35 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     // check LAr energy loss requirement
 
     ANA_MSG_DEBUG("Summing up energy deposits in calorimeter");
-    trk_sumEPos_Lar_100 = 0.; 
-    trk_sumEPos_Lar_200 = 0.; 
-    trk_sumE_Lar_200 = 0.;
-    trk_sumE_Lar_100 = 0.;
-    for (unsigned int i=0; i<m_layer_lar.size(); i++) {
-      float trk_E_tmp_200 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_lar[i]+"_200"))/1e3; 
-      float trk_E_tmp_100 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_lar[i]+"_100"))/1e3; 
-      trk_sumE_Lar_200 += trk_E_tmp_200;
-      trk_sumE_Lar_100 += trk_E_tmp_100;
+    trk_sumEPos_EM_100 = 0.; 
+    trk_sumEPos_EM_200 = 0.; 
+    trk_sumE_EM_200 = 0.;
+    trk_sumE_EM_100 = 0.;
+    for (unsigned int i=0; i<m_layer_EM.size(); i++) {
+      float trk_E_tmp_200 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_EM[i]+"_200"))/1e3; 
+      float trk_E_tmp_100 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_EM[i]+"_100"))/1e3; 
+      trk_sumE_EM_200 += trk_E_tmp_200;
+      trk_sumE_EM_100 += trk_E_tmp_100;
       if (trk_E_tmp_200 > 0.) // only include E > 0 (i.e. not calorimeter noise)
-        trk_sumEPos_Lar_200 += trk_E_tmp_200;
+        trk_sumEPos_EM_200 += trk_E_tmp_200;
       if (trk_E_tmp_100 > 0.) // only include E > 0 (i.e. not calorimeter noise)
-        trk_sumEPos_Lar_100 += trk_E_tmp_100;
+        trk_sumEPos_EM_100 += trk_E_tmp_100;
     }
 
-    // check E(tile)/E(total) requirement
-    trk_sumEPos_Tile_200 = 0.; 
-    trk_sumEPos_Tile_100 = 0.; 
-    trk_sumE_Tile_200 = 0.;
-    trk_sumE_Tile_100 = 0.;
-    for (unsigned int i=0; i<m_layer_tile.size(); i++) {
-      float trk_E_tmp_200 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_tile[i]+"_200"))/1e3; 
-      float trk_E_tmp_100 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_tile[i]+"_100"))/1e3; 
-      trk_sumE_Tile_200 += trk_E_tmp_200;
-      trk_sumE_Tile_100 += trk_E_tmp_100;
+    // check E(HAD)/E(total) requirement
+    trk_sumEPos_HAD_200 = 0.; 
+    trk_sumEPos_HAD_100 = 0.; 
+    trk_sumE_HAD_200 = 0.;
+    trk_sumE_HAD_100 = 0.;
+    for (unsigned int i=0; i<m_layer_HAD.size(); i++) {
+      float trk_E_tmp_200 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_HAD[i]+"_200"))/1e3; 
+      float trk_E_tmp_100 = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer_HAD[i]+"_100"))/1e3; 
+      trk_sumE_HAD_200 += trk_E_tmp_200;
+      trk_sumE_HAD_100 += trk_E_tmp_100;
       if (trk_E_tmp_200 > 0.) // only include E > 0 (i.e. not calorimeter noise)
-        trk_sumEPos_Tile_200 += trk_E_tmp_200;
+        trk_sumEPos_HAD_200 += trk_E_tmp_200;
       if (trk_E_tmp_100 > 0.) // only include E > 0 (i.e. not calorimeter noise)
-        trk_sumEPos_Tile_100 += trk_E_tmp_100;
+        trk_sumEPos_HAD_100 += trk_E_tmp_100;
     }
 
     trk_sumEPos_Total_200 = 0.;
@@ -279,20 +279,20 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
       if (trk_E_100_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
         trk_sumEPos_Total_100 += trk_E_100_tmp; 
     }
-    trk_TileEfrac_200 = 0.;
+    trk_HADEfrac_200 = 0.;
     if (trk_sumE_Total_200 > 0.)  
-      trk_TileEfrac_200 = trk_sumE_Tile_200/trk_sumE_Total_200;
-    trk_TileEfrac_100 = 0.;
+      trk_HADEfrac_200 = trk_sumE_HAD_200/trk_sumE_Total_200;
+    trk_HADEfrac_100 = 0.;
     if (trk_sumE_Total_100 > 0.)  
-      trk_TileEfrac_100 = trk_sumE_Tile_100/trk_sumE_Total_100;
+      trk_HADEfrac_100 = trk_sumE_HAD_100/trk_sumE_Total_100;
 
     // cluster energy associated with the track
-    trk_E_EM_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3; 
-    trk_E_EM_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3; 
+    trk_E_EM_nopresampler_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3;
+    trk_E_EM_nopresampler_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3;
     trk_E_HAD_100 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_100"))/1e3; 
     trk_E_HAD_200 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_200"))/1e3; 
-    trk_E_Total_100 = trk_E_EM_100 + trk_E_HAD_100;
-    trk_E_Total_200 = trk_E_EM_200 + trk_E_HAD_200;
+    trk_E_Total_nopresampler_100 = trk_E_EM_nopresampler_100 + trk_E_HAD_100;
+    trk_E_Total_nopresampler_200 = trk_E_EM_nopresampler_200 + trk_E_HAD_200;
 
     //Get the truth link of the track
 

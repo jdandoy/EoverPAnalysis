@@ -71,30 +71,32 @@ class EoverPTreeAlgo : public xAH::Algorithm
 
     float trkWeight;
 
-    float trk_sumEPos_Lar_100;
-    float trk_sumEPos_Lar_200;
-    float trk_sumE_Lar_200;
-    float trk_sumE_Lar_100;
+    float trk_sumEPos_EM_100;
+    float trk_sumEPos_EM_200;
+    float trk_sumE_EM_200;
+    float trk_sumE_EM_100;
 
-    float  trk_sumEPos_Tile_200;
-    float  trk_sumEPos_Tile_100;
-    float  trk_sumE_Tile_200;
-    float  trk_sumE_Tile_100;
+    float  trk_sumEPos_HAD_200;
+    float  trk_sumEPos_HAD_100;
+    float  trk_sumE_HAD_200;
+    float  trk_sumE_HAD_100;
 
     float  trk_sumEPos_Total_200;
     float  trk_sumEPos_Total_100;
     float  trk_sumE_Total_200;
     float  trk_sumE_Total_100;
 
-    float  trk_TileEfrac_200;
-    float  trk_TileEfrac_100;
+    float  trk_HADEfrac_200;
+    float  trk_HADEfrac_100;
 
     float trk_E_EM_100;
+    float trk_E_EM_nopresampler_100;
     float trk_E_EM_200;
+    float trk_E_EM_nopresampler_200;
     float trk_E_HAD_100; 
     float trk_E_HAD_200;
-    float trk_E_Total_100;
-    float trk_E_Total_200;
+    float trk_E_Total_nopresampler_100;
+    float trk_E_Total_nopresampler_200;
 
     uint8_t trk_NPV_2;
     uint8_t trk_NPV_4;
@@ -115,9 +117,8 @@ class EoverPTreeAlgo : public xAH::Algorithm
     TH1D* m_trk_cutflowHist_1;  //!
     // list of calo layers
     const std::vector<std::string> m_layer = {"PreSamplerB","PreSamplerE", "EMB1", "EMB2", "EMB3", "EME1", "EME2", "EME3", "HEC0", "HEC1", "HEC2", "HEC3", "TileBar0", "TileBar1", "TileBar2", "TileGap1", "TileGap2", "TileGap3", "TileExt0", "TileExt1", "TileExt2"}; //! array of all the calo layers
-    const std::vector<std::string> m_layer_lar = {"EMB1", "EMB2", "EMB3", "EME1", "EME2", "EME3", "HEC0", "HEC1", "HEC2", "HEC3"}; //! array of lar layers only
-    const std::vector<std::string> m_layer_tile = {"TileBar0", "TileBar1", "TileBar2", "TileGap1", "TileGap2", "TileGap3", "TileExt0", "TileExt1", "TileExt2"}; //! array of tile layers only
-
+    const std::vector<std::string> m_layer_EM = {"PreSamplerB","PreSamplerE", "EMB1", "EMB2", "EMB3", "EME1", "EME2", "EME3"};
+    const std::vector<std::string> m_layer_HAD = {"TileBar0", "TileBar1", "TileBar2", "TileGap1", "TileGap2", "TileGap3", "TileExt0", "TileExt1", "TileExt2", "HEC0", "HEC1", "HEC2", "HEC3"}; //! array of HAD layers only
 
     // variables that don't get filled at submission time should be
     // protected from being send from the submission node to the worker
