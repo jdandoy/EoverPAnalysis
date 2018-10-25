@@ -27,9 +27,7 @@ source x86_64-slc6-gcc62-opt/setup.sh
 cd ../run
 mkdir results
 rucio download user.luadamek.14704913.EXT1._000001.pool.root
-xAH_run.py --files $TestArea/../run/user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root --config $TestArea/EoverPAnalysis/scripts/config_eop_mc_lowmu_runII_general.py --submitDir $TestArea/../run/results/eop_mc_test_0 --force direct
-cp results/eop_mc_test_0/hist-user.luadamek.root results/
-python $TestArea/EoverPAnalysis/scripts/plotting/make_plots_1d_hists.py --selections EoverP_LoosePrimaryTrks_ClusterEnergy_Run1paper
+xAH_run.py --files user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root --config ../source/EoverPAnalysis/scripts/config_eop_tree_dump.py --submitDir testing --force direct
 ```
 
 ## Submitting Grid Jobs in Release 21
