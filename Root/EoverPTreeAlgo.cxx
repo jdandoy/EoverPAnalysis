@@ -218,11 +218,19 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     else {ANA_MSG_WARNING("Coulnd't find the decorator for the dR to the nearest track"); trk_nearest_dR = -1.0;}
 
     trk_pt = trk->pt()/1e3;
-    trk_p = 0.0;
+
+    //Get the value of the eta and phi co-ordinates when extrapolated to the EMB/EME
+    trk_etaEMB2 = trk->auxdata<float>("CALO_trkEta_EMB2");
+    trk_phiEMB2 = trk->auxdata<float>("CALO_trkPhi_EMB2");
+
+    // EME2
+    trk_etaEME2 = trk->auxdata<float>("CALO_trkEta_EME2");
+    trk_phiEME2 = trk->auxdata<float>("CALO_trkPhi_EME2");
 
     trk_d0 = trk->d0(); //This is the correct d0
     trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct z0sin theta impact parameter. I need to fix this later. For now, just use the track vertex association tool
 
+    trk_p = 0.0;
     if (fabs(trk->qOverP())>0.) trk_p = (1./fabs(trk->qOverP()))/1e3; 
     trk_charge = (trk->qOverP()>0.) ? 1 : -1;
 

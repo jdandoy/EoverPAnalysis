@@ -13,6 +13,7 @@ pyximport.install(setup_args={"include_dirs":np.get_include()},
 
 from util import getWeightsFromBins
 
+
 def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
     '''normalize the weights to the histogram'''
     low_edges = []
@@ -102,7 +103,8 @@ def cleanUpHistograms(h):
 MCColor = ROOT.kRed
 DataColor = ROOT.kBlack
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000):
+CANVAS_COUNTER = 0
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None):
     ''' Draw the data vs MC ratio for the MC and data histograms'''
 
     MCHist = histogram_dict[MCKey]
@@ -117,7 +119,11 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     legend.SetBorderSize(0)
     toGlobalScope(legend)
 
-    canvas = ROOT.TCanvas(MCKey + DataKey + MCHist.GetTitle(), MCKey + DataKey + MCHist.GetTitle(), 1300, 800)
+    global CANVAS_COUNTER #This is to make sure that no two canvases ever get the same name. Otherwise root complains...
+    canvas_name = "Canvas" + MCKey + DataKey + MCHist.GetTitle() + str(CANVAS_COUNTER)
+    CANVAS_COUNTER = CANVAS_COUNTER + 1
+    canvas = ROOT.TCanvas(canvas_name, canvas_name, 1300, 800)
+
 
     top_pad = ROOT.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
     top_pad.Draw()
@@ -189,6 +195,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     bottom_pad.cd()
     toGlobalScope(bottom_pad)
 
+
     data_ratio = DataHist.Clone("data_histogram")
     data_ratio.Divide(MCHist)
     data_ratio = cleanUpHistograms(data_ratio)
@@ -197,6 +204,9 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
 
     MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
     variableLabel = MCHist.GetXaxis().GetTitle()
+
+    if xTicksNumber != None:
+        data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
 
     data_ratio.GetYaxis().SetTitle("Data/MC")
     scale_ratio = (top_pad.GetWh()*top_pad.GetAbsHNDC())/(bottom_pad.GetWh() * bottom_pad.GetAbsHNDC())
@@ -295,7 +305,7 @@ def DivideHistograms(hist_dict1, hist_dict2):
 
     return_dict = {}
     for channel in dict1_keys:
-        Hist_clone1 = hist_dict1[channel].Clone(channel + "divided")
+        Hist_clone1 = hist_dict1[channel].Clone(hist_dict1[channel].GetName() + "divided" + hist_dict2[channel].GetName())
         Hist_clone1.GetXaxis().SetTitle(hist_dict1[channel].GetXaxis().GetTitle())
         Hist_clone1.GetYaxis().SetTitle(hist_dict1[channel].GetYaxis().GetTitle())
         Hist_clone1.Divide(hist_dict2[channel])
@@ -317,6 +327,7 @@ class Plotter:
         self.verbose = False
         self.base_selections = base_selections
         self.NormalizationWeightsDictionary = {} # A dictionary of channel to variable to the weights needed for the reweighting of this variable
+        self.object_counter = 0
 
     def AddInputDictionary(self, dictionary):
         '''Take an input dictionary of channel names to: tuple of (channel descriptor for legend, list of [input root filename strings])'''
@@ -327,66 +338,46 @@ class Plotter:
 
     def CheckForNormalizationWeights(self, channel, filename):
         if channel not in self.NormalizationWeightsDictionary:
-            print "no normalization weights found for channel " + filename
+            print "no normalization weights found for file " + filename
             return False
         if filename not in self.NormalizationWeightsDictionary[channel]: raise ValueError("There should have been a set of normalization weights for this file")
         print "Found renormalization weights for file " + filename
-
         return True
 
-    def GetNumberOfTracks(self, channel):
+    def GetNumberOfTracks(self, channel, list_selections = [],variables = []):
         '''Get the total weighted number of Tracks. This is to normalize the distributions to each other'''
-
-        list_selections = []
         branches = []
-        variables = []
-
         weightedNumber = 0
 
         for filename in self.channelFiles[channel]:
             if self.verbose: print "Reading from file " + filename
-            input_file = ROOT.TFile(filename, "READ")
-            if self.verbose: input_file.ls()
-
-            if self.verbose: print "Getting tree " + self.treeName
-            input_tree = input_file.Get(self.treeName)
-            total_entries = input_tree.GetEntries()
-            selected_entries = input_tree.GetEntries(self.base_selections)
-            input_file.Close()
-            del input_tree
-            del input_file
-
-            branches = GetListOfNeededBranches(variables, list_selections)
-            #The configuration for the fetch results function.
-            result = GetData(partition = (0, total_entries), bare_branches = branches, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
-
-            variable_dict = result["variable_dict"]
-            weights = variable_dict["weights"]
-            if channel in self.NormalizationWeightsDictionary:
-                weights = weights * self.NormalizationWeightsDictionary[channel][filename] #get the normalization weights to make distributions agree between data and MC
+            variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
             weightedNumber += np.sum(weights)
-
         return weightedNumber
 
-    def SetTotalTrackNumberNormalization(self, channel, normalization):
+    def GetNumSelectedEntries(self, filename):
+        input_file = ROOT.TFile(filename, "READ")
+        input_tree = input_file.Get(self.treeName)
+        selected_entries = input_tree.GetEntries(self.base_selections)
+        return selected_entries
+
+    def GetNumEntries(self, filename):
+        input_file = ROOT.TFile(filename, "READ")
+        input_tree = input_file.Get(self.treeName)
+        entries = input_tree.GetEntries()
+        return entries
+
+    def UpdateNormalizationWeights(self, channel, filename, normalization):
+        selected_entries = self.GetNumSelectedEntries(filename)
         if channel not in self.NormalizationWeightsDictionary:
             self.NormalizationWeightsDictionary[channel] = {}
-            for filename in self.channelFiles[channel]:
-                if filename not in self.NormalizationWeightsDictionary[channel]:
-                   input_file = ROOT.TFile(filename, "READ")
-                   if self.verbose: input_file.ls()
-                   if self.verbose: print "Getting tree " + self.treeName
-                   input_tree = input_file.Get(self.treeName)
-                   total_entries = input_tree.GetEntries()
-                   selected_entries = input_tree.GetEntries(self.base_selections)
-                   input_file.Close()
-                   del input_tree
-                   del input_file
-                   self.NormalizationWeightsDictionary[channel][filename] = np.ones(selected_entries) * normalization
-        else:
-            for filename in self.channelFiles[channel]:
-                self.NormalizationWeightsDictionary[channel][filename] *= normalization
+        if filename not in self.NormalizationWeightsDictionary[channel]:
+            self.NormalizationWeightsDictionary[channel][filename] = np.ones(selected_entries)
+        self.NormalizationWeightsDictionary[channel][filename] *= normalization
 
+    def SetTotalTrackNumberNormalization(self, channel, normalization):
+        for filename in self.channelFiles[channel]:
+            self.UpdateNormalizationWeights(channel, filename, normalization)
 
     def UseVariableAndHistogramToNormalize(self, variable, HistDict, ChannelToNormalize, ChannelToNormalizeTo):
          '''take a variable, and a histogram, and set up the plotter so that it always normalizes the ChannelToNormalize to the ChannelToNormalilzeTo'''
@@ -397,40 +388,50 @@ class Plotter:
          ratio_hist = TargetHist.Clone("NormalizationHistogram" + variable.name + ChannelToNormalize)
          ratio_hist.Divide(UnNormalizedHist)
 
-         if ChannelToNormalize not in self.NormalizationWeightsDictionary:
-            self.NormalizationWeightsDictionary[ChannelToNormalize] = {}
-
          for filename in self.channelFiles[ChannelToNormalize]:
-            print "Reading from file " + filename
-            print "Corresponding to channel " + ChannelToNormalize
-            input_file = ROOT.TFile(filename, "READ")
-
-            if self.verbose: input_file.ls()
-
-            if self.verbose: print "Getting tree " + self.treeName
-            input_tree = input_file.Get(self.treeName)
-            total_entries = input_tree.GetEntries()
-            selected_entries = input_tree.GetEntries(self.base_selections)
-            input_file.Close()
-            del input_tree
-            del input_file
-
-            if filename not in self.NormalizationWeightsDictionary[ChannelToNormalize]:
-                print "Filename not found in the weights dictionary"
-                self.NormalizationWeightsDictionary[ChannelToNormalize][filename] = np.ones(selected_entries)
-
             variables = [variable]
             list_selections = []
+            variable_dict, weights = self.GetVariablesAndWeights(ChannelToNormalize, filename, variables, list_selections)
 
-            branches = GetListOfNeededBranches(variables, list_selections)
-            #The configuration for the fetch results function.
-            result = GetData(partition = (0, total_entries), bare_branches = branches, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections,  verbose = self.verbose)
-            variable_in_histogram = result["variable_dict"][variable.name]
-            variable_in_histogram.shape
+            variable_in_histogram = variable_dict[variable.name]
             normalization = WeightsToNormalizeToHistogram(variable_in_histogram, ratio_hist)
-            print normalization.shape
-            #store the normalization for this channel:
-            self.NormalizationWeightsDictionary[ChannelToNormalize][filename] *= normalization
+            self.UpdateNormalizationWeights(ChannelToNormalize, filename, normalization)
+
+    def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
+        ''' Get the data from a specific file'''
+        total_entries = self.GetNumEntries(filename)
+        branches = GetListOfNeededBranches(variables, list_selections)
+        #The configuration for the fetch results function.
+        result = GetData(partition = (0, total_entries), bare_branches = branches, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
+
+        ##Get the resulting dictionary of variables, selections, and weights
+        selection_dict = result["selection_dict"]
+        variable_dict = result["variable_dict"]
+        weights = variable_dict["weights"]
+
+        #Do we need to renormalize this channel?
+        toNormalize = self.CheckForNormalizationWeights(channel, filename)
+        if toNormalize:
+            weights = weights * self.NormalizationWeightsDictionary[channel][filename]
+
+        #prepare to loop through the selections and apply all of them
+        if self.verbose: print("\n\n\n\n\n===============\nPreselections are being applied")
+        if self.verbose: print("Pre-selection event count" + str(len(weights)))
+        total_selection = np.ones(len(weights)) > 0.0
+        for selection in list_selections:
+            if self.verbose: print("applying selection " + str(selection.name))
+            if self.verbose: print(selection_dict[selection.name])
+            total_selection &= selection_dict[selection.name]
+            #cutflowsWeighted.Fill(selection_name, np.sum(weights[total_selection]))
+            #cutflows.Fill(selection_name, np.sum(1*total_selection))
+        if self.verbose: print("post preselection event count" + str(np.sum(1*total_selection)))
+
+        #Apply the selections to the variables and return them.
+        weights = weights[total_selection]
+        for variable in variable_dict:
+            variable_dict[variable] = variable_dict[variable][total_selection]
+
+        return variable_dict, weights
 
 
     def GetHistograms(self, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", normalize = False):
@@ -444,9 +445,11 @@ class Plotter:
         for sel in list_selections:
             description_string += sel.name
 
+        description_string += str(self.object_counter)
+        self.object_counter += 1
+
         #First go and get all of the histograms that we need
         histogram_dictionary = {}
-        LegendLabels = {}
         for channel in self.channels:
             if (type(bins) == list):
                 bins_array = array('d',bins)
@@ -458,53 +461,68 @@ class Plotter:
             histogram_dictionary[channel].Sumw2()
 
         for channel in self.channels:
+            normalization_weight = 0.0
+            print "Reading files for channel " + channel
             for filename in self.channelFiles[channel]:
-                print "Reading from file " + filename
-                print "Corresponding to channel " + channel
-                input_file = ROOT.TFile(filename, "READ")
-
-                if self.verbose: input_file.ls()
-
-                if self.verbose: print "Getting tree " + self.treeName
-                input_tree = input_file.Get(self.treeName)
-                total_entries = input_tree.GetEntries()
-                selected_entries = input_tree.GetEntries(self.base_selections)
-                input_file.Close()
-                del input_tree
-                del input_file
-
-                branches = GetListOfNeededBranches(variables, list_selections)
-
-                #The configuration for the fetch results function.
-                result = GetData(partition = (0, total_entries), bare_branches = branches, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
-
-                selection_dict = result["selection_dict"]
-                variable_dict = result["variable_dict"]
-                weights = variable_dict["weights"]
-
-                toNormalize = self.CheckForNormalizationWeights(channel, filename)
-                if toNormalize:
-                    weights = weights * self.NormalizationWeightsDictionary[channel][filename]
-
-                #prepare to loop through the selections and apply all of them
-                if self.verbose: print("\n\n\n\n\n===============\nPreselections are being applied")
-                if self.verbose: print("Pre-selection event count" + str(len(weights)))
-                total_selection = np.ones(len(weights)) > 0.0
-                for selection in list_selections:
-                    if self.verbose: print("applying selection " + str(selection.name))
-                    if self.verbose: print(selection_dict[selection.name])
-                    total_selection &= selection_dict[selection.name]
-                    #cutflowsWeighted.Fill(selection_name, np.sum(weights[total_selection]))
-                    #cutflows.Fill(selection_name, np.sum(1*total_selection))
-
-                if self.verbose: print("post preselection event count" + str(np.sum(1*total_selection)))
-
-                #for the events that pass the selections, fill the events into the histograms
-                to_fill = variable_dict[variableNameToFill][total_selection]
-                to_weight = weights[total_selection]
-
+                variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
+                to_fill = variable_dict[variableNameToFill]
+                to_weight = weights
+                if self.verbose: print(len(to_fill))
+                if self.verbose: print(len(to_weight))
+                if self.verbose: print to_fill
+                if self.verbose: print to_weight
+                if self.verbose: print("Filling Variable " + variable.name)
+                fill_hist(histogram_dictionary[channel], to_fill, to_weight)
                 if normalize:
-                    to_weight = to_weight/np.sum(to_weight)
+                    normalization_weight += np.sum(to_weight)
+
+            if normalize:
+                histogram_dictionary[channel].Scale(1./normalization_weight)
+
+
+        return histogram_dictionary
+
+
+    def Get2DHistograms(self, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", normalize = False):
+        '''given a variable, Draw the histogram for the given variable'''
+        variableNameToFill_x = variable_x.name
+        variableNameToFill_y = variable_y.name
+        variables = [variable_x, variable_y]
+
+        #Create a unique name for the 2D histogram
+        description_string = "2DHistogram"
+        for variable in variables:
+            description_string += variable.name
+        for sel in list_selections:
+            description_string += sel.name
+        description_string += str(self.object_counter)
+        self.object_counter += 1
+
+        #First go and get all of the histograms that we need
+        histogram_dictionary = {}
+        for channel in self.channels:
+            if (type(bins_x) == list and type(bins_y) = list):
+                bins_array_x = array('d',bins_x)
+                bins_array_y = array('d',bins_y)
+                histogram_dictionary[channel] = ROOT.TH2D(description_string, description_string, len(bins_array_x)-1, bins_array_x, len(bins_array_y)-1, bins_array_y)
+            else if (type(bins_x) != list and type(bins_y) != list):
+                histogram_dictionary[channel] = ROOT.TH2D(description_string, description_string, bins_x, range_low_x + 0.0000001, range_high_z - 0.000001, bins_y, range_low_y+0.0000001, range_high_y + 0.0000001)
+            else:
+                raise ValueError("both of the bins_x and bins_y variables need to be the same type. Both integers, or both lists")
+            histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
+            histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
+            histogram_dictionary[channel].Sumw2()
+
+        for channel in self.channels:
+            normalization_weight = 0.0
+            for filename in self.channelFiles[channel]:
+                variable_dict, weights = self.GetVariablesAndWeights(filename, variables, selections)
+                to_fill_x = variable_dict[variableNameToFill_x]
+                to_fill_y = variable_dict[variableNameToFill_y
+                x_y_list = [to_fill_x, to_fill_y]
+                to_fill = np.vstack(x_y_list)
+                to_fill = np.swapaxes(to_fill, 1, 0)#This is to get it to the right shape for filling
+                to_weight = weights
                 if self.verbose: print(len(to_fill))
                 if self.verbose: print(len(to_weight))
                 if self.verbose: print to_fill
@@ -512,9 +530,13 @@ class Plotter:
                 if self.verbose: print("Filling Variable " + variable.name)
                 fill_hist(histogram_dictionary[channel], to_fill, to_weight)
 
+                if normalize:
+                    normalization_weight += np.sum(to_weight)
+
+            if normalize:
+                histogram_dictionary[channel].Scale(1./normalization_weight)
+
         return histogram_dictionary
-
-
 
 
 
