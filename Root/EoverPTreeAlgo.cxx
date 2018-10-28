@@ -217,6 +217,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     if (acc_dRToNearestTrack.isAvailable(*trk)) trk_nearest_dR = acc_dRToNearestTrack(*trk);
     else {ANA_MSG_WARNING("Coulnd't find the decorator for the dR to the nearest track"); trk_nearest_dR = -1.0;}
 
+    //This is the track pT
     trk_pt = trk->pt()/1e3;
 
     //Get the value of the eta and phi co-ordinates when extrapolated to the EMB/EME
@@ -230,6 +231,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_d0 = trk->d0(); //This is the correct d0
     trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct z0sin theta impact parameter. I need to fix this later. For now, just use the track vertex association tool
 
+    //get the track momentum from q/p
     trk_p = 0.0;
     if (fabs(trk->qOverP())>0.) trk_p = (1./fabs(trk->qOverP()))/1e3; 
     trk_charge = (trk->qOverP()>0.) ? 1 : -1;
@@ -239,8 +241,8 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_phiID = trk->phi();
 
     trkWeight = eventWeight;//The track weight is just the event weight
-    // check LAr energy loss requirement
 
+    //Sum all energy deposits in the EM calorimeter
     ANA_MSG_DEBUG("Summing up energy deposits in calorimeter");
     trk_sumEPos_EM_100 = 0.; 
     trk_sumEPos_EM_200 = 0.; 
@@ -257,7 +259,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         trk_sumEPos_EM_100 += trk_E_tmp_100;
     }
 
-    // check E(HAD)/E(total) requirement
+    //sum all energy deposits in the HAD calorimeter
     trk_sumEPos_HAD_200 = 0.; 
     trk_sumEPos_HAD_100 = 0.; 
     trk_sumE_HAD_200 = 0.;
@@ -273,6 +275,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         trk_sumEPos_HAD_100 += trk_E_tmp_100;
     }
 
+    //sum all energy deposits, regardless of location in calorimeter
     trk_sumEPos_Total_200 = 0.;
     trk_sumEPos_Total_100 = 0.;
     trk_sumE_Total_200 = 0.;
@@ -294,15 +297,13 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     if (trk_sumE_Total_100 > 0.)  
       trk_HADEfrac_100 = trk_sumE_HAD_100/trk_sumE_Total_100;
 
-    // cluster energy associated with the track
+    //These decorations are available at the derivation level. the "EM" energy does not include the endcap and barrel presamplers.
     trk_E_EM_nopresampler_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3;
     trk_E_EM_nopresampler_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3;
     trk_E_HAD_100 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_100"))/1e3; 
     trk_E_HAD_200 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_200"))/1e3; 
     trk_E_Total_nopresampler_100 = trk_E_EM_nopresampler_100 + trk_E_HAD_100;
     trk_E_Total_nopresampler_200 = trk_E_EM_nopresampler_200 + trk_E_HAD_200;
-
-    //Get the truth link of the track
 
     //reset the truth information
     trk_truthPdgId = 0;
@@ -313,7 +314,6 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
 
     //Get the truth match probability of the track
     static SG::AuxElement::ConstAccessor< float > tmpAcc("truthMatchProbability"); //What is the name of the truth match probabily cut variable?
-
     if (tmpAcc.isAvailable(*trk)){
         const xAOD::TruthParticle* truthPart = getTruthPtr(trk);
         float truthProb = tmpAcc(*trk);
