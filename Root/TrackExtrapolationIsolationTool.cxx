@@ -80,10 +80,11 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
 
   // retrieve the tracking cutflows for the plots
  
-  const xAOD::TrackParticleContainer_v1* inputTracks  = 0;
+  const xAOD::TrackParticleContainer* inputTracks(nullptr);
   if (!m_event->retrieve(inputTracks, m_inputTrackContainer).isSuccess()){
      Error("execute()","couldn't retrieve the input track container");
   }
+  static SG::AuxElement::Decorator< float > nearestDRDecorator ("dRToNearestTrack");
 
   ConstDataVector<xAOD::TrackParticleContainer>* selectedTracks(nullptr);
   selectedTracks = new ConstDataVector<xAOD::TrackParticleContainer>(SG::VIEW_ELEMENTS);
@@ -171,10 +172,9 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
     } // END looping trk2
 
     if (trk1_not_isolated_EMB2) {ANA_MSG_DEBUG("Track failed isolation"); continue;}
-    if (trk1_not_isolated_EME2) {ANA_MSG_DEBUG("Track failed isolation"); continue;}
+    if (trk1_not_isolated_EME2) {ANA_MSG_DEBUG("Track failed isolation");  continue;}
     ANA_MSG_DEBUG("Track passed isolation cut, decorating with dR = " + std::to_string(trk1_nearest_dR));
-    SG::AuxElement::Decorator< float > nearestDRDecorator ("dRToNearestTrack");
-    trk1_nearest_dR = nearestDRDecorator(*trk1);//decorate the track with the distance to the nearest track
+    nearestDRDecorator(*trk1) = trk1_nearest_dR;//decorate the track with the distance to the nearest track
     selectedTracks->push_back(trk1);
     if(m_useCutFlow) m_trk_cutflowHist_1->Fill("Isolated in EM Layer 2", 1);
   } //END looping trk1
