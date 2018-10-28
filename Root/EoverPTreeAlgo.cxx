@@ -158,6 +158,7 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_truthPdgId", &trk_truthPdgId);
   m_tree->Branch("trk_truthEnergy", &trk_truthEnergy);
   m_tree->Branch("trk_truthP", &trk_truthP);
+  m_tree->Branch("trk_truthProb", &trk_truthProb);
   m_tree->Branch("trk_actualmu", &trk_actualmu);
   m_tree->Branch("trk_averagemu", &trk_averagemu);
   m_tree->Branch("trk_corrected_averagemu", &trk_corrected_averagemu);
@@ -311,16 +312,17 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_truthP = -999.0;
     trk_truthIsFake = -1;
     trk_truthFromPileup = -1;
+    trk_truthProb = -1.0;
 
     //Get the truth match probability of the track
     static SG::AuxElement::ConstAccessor< float > tmpAcc("truthMatchProbability"); //What is the name of the truth match probabily cut variable?
     if (tmpAcc.isAvailable(*trk)){
         const xAOD::TruthParticle* truthPart = getTruthPtr(trk);
-        float truthProb = tmpAcc(*trk);
+        trk_truthProb = tmpAcc(*trk);
         //check if the track passes the truth match probaility cut
         int m_matchingProbabilityCut = 0.75; //For now there is a hard coded truth matching cut. 
         //I stole this from https://gitlab.cern.ch/atlas/athena/blob/e81dc8a15b3cb8a5ba9283ae558b37d771028f2d/PhysicsAnalysis/TrackingID/InDetTrackSystematicsTools/InDetTrackSystematicsTools/InDetTrackTruthOriginTool.h
-        if (truthProb < m_matchingProbabilityCut){trk_truthIsFake = 1; trk_truthFromPileup = 0;} //there was no truth match, and the track is a fake
+        if (trk_truthProb < m_matchingProbabilityCut){trk_truthIsFake = 1; trk_truthFromPileup = 0;} //there was no truth match, and the track is a fake
         else if (!truthPart) {trk_truthFromPileup = 1; trk_truthIsFake = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
         else { 
             trk_truthFromPileup = 0;
