@@ -123,8 +123,6 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_d0", &trk_d0);
   m_tree->Branch("trk_nTRT", &trk_nTRT);
   m_tree->Branch("trk_charge", &trk_charge);
-  m_tree->Branch("trk_truthIsFake", &trk_truthIsFake);
-  m_tree->Branch("trk_truthFromPileup", &trk_truthFromPileup);
   m_tree->Branch("trk_z0sintheta", &trk_z0sintheta);
   m_tree->Branch("trk_p", &trk_p);
   m_tree->Branch("trk_etaEMB2", &trk_etaEMB2);
@@ -155,6 +153,7 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_E_Total_nopresampler_200", &trk_E_Total_nopresampler_200);
   m_tree->Branch("trk_NPV_2", &trk_NPV_2);
   m_tree->Branch("trk_NPV_4", &trk_NPV_4);
+  m_tree->Branch("trk_hasTruthParticle", &trk_hasTruthParticle);
   m_tree->Branch("trk_truthPdgId", &trk_truthPdgId);
   m_tree->Branch("trk_truthEnergy", &trk_truthEnergy);
   m_tree->Branch("trk_truthP", &trk_truthP);
@@ -310,9 +309,8 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_truthPdgId = 0;
     trk_truthEnergy = -999.0;
     trk_truthP = -999.0;
-    trk_truthIsFake = -1;
-    trk_truthFromPileup = -1;
     trk_truthProb = -1.0;
+    trk_hasTruthParticle = 0;
 
     //Get the truth match probability of the track
     static SG::AuxElement::ConstAccessor< float > tmpAcc("truthMatchProbability"); //What is the name of the truth match probabily cut variable?
@@ -322,11 +320,9 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         //check if the track passes the truth match probaility cut
         int m_matchingProbabilityCut = 0.75; //For now there is a hard coded truth matching cut. 
         //I stole this from https://gitlab.cern.ch/atlas/athena/blob/e81dc8a15b3cb8a5ba9283ae558b37d771028f2d/PhysicsAnalysis/TrackingID/InDetTrackSystematicsTools/InDetTrackSystematicsTools/InDetTrackTruthOriginTool.h
-        if (trk_truthProb < m_matchingProbabilityCut){trk_truthIsFake = 1; trk_truthFromPileup = 0;} //there was no truth match, and the track is a fake
-        else if (!truthPart) {trk_truthFromPileup = 1; trk_truthIsFake = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
+        if (!truthPart) {trk_hasTruthParticle = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
         else { 
-            trk_truthFromPileup = 0;
-            trk_truthIsFake = 0;
+            trk_hasTruthParticle = 1;
             trk_truthPdgId = truthPart->pdgId();
             trk_truthEnergy = truthPart->e()/1000.0;
             truthPartVec.SetPtEtaPhiE(truthPart->pt()/1000.0, truthPart->eta(), truthPart->phi(), truthPart->e()/1000.0);
