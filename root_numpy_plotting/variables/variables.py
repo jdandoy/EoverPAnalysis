@@ -1,5 +1,24 @@
 from calculation.calculation import calculation, calculationDataMC
+from selections.selections import NonZeroEnergy
 import numpy as np
+from math import pi
+
+def trkHADFraction(trk):
+    trk_total_nonzero = NonZeroEnergy(trk)
+    return_value = np.zeros(len(trk))
+    return_value[trk_total_nonzero] = trk["trk_E_HAD_200"][trk_total_nonzero]/trk["trk_sumE_Total_200"][trk_total_nonzero]
+    return return_value
+branches = ["trk_sumE_Total_200", "trk_E_HAD_200"]
+calc_trkHADFraction = calculation(trkHADFraction, branches)
+
+def trkEMFraction(trk):
+    trk_total_nonzero = NonZeroEnergy(trk)
+    trk_EM_200 = trk["trk_sumE_EM_200"]
+    return_value = np.zeros(len(trk))
+    return_value[trk_total_nonzero] = trk_EM_200[trk_total_nonzero]/trk["trk_sumE_Total_200"][trk_total_nonzero]
+    return return_value
+branches = ["trk_sumE_Total_200", "trk_sumE_EM_200"]
+calc_trkEMFraction = calculation(trkEMFraction, branches)
 
 def trkPt(trk):
     return trk["trk_pt"]
@@ -80,10 +99,35 @@ def trkEtaEMB2(trk):
 branches = ["trk_etaEMB2"]
 calc_trkEtaEMB2 = calculation(trkEtaEMB2, branches)
 
+def EnergyAnulus(trk):
+    return trk["trk_sumE_EM_200"] - trk["trk_sumE_EM_100"]
+branches = ["trk_sumE_EM_200", "trk_sumE_EM_100"]
+calc_EnergyAnulus = calculation(EnergyAnulus, branches)
+
+def EOPBkg(trk):
+    return (1./trk["trk_p"]) * (4.0/3.0) * (EnergyAnulus(trk))
+branches = ["trk_sumE_EM_200", "trk_sumE_EM_100", "trk_p"]
+calc_EOPBkg = calculation(EOPBkg, branches)
+
 def EOP(trk):
     return trk["trk_sumE_Total_200"]/trk["trk_p"]
 branches = ["trk_sumE_Total_200", "trk_p"]
 calc_EOP = calculation(EOP, branches)
+
+def DPhi(trk):
+    dphi = np.ones(len(trk)) * 100000000.0
+    hasEMB2 = np.abs(trk["trk_phiEMB2"]) < 40
+    hasEME2 = np.abs(trk["trk_phiEME2"]) < 40
+    if np.any(hasEMB2 & hasEME2):
+        print("This many tracks had an extrapolation to both EME and EMB " + str(np.sum(1.0 * (hasEMB2 & hasEME2))))
+    dphi[hasEME2] = np.abs(trk["trk_phiID"] - trk["trk_phiEME2"])[hasEME2]
+    dphi[hasEMB2] = np.abs(trk["trk_phiID"] - trk["trk_phiEMB2"])[hasEMB2]
+    greater_than_pi = dphi > pi
+
+    dphi[greater_than_pi] = 2.0 * pi - dphi[greater_than_pi]
+    return dphi
+branches = ["trk_phiEMB2", "trk_phiEME2","trk_phiID"]
+calc_trkDPhi = calculation(DPhi, branches)
 
 def weight(trk, isData):
     if not isData:

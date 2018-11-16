@@ -3,16 +3,41 @@ astyle.SetAtlasStyle()
 import numpy as np
 from variables.variables import calc_weight
 from array import array
-from root_numpy import fill_hist
+from root_numpy import fill_hist, fill_profile
 import ROOT
 from DataPrep import GetData
-import pyximport
-pyximport.install(setup_args={"include_dirs":np.get_include()},
+from pyximport import install
+install(setup_args={"include_dirs":np.get_include()},
                   reload_support=True)
-
 
 from util import getWeightsFromBins
 
+global_scope = []
+CANVAS_COUNTER = 0
+
+def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
+     global CANVAS_COUNTER
+     ROOT.gStyle.SetPalette(ROOT.kInvertedDarkBodyRadiator)
+     canvas_name = TwoDHist.GetName() + "_" + str(CANVAS_COUNTER)
+     CANVAS_COUNTER += 1
+     canvas = ROOT.TCanvas(canvas_name, canvas_name, 1300, 800)
+     canvas.SetRightMargin(0.25)
+     TwoDHist.Draw("colz")
+     #TwoDHist.GetZaxis().SetTitleSize(0.035)
+     TwoDHist.GetZaxis().SetTitleOffset(3.5)
+     TwoDHist.GetXaxis().SetTitleOffset(1.0)
+     TwoDHist.GetZaxis().SetTitleOffset(0.8)
+     TwoDHist.GetYaxis().SetTitleOffset(1.0)
+     if doLogx:
+         canvas.SetLogx()
+     if doLogy:
+         canvas.SetLogy()
+     canvas.Draw()
+     #TwoDHist.GetXaxis().SetRange(15, 300)
+     canvas.Modified()
+     canvas.Update()
+     global_scope.append(canvas)
+     return canvas
 
 def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
     '''normalize the weights to the histogram'''
@@ -28,7 +53,7 @@ def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
     low_edges = np.array(low_edges, np.float)
     high_edges = np.array(high_edges, np.float)
     hist_weights = np.array(normalizations, np.float)
-    ##There must be a very clever way to implement this in root numpy... I'm sure of it!
+
     weights = getWeightsFromBins(variable_in_histogram, low_edges, high_edges, hist_weights)
 
     return weights
@@ -87,7 +112,6 @@ def handle_underflow_overflow(h):
     return h
 
 #Keep things alive at the global scope
-global_scope = []
 
 def toGlobalScope(obj):
     global_scope.append(obj)
@@ -103,8 +127,29 @@ def cleanUpHistograms(h):
 MCColor = ROOT.kRed
 DataColor = ROOT.kBlack
 
-CANVAS_COUNTER = 0
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None):
+def GetHistogramOfErrors(hist_dict):
+    '''take the histograms from two different dictionaries, and divide them by matching keys'''
+    dict_keys = hist_dict.keys()
+
+    for key in dict_keys:
+        if key not in dict_keys:
+            raise ValueError("The two dictionaries do not have the same keys")
+
+    return_dict = {}
+    for channel in dict_keys:
+        Hist_clone = hist_dict[channel].Clone(hist_dict[channel].GetName() + "Errors")
+        Hist_clone.GetXaxis().SetTitle(hist_dict[channel].GetXaxis().GetTitle())
+        Hist_clone.GetYaxis().SetTitle(hist_dict[channel].GetYaxis().GetTitle())
+        Hist_clone.Sumw2()
+        for bin in range(0, Hist_clone.GetNbinsX() + 1):
+            hist_clone.SetBinContent(bin, hist_dict[channel])
+            hist_clone.SetBinError(bin, 0.0)
+
+        return_dict[channel] = Hist_clone
+
+    return return_dict
+
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505):
     ''' Draw the data vs MC ratio for the MC and data histograms'''
 
     MCHist = histogram_dict[MCKey]
@@ -132,13 +177,16 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
 
     filename = MCHist.GetTitle() + "histogram"
 
+    if (type(extra_description) == list and len(extra_description) > 3):
+        scale_factor *= 10.0
+
     maximum_bin = 0.0
     minimum_bin = 10000000000000000.0
     for bin in range(1, MCHist.GetNbinsX() + 1):
         content = MCHist.GetBinContent(bin)
         if content > maximum_bin:
             maximum_bin = content
-        if content < minimum_bin and minimum_bin > 0.0:
+        if content < minimum_bin and content > 0.0:
             minimum_bin = content
 
     title_offset = 0.7
@@ -148,14 +196,13 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
 
     if doLogy:
         if minimum_bin <= 0.0:
-            minimum_bin = 0.011
+            minimum_bin = 1
         MCHist.SetMaximum(maximum_bin * scale_factor)
         MCHist.SetMinimum(minimum_bin * 1.0)
 
     else:
-        MCHist.SetMaximum(maximum_bin * 1.8)
-        MCHist.SetMinimum(minimum_bin * 0.8)
-
+        MCHist.SetMaximum(maximum_bin * 1.5)
+        MCHist.SetMinimum(minimum_bin * 0.5)
 
     MCHist.GetYaxis().SetTitleOffset(title_offset)
     MCHist.Draw("HIST")
@@ -195,7 +242,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     bottom_pad.cd()
     toGlobalScope(bottom_pad)
 
-
     data_ratio = DataHist.Clone("data_histogram")
     data_ratio.Divide(MCHist)
     data_ratio = cleanUpHistograms(data_ratio)
@@ -205,8 +251,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
     variableLabel = MCHist.GetXaxis().GetTitle()
 
-    if xTicksNumber != None:
-        data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
+
+    data_ratio.GetYaxis().SetNdivisions(yTicksNumber)
 
     data_ratio.GetYaxis().SetTitle("Data/MC")
     scale_ratio = (top_pad.GetWh()*top_pad.GetAbsHNDC())/(bottom_pad.GetWh() * bottom_pad.GetAbsHNDC())
@@ -219,7 +265,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     data_ratio.GetXaxis().SetTitleSize(MCHist_label_size*scale_ratio)
     data_ratio.GetYaxis().SetTitleSize(MCHist_label_size*scale_ratio)
     data_ratio.GetYaxis().SetTitleOffset(title_offset/scale_ratio)
-    data_ratio.GetYaxis().SetNdivisions(405);
     data_ratio.SetMaximum(ratio_max - 0.0001)
     data_ratio.SetMinimum(ratio_min + 0.0001)
     data_ratio.Draw("HIST E")
@@ -275,9 +320,25 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     bottom_pad.SetTopMargin(0)
     bottom_pad.SetBottomMargin(0.45)
 
+    if xTicksNumber != None:
+        data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
+
+
+    bottom_pad.Modified()
+    bottom_pad.Update()
+
+    top_pad.Modified()
+    top_pad.Update()
+
+    canvas.SetRightMargin(0.15);
+
+    canvas.Modified()
+    canvas.Update()
+
     return canvas
 
 def GetListOfNeededBranches(variables, selections):
+    '''given a list of variables and selections, get all of the branches that should be read from the tree'''
     branches = []
 
     for variable in variables:
@@ -293,6 +354,7 @@ def GetListOfNeededBranches(variables, selections):
     return branches
 
 def DivideHistograms(hist_dict1, hist_dict2):
+    '''take the histograms from two different dictionaries, and divide them by matching keys'''
     dict1_keys = hist_dict1.keys()
     dict2_keys = hist_dict2.keys()
 
@@ -311,8 +373,23 @@ def DivideHistograms(hist_dict1, hist_dict2):
         Hist_clone1.Divide(hist_dict2[channel])
         return_dict[channel] = Hist_clone1
 
-
     return return_dict
+
+def DivideTwoChannels(hist_dict, channel_numerator, channel_denomenator, new_zlabel = "", z_low = 0.0, z_high = 2.0):
+    '''Divide two specific histograms by eachother'''
+    hist_numerator = hist_dict[channel_numerator]
+    hist_denomenator = hist_dict[channel_denomenator]
+
+    Hist_clone = hist_numerator.Clone(hist_dict1[channel].GetName() + "divided" + hist_dict2[channel].GetName())
+
+    Hist_clone.Divide(hist_denomenator)
+
+    Hist_clone.SetMaximum(z_high)
+    Hist_clone.SetMinimum(z_low)
+    Hist_clone.GetXaxis().SetTitle(new_zlabel)
+
+    return Hist_clone
+
 
 class Plotter:
     def __init__(self, inputs, treeName, base_selections = ""):
@@ -407,7 +484,7 @@ class Plotter:
         ##Get the resulting dictionary of variables, selections, and weights
         selection_dict = result["selection_dict"]
         variable_dict = result["variable_dict"]
-        weights = variable_dict["weights"]
+        weights = result["weights"]
 
         #Do we need to renormalize this channel?
         toNormalize = self.CheckForNormalizationWeights(channel, filename)
@@ -429,12 +506,14 @@ class Plotter:
         #Apply the selections to the variables and return them.
         weights = weights[total_selection]
         for variable in variable_dict:
-            variable_dict[variable] = variable_dict[variable][total_selection]
+            print "applying selection to variable " + variable
+            variable_dict[variable] = variable_dict[variable][total_selection]  ##for some reason it gets stuck here... what a shame...
 
         return variable_dict, weights
 
 
-    def GetHistograms(self, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", normalize = False):
+
+    def GetHistograms(self, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", normalize = False, HistogramPerFile=False):
         '''given a variable, Draw the histogram for the given variable'''
         variableNameToFill = variable.name
         variables = [variable]
@@ -450,40 +529,70 @@ class Plotter:
 
         #First go and get all of the histograms that we need
         histogram_dictionary = {}
-        for channel in self.channels:
-            if (type(bins) == list):
-                bins_array = array('d',bins)
-                histogram_dictionary[channel] = ROOT.TH1D(description_string, description_string, len(bins_array)-1, bins_array)
-            else:
-                histogram_dictionary[channel] = ROOT.TH1D(description_string, description_string, bins, range_low + 0.0000001, range_high - 0.000001)
-            histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
-            histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
-            histogram_dictionary[channel].Sumw2()
+        if not HistogramPerFile:
+            for channel in self.channels:
+                if (type(bins) == list):
+                    bins_array = array('d',bins)
+                    histogram_dictionary[channel] = ROOT.TH1D(description_string + channel, description_string + channel, len(bins_array)-1, bins_array)
+                else:
+                    histogram_dictionary[channel] = ROOT.TH1D(description_string +channel, description_string + channel, bins, range_low + 0.0000001, range_high - 0.000001)
+                histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
+                histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
+                histogram_dictionary[channel].Sumw2()
 
-        for channel in self.channels:
-            normalization_weight = 0.0
-            print "Reading files for channel " + channel
-            for filename in self.channelFiles[channel]:
-                variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
-                to_fill = variable_dict[variableNameToFill]
-                to_weight = weights
-                if self.verbose: print(len(to_fill))
-                if self.verbose: print(len(to_weight))
-                if self.verbose: print to_fill
-                if self.verbose: print to_weight
-                if self.verbose: print("Filling Variable " + variable.name)
-                fill_hist(histogram_dictionary[channel], to_fill, to_weight)
+            for channel in self.channels:
+                normalization_weight = 0.0
+                print "Reading files for channel " + channel
+                for filename in self.channelFiles[channel]:
+                    variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
+                    to_fill = variable_dict[variableNameToFill]
+                    to_weight = weights
+                    if self.verbose: print(len(to_fill))
+                    if self.verbose: print(len(to_weight))
+                    if self.verbose: print to_fill
+                    if self.verbose: print to_weight
+                    if self.verbose: print("Filling Variable " + variable.name)
+                    fill_hist(histogram_dictionary[channel], to_fill, to_weight)
+                    if normalize:
+                        normalization_weight += np.sum(to_weight)
+
                 if normalize:
-                    normalization_weight += np.sum(to_weight)
+                    histogram_dictionary[channel].Scale(1./normalization_weight)
 
-            if normalize:
-                histogram_dictionary[channel].Scale(1./normalization_weight)
+            return histogram_dictionary
+        else:
+            for channel in self.channels:
+                for filename in self.channelFiles[channel]:
+                    histogram_dictionary[filename] = {}
+                    if (type(bins) == list):
+                        bins_array = array('d',bins)
+                        histogram_dictionary[filename] = ROOT.TH1D(description_string + channel, description_string + channel + filename.split("/")[-1], len(bins_array)-1, bins_array)
+                    else:
+                        histogram_dictionary[filename] = ROOT.TH1D(description_string +channel, description_string + channel + filename.split("/")[-1], bins, range_low + 0.0000001, range_high - 0.000001)
+                    histogram_dictionary[filename].GetXaxis().SetTitle(xlabel)
+                    histogram_dictionary[filename].GetYaxis().SetTitle(ylabel)
+                    histogram_dictionary[filename].Sumw2()
+
+                    normalization_weight = 0.0
+                    print "Reading files for channel " + channel
+                    variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
+                    to_fill = variable_dict[variableNameToFill]
+                    to_weight = weights
+                    if self.verbose: print(len(to_fill))
+                    if self.verbose: print(len(to_weight))
+                    if self.verbose: print to_fill
+                    if self.verbose: print to_weight
+                    if self.verbose: print("Filling Variable " + variable.name)
+                    fill_hist(histogram_dictionary[filename], to_fill, to_weight)
+                    if normalize:
+                         normalization_weight += np.sum(to_weight)
+                         histogram_dictionary[filename].Scale(1./normalization_weight)
+
+            return histogram_dictionary
 
 
-        return histogram_dictionary
 
-
-    def Get2DHistograms(self, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", normalize = False):
+    def Get2DHistograms(self, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="", normalize = False):
         '''given a variable, Draw the histogram for the given variable'''
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
@@ -501,37 +610,100 @@ class Plotter:
         #First go and get all of the histograms that we need
         histogram_dictionary = {}
         for channel in self.channels:
-            if (type(bins_x) == list and type(bins_y) = list):
+            if (type(bins_x) == list and type(bins_y) == list):
                 bins_array_x = array('d',bins_x)
                 bins_array_y = array('d',bins_y)
-                histogram_dictionary[channel] = ROOT.TH2D(description_string, description_string, len(bins_array_x)-1, bins_array_x, len(bins_array_y)-1, bins_array_y)
-            else if (type(bins_x) != list and type(bins_y) != list):
-                histogram_dictionary[channel] = ROOT.TH2D(description_string, description_string, bins_x, range_low_x + 0.0000001, range_high_z - 0.000001, bins_y, range_low_y+0.0000001, range_high_y + 0.0000001)
+                histogram_dictionary[channel] = ROOT.TH2D(description_string + channel, description_string + channel, len(bins_array_x)-1, bins_array_x, len(bins_array_y)-1, bins_array_y)
+            elif (type(bins_x) != list and type(bins_y) != list):
+                histogram_dictionary[channel] = ROOT.TH2D(description_string + channel, description_string + channel, bins_x, range_low_x + 0.0000001, range_high_x - 0.000001, bins_y, range_low_y+0.0000001, range_high_y + 0.0000001)
             else:
                 raise ValueError("both of the bins_x and bins_y variables need to be the same type. Both integers, or both lists")
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
+            histogram_dictionary[channel].GetZaxis().SetTitle(zlabel)
+            histogram_dictionary[channel].GetZaxis().SetTitleSize(0.035)
+            histogram_dictionary[channel].GetZaxis().SetTitleOffset(1.35)
             histogram_dictionary[channel].Sumw2()
 
         for channel in self.channels:
             normalization_weight = 0.0
             for filename in self.channelFiles[channel]:
-                variable_dict, weights = self.GetVariablesAndWeights(filename, variables, selections)
-                to_fill_x = variable_dict[variableNameToFill_x]
-                to_fill_y = variable_dict[variableNameToFill_y
-                x_y_list = [to_fill_x, to_fill_y]
-                to_fill = np.vstack(x_y_list)
-                to_fill = np.swapaxes(to_fill, 1, 0)#This is to get it to the right shape for filling
+                variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
+                print("Got the variable and weights")
+                n_sel = len(weights)
+                print("Set up the number of selected entries")
+                to_fill = np.zeros((n_sel,2))
+                to_fill[:,0] = variable_dict[variableNameToFill_x]
+                to_fill[:,1] = variable_dict[variableNameToFill_y]
                 to_weight = weights
-                if self.verbose: print(len(to_fill))
-                if self.verbose: print(len(to_weight))
                 if self.verbose: print to_fill
                 if self.verbose: print to_weight
                 if self.verbose: print("Filling Variable " + variable.name)
+                print("Filling Histogram")
                 fill_hist(histogram_dictionary[channel], to_fill, to_weight)
+
+                print("Finished filling histogram")
 
                 if normalize:
                     normalization_weight += np.sum(to_weight)
+
+            if normalize:
+                histogram_dictionary[channel].Scale(1./normalization_weight)
+
+        return histogram_dictionary
+
+
+    def GetTProfileHistograms(self, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="", normalize = False):
+        '''given a variable, Draw the histogram for the given variable'''
+        variableNameToFill_x = variable_x.name
+        variableNameToFill_y = variable_y.name
+        variables = [variable_x, variable_y]
+
+        #Create a unique name for the 2D histogram
+        description_string = "TProfileHistogram"
+        for variable in variables:
+            description_string += variable.name
+        for sel in list_selections:
+            description_string += sel.name
+        description_string += str(self.object_counter)
+        self.object_counter += 1
+
+        #First go and get all of the histograms that we need
+        histogram_dictionary = {}
+        for channel in self.channels:
+            if (type(bins) == list):
+                bins_array = array('d',bins)
+                histogram_dictionary[channel] = ROOT.TProfile(description_string + channel, description_string + channel, len(bins_array)-1, bins_array)
+            else:
+                histogram_dictionary[channel] = ROOT.TProfile(description_string + channel, description_string + channel, bins, range_low + 0.0000001, range_high - 0.000001)
+            histogram_dictionary[channel].Sumw2()
+
+        for channel in self.channels:
+            normalization_weight = 0.0
+            for filename in self.channelFiles[channel]:
+                variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
+                print("Got the variable and weights")
+                n_sel = len(weights)
+                print("Set up the number of selected entries")
+                to_fill = np.zeros((n_sel,2))
+                to_fill[:,0] = variable_dict[variableNameToFill_x]
+                to_fill[:,1] = variable_dict[variableNameToFill_y]
+                to_weight = weights
+                if self.verbose: print to_fill
+                if self.verbose: print to_weight
+                if self.verbose: print("Filling Variable " + variable.name)
+                print("Filling Histogram")
+                fill_profile(histogram_dictionary[channel], to_fill, to_weight)
+
+                print("Finished filling histogram")
+
+                if normalize:
+                    normalization_weight += np.sum(to_weight)
+
+            #convert the tprofile histogram to a refular histogram, for division later
+            histogram_dictionary[channel] = histogram_dictionary[channel].ProjectionX()
+            histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
+            histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
 
             if normalize:
                 histogram_dictionary[channel].Scale(1./normalization_weight)
