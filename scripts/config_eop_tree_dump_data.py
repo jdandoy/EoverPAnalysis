@@ -21,7 +21,7 @@ c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
                                  "m_applyPrimaryVertexCut": True,
                                  "m_applyEventCleaningCut": True,
                                  "m_applyCoreFlagsCut": True,
-                                 "m_applyTriggerCut": True, #This should be true for data
+                                 "m_applyTriggerCut": False, #This should be true for data
                                  #"m_useCutflow": True,
                                  "m_GRLxml": "EoverPAnalysis/data17_13TeV.periodN_DetStatus-v98-pro21-16_Unknown_PHYS_StandardGRL_All_Good_25ns_ignore_GLOBAL_LOWMU_for_specific_run341294.xml",
                                  "m_lumiCalcFileNames": "EoverPAnalysis/ilumicalc_histograms_HLT_mb_sptrk_341294_OflLumi-13TeV-010.root",
@@ -95,11 +95,10 @@ c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociated
 
 #### Make E/p ttree
 for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_tight_isolated, trks_tight_isolated_vertex]:
-    for energy_calib in ["ClusterEnergy", "CellEnergy"]#, "ClusterEnergyLCW", "CellEnergy"]:
         ''' E/p histograms with LoosePrimary track selection'''
-        c.setalg("EoverPTreeAlgo", {"m_name": "EoverP_"+energy_calib + track_container,
+        c.setalg("EoverPTreeAlgo", {"m_name": "EoverP_" + track_container,
                                     "m_inTrackContainerName": track_container,
-                                    "m_energyCalib": energy_calib, # ClusterEnergy, ClusterEnergyLCW, or CellEnergy
+                                    "m_energyCalibList": "ClusterEnergy,CellEnergy,ClusterEnergyLCW", # ClusterEnergy, ClusterEnergyLCW, or CellEnergy
                                     "m_useCutFlow": True,
-                                    "m_msgLevel": "info"})
+                                    "m_msgLevel": "debug"})
 
