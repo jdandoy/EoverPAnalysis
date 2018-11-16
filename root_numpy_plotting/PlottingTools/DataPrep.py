@@ -60,7 +60,7 @@ def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = Non
     variable_dict = {}
 
     print("Evaluating weights")
-    weights = weightCalculator.eval(data, channel)
+    weights = weightCalculator.eval(data, isData, channel)
 
     if not isData:
         print("getting the xsection weight")

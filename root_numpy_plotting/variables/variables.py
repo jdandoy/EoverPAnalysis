@@ -1,7 +1,8 @@
-from calculation.calculation import calculation, calculationDataMC
+from calculation.calculation import calculation, calculationDataMC, weightCalculation
 from selections.selections import NonZeroEnergy
 import numpy as np
 from math import pi
+
 
 def trkHADFraction(trk):
     trk_total_nonzero = NonZeroEnergy(trk)
@@ -134,4 +135,4 @@ def weight(trk, isData):
         return trk["trkWeight"]
     return np.ones(len(trk))
 branches = ["trkWeight"]
-calc_weight = calculationDataMC(weight, branches)
+calc_weight = weightCalculation(weight, branches)

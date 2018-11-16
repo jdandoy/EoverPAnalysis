@@ -5,11 +5,7 @@ from array import array
 from root_numpy import fill_hist, fill_profile
 import ROOT
 from DataPrep import GetData
-from pyximport import install
-install(setup_args={"include_dirs":np.get_include()},
-                  reload_support=True)
 
-from util import getWeightsFromBins
 
 global_scope = []
 CANVAS_COUNTER = 0
@@ -419,17 +415,8 @@ class Plotter:
         entries = input_tree.GetEntries()
         return entries
 
-    def UpdateNormalizationWeights(self, channel, filename, normalization):
-        selected_entries = self.GetNumSelectedEntries(filename)
-        if channel not in self.NormalizationWeightsDictionary:
-            self.NormalizationWeightsDictionary[channel] = {}
-        if filename not in self.NormalizationWeightsDictionary[channel]:
-            self.NormalizationWeightsDictionary[channel][filename] = np.ones(selected_entries)
-        self.NormalizationWeightsDictionary[channel][filename] *= normalization
-
     def SetTotalTrackNumberNormalization(self, channel, normalization):
-        for filename in self.channelFiles[channel]:
-            self.UpdateNormalizationWeights(channel, filename, normalization)
+        self.weightCalculator.addTotalNumberRenormalization(channel, normalization)
 
     def UseVariableAndHistogramToNormalize(self, variable, HistDict, ChannelToNormalize, ChannelToNormalizeTo):
          '''take a variable, and a histogram, and set up the plotter so that it always normalizes the ChannelToNormalize to the ChannelToNormalilzeTo'''
@@ -439,14 +426,14 @@ class Plotter:
 
          ratio_hist = TargetHist.Clone("NormalizationHistogram" + variable.name + ChannelToNormalize)
          ratio_hist.Divide(UnNormalizedHist)
-         self.weightCalculator.addReweightHistogram(channel, variable, ratio_hist)
+         self.weightCalculator.addReweightHistogram(ChannelToNormalize, variable, ratio_hist)
 
     def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
         ''' Get the data from a specific file'''
         total_entries = self.GetNumEntries(filename)
         branches = GetListOfNeededBranches(variables, list_selections)
         #The configuration for the fetch results function.
-        result = GetData(partition = (0, total_entries), bare_branches = branches, channel = channel, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
+        result = GetData(partition = (0, total_entries), bare_branches = branches, channel = channel, filename = filename, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
 
         ##Get the resulting dictionary of variables, selections, and weights
         selection_dict = result["selection_dict"]
