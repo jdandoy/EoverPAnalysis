@@ -1,7 +1,6 @@
 from atlasplots import atlas_style as astyle
 astyle.SetAtlasStyle()
 import numpy as np
-from variables.variables import calc_weight
 from array import array
 from root_numpy import fill_hist, fill_profile
 import ROOT
@@ -39,24 +38,7 @@ def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
      global_scope.append(canvas)
      return canvas
 
-def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
-    '''normalize the weights to the histogram'''
-    low_edges = []
-    high_edges = []
-    normalizations = []
-    #get the low bin edges of the histograms
-    for bin in range(1, histogram.GetNbinsX() + 1):
-        low_edges.append(histogram.GetBinLowEdge(bin))
-        high_edges.append(histogram.GetBinLowEdge(bin + 1))
-        normalizations.append(histogram.GetBinContent(bin))
 
-    low_edges = np.array(low_edges, np.float)
-    high_edges = np.array(high_edges, np.float)
-    hist_weights = np.array(normalizations, np.float)
-
-    weights = getWeightsFromBins(variable_in_histogram, low_edges, high_edges, hist_weights)
-
-    return weights
 
 def DrawText(x, y, text, color=1, size=0.05):
     """Draw text.
@@ -392,7 +374,7 @@ def DivideTwoChannels(hist_dict, channel_numerator, channel_denomenator, new_zla
 
 
 class Plotter:
-    def __init__(self, inputs, treeName, base_selections = ""):
+    def __init__(self, inputs, treeName, weightCalculator, base_selections = ""):
         self.channelFiles = {}
         self.channelLabels = {}
         self.AddInputDictionary(inputs)
@@ -405,6 +387,7 @@ class Plotter:
         self.base_selections = base_selections
         self.NormalizationWeightsDictionary = {} # A dictionary of channel to variable to the weights needed for the reweighting of this variable
         self.object_counter = 0
+        self.weightCalculator = weightCalculator
 
     def AddInputDictionary(self, dictionary):
         '''Take an input dictionary of channel names to: tuple of (channel descriptor for legend, list of [input root filename strings])'''
@@ -412,14 +395,6 @@ class Plotter:
         for channel in self.channels:
             self.channelFiles[channel] = dictionary[channel][1]
             self.channelLabels[channel] = dictionary[channel][0]
-
-    def CheckForNormalizationWeights(self, channel, filename):
-        if channel not in self.NormalizationWeightsDictionary:
-            print "no normalization weights found for file " + filename
-            return False
-        if filename not in self.NormalizationWeightsDictionary[channel]: raise ValueError("There should have been a set of normalization weights for this file")
-        print "Found renormalization weights for file " + filename
-        return True
 
     def GetNumberOfTracks(self, channel, list_selections = [],variables = []):
         '''Get the total weighted number of Tracks. This is to normalize the distributions to each other'''
@@ -464,32 +439,19 @@ class Plotter:
 
          ratio_hist = TargetHist.Clone("NormalizationHistogram" + variable.name + ChannelToNormalize)
          ratio_hist.Divide(UnNormalizedHist)
-
-         for filename in self.channelFiles[ChannelToNormalize]:
-            variables = [variable]
-            list_selections = []
-            variable_dict, weights = self.GetVariablesAndWeights(ChannelToNormalize, filename, variables, list_selections)
-
-            variable_in_histogram = variable_dict[variable.name]
-            normalization = WeightsToNormalizeToHistogram(variable_in_histogram, ratio_hist)
-            self.UpdateNormalizationWeights(ChannelToNormalize, filename, normalization)
+         self.weightCalculator.addReweightHistogram(channel, variable, ratio_hist)
 
     def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
         ''' Get the data from a specific file'''
         total_entries = self.GetNumEntries(filename)
         branches = GetListOfNeededBranches(variables, list_selections)
         #The configuration for the fetch results function.
-        result = GetData(partition = (0, total_entries), bare_branches = branches, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
+        result = GetData(partition = (0, total_entries), bare_branches = branches, channel = channel, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
 
         ##Get the resulting dictionary of variables, selections, and weights
         selection_dict = result["selection_dict"]
         variable_dict = result["variable_dict"]
         weights = result["weights"]
-
-        #Do we need to renormalize this channel?
-        toNormalize = self.CheckForNormalizationWeights(channel, filename)
-        if toNormalize:
-            weights = weights * self.NormalizationWeightsDictionary[channel][filename]
 
         #prepare to loop through the selections and apply all of them
         if self.verbose: print("\n\n\n\n\n===============\nPreselections are being applied")
@@ -560,6 +522,7 @@ class Plotter:
                     histogram_dictionary[channel].Scale(1./normalization_weight)
 
             return histogram_dictionary
+
         else:
             for channel in self.channels:
                 for filename in self.channelFiles[channel]:
