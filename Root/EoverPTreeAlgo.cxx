@@ -494,8 +494,6 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         const xAOD::TruthParticle* truthPart = getTruthPtr(trk);
         trk_truthProb = tmpAcc(*trk);
         //check if the track passes the truth match probaility cut
-        int m_matchingProbabilityCut = 0.75; //For now there is a hard coded truth matching cut. 
-        //I stole this from https://gitlab.cern.ch/atlas/athena/blob/e81dc8a15b3cb8a5ba9283ae558b37d771028f2d/PhysicsAnalysis/TrackingID/InDetTrackSystematicsTools/InDetTrackSystematicsTools/InDetTrackTruthOriginTool.h
         if (!truthPart) {trk_hasTruthParticle = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
         else { 
             trk_hasTruthParticle = 1;
