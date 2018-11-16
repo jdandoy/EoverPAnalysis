@@ -1,6 +1,7 @@
 from multiprocessing import Pool, cpu_count
 from ROOT import TFile, TH1D, TTree
 from numpy import loadtxt
+from root_numpy import tree2array
 
 #These are python JZW samples. I normalize to the number of generated events, the cross section and the filter efficiency
 weight_dictionary = {\
@@ -8,6 +9,13 @@ weight_dictionary = {\
 "361021" : (1/(1000000.0)) * 78420000 * 0.00067143,
 "361022" : (1/(999000.0)) *  2433200 * 0.00033423,
 }
+
+#particle_labels_dictionary = {\
+#""#pi^+"
+
+import os
+import psutil
+process = psutil.Process(os.getpid())
 
 def branchDresser(branches):
     '''this is a function that dresses the branches to extend the branches'''
@@ -28,7 +36,7 @@ def getIsData(filename):
 
 def GetData(partition = (0, 0), bare_branches = [], filename = None, treename = None, variables = [], weightCalculator = None, selections = [], selection_string = "",  verbose = False):
     '''a function used for multiprocessing. It makes all of the selections used by the analysis'''
-    import root_numpy as rnp
+    global process
 
     isData = getIsData(filename)
     for branch in weightCalculator.branches:
@@ -40,23 +48,24 @@ def GetData(partition = (0, 0), bare_branches = [], filename = None, treename = 
     if verbose: print "Reading from file " + filename
     f = TFile(filename, "READ")
     t = f.Get(treename)
-    data = rnp.tree2array(t, branches, selection_string, start = partition[0], stop = partition[1])
+    data = tree2array(t, branches, selection_string, start = partition[0], stop = partition[1])
     if verbose: print "Got the data for parition " + str(partition)
-    f.Close()
-    del f
-    del t
+    #f.Close()
+    #del f
+    #del t
 
     # a dictionary of selections
     selection_dict = {}
     # a dictionary of variables = {}
     variable_dict = {}
 
+    print("Evaluating weights")
     weights = weightCalculator.eval(data, isData)
     if not isData:
+        print("getting the xsection weight")
         xsec_weight = getXSectionWeight(filename)
         if verbose: print("X Section Weight Set To " + str(xsec_weight))
         weights = weights * xsec_weight
-    variable_dict["weights"] = weights
 
     ##calculate everything we need in one go!
     for variable in variables:
@@ -73,4 +82,5 @@ def GetData(partition = (0, 0), bare_branches = [], filename = None, treename = 
     return_dict = {}
     return_dict["selection_dict"] = selection_dict
     return_dict["variable_dict"] = variable_dict
+    return_dict["weights"] = weights
     return return_dict
