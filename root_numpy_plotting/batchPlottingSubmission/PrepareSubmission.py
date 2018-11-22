@@ -2,6 +2,7 @@
 from sys import path as sys_path
 from os import path as os_path
 Curr_DIR = os_path.expandvars('$PWD')
+print Curr_DIR
 sys_path.insert(1, Curr_DIR)
 import os
 from inputs.samples import INPUT
@@ -90,7 +91,7 @@ for i in range(0, len(partitions)):
     submission_list.append(plots)
     file = open(outputDir + "/submission" + str(i) + ".sh", "w")
     file.write("cd " + cwd + "\n")
-    file.write("source batchPlittingSubmission/env.sh\n")
+    file.write("source batchPlottingSubmission/env.sh\n")
     file.write("python batchPlottingSubmission/submit.py --num " + str(i) + " --picklefile " + submission_pickle_file + " --jobname " + jobName + "\n")
     #file.write("cp *.root " + cwd + "\n")
     leading_script.write("bsub -q 8nm -J sub" + str(i) +  " < " + outputDir + "/submission" + str(i) + ".sh" + "\n")

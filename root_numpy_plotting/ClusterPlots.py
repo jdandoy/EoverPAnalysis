@@ -128,9 +128,9 @@ def FillingScript(plotter, outputRootFileName):
 
 
 #   ################################################################################yy
-   histogram_name = "eventAverageMu"
-   selections = [sel_Event]
-   eventAverageMuHist = plotter.GetHistograms(histogram_name,
+    histogram_name = "eventAverageMu"
+    selections = [sel_Event]
+    eventAverageMuHist = plotter.GetHistograms(histogram_name,
                                           calc_trkAverageMu,\
                                           list_selections = selections,\
                                           bins = 10,\
@@ -138,7 +138,7 @@ def FillingScript(plotter, outputRootFileName):
                                           range_high = 10.0,\
                                           xlabel ='<#mu>',\
                                           ylabel = 'Number of Events')
-   WriteToFile(eventAverageMuHist, outFile)
+    WriteToFile(eventAverageMuHist, outFile)
 #    description = "Inclusive Selection"
 #    DataVsMC = DrawDataVsMC(trkAverageMuHist,\
 #                            plotter.channelLabels,\
@@ -182,15 +182,15 @@ def FillingScript(plotter, outputRootFileName):
     for i in range(0, nBins + 1):
         p_bins.append(0.5 * (base) ** i )
 
-    ################################################################################yy
-    #plot a histogram of the average track pt
+   ################################################################################yy
+   #plot a histogram of the average track pt
     histogram_name = "trkPtHist"
     trkPtHistZoom = plotter.GetHistograms(histogram_name,\
-                                        calc_trkPt,\
-                                        list_selections = [],\
-                                        bins = p_bins,\
-                                        xlabel ="Track P_{T} [GeV]",\
-                                        ylabel = "Number of Tracks")
+                                       calc_trkPt,\
+                                       list_selections = [],\
+                                       bins = p_bins,\
+                                       xlabel ="Track P_{T} [GeV]",\
+                                       ylabel = "Number of Tracks")
 
     WriteToFile(trkPtHistZoom, outFile)
 #   description = "Inclusive Selection"
