@@ -76,7 +76,7 @@ class weightCalculation:
             ##make sure that we always read the variable that we need for the histogram reweighting
             for branch_name in variable.branches:
                 if branch_name not in self.branches:
-                    self.branches.append(branch_name):
+                    self.branches.append(branch_name)
             self.branches += variable.branches
         else:
             self.reweightDictionary[channel]["variables"].append(variable)

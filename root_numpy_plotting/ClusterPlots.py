@@ -3,11 +3,12 @@
 
 from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas
 import ROOT
-from variables.variables import calc_weight
-from inputs.samples import INPUT
+#from variables.variables import calc_weight
+#from inputs.samples import INPUT
 import os
 from math import pi
 import pickle
+
 def CloseCanvas(canv):
     canv.Close()
     ROOT.gSystem.ProcessEvents()
@@ -25,7 +26,7 @@ def WriteToFile(histogram_dictionary, outFile):
 #This is a script that fills the histograms for
 def FillingScript(plotter, outputRootFileName):
     #import thje variables that we want to plot
-    from variables.variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2
+    from variables.variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount
     #import the selections that we want to plot
     from selections.selections import sel_NTRT20, sel_NTRT25, sel_NTRT30, sel_ECALEta0_6, sel_PGreater1 ,sel_PGreater1_5, sel_PGreater2, sel_PGreater2_5, sel_Z0SinThetaLess1_5, sel_d0Less1_5, sel_Event
     #impot the ID selections that we want to plot
@@ -33,36 +34,32 @@ def FillingScript(plotter, outputRootFileName):
 
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
 
-    dict_total_track_count = {}
-    dict_total_track_count["LowMuData"] = plotter.GetNumberOfTracks("LowMuData")
-    dict_total_track_count["PythiaJetJet"] = plotter.GetNumberOfTracks("PythiaJetJet")
-
-    #Pickle the total track counts now, with the output root filename rstriped
-    outputPickleFile = outputRootFileName.rstrip(".root")
-    outputPickleFile += ".pickle"
-
-    pickle.dump( dict_total_track_count, open( outputPickleFile, "wb" ) )
-
-    #REMEMBER TO PICKLE THESE FILES OT THE FINAL HISTOGRAM
-    oneD_plot_list = []
-    twoD_plot_list = []
-    profile_plot_list = []
+    ##just count the number of tracks in each histogram
+    histogram_name = "trkCount"
+    selections = []
+    trkCountHist = plotter.GetHistograms(histogram_name,\
+                                                         calc_trkCount,\
+                                                         list_selections = selections,\
+                                                         bins = 1,\
+                                                         range_low = -0.5,\
+                                                         range_high = +1.5,\
+                                                         xlabel ='Always 0',\
+                                                         ylabel = 'Number of Tracks')
+    WriteToFile(trkCountHist, outFile)
 
     ################################################################################
     #plot the first set of variables that we're interested in
     #plot the trk avaerage mu histogram
     histogram_name = "trkAverageMu"
-    oneD_plot_list.append(histogram_name)
     selections = []
-    import cProfile
     trkAverageMuHist = plotter.GetHistograms(histogram_name,\
-                                                         calc_trkAverageMu,\
-                                                         list_selections = selections,\
-                                                         bins = 10,\
-                                                         range_low = 0.0,\
-                                                         range_high = 10.0,\
-                                                         xlabel ='Average #mu of Event',\
-                                                         ylabel = 'Number of Tracks')
+                                                        calc_trkAverageMu,\
+                                                        list_selections = selections,\
+                                                        bins = 10,\
+                                                        range_low = 0.0,\
+                                                        range_high = 10.0,\
+                                                        xlabel ='Average #mu of Event',\
+                                                        ylabel = 'Number of Tracks')
     WriteToFile(trkAverageMuHist, outFile)
 ##    description = "Inclusive Selection"
 ##    DataVsMC = DrawDataVsMC(trkAverageMuHist,\
@@ -75,17 +72,17 @@ def FillingScript(plotter, outputRootFileName):
 ##    CloseCanvas(DataVsMC)
 
 
-    ################################################################################
-    #plot a histogram of the average event NPV
+   ################################################################################
+   #plot a histogram of the average event NPV
     histogram_name = "trkNPV2"
     eventNPV2Hist = plotter.GetHistograms(histogram_name,\
-                                        calc_trkNPV2,\
-                                        list_selections = [],\
-                                        bins = 13,\
-                                        range_low = -0.5,\
-                                        range_high = 12.5,\
-                                        xlabel ="NPV with 2 Tracks",\
-                                        ylabel = "Number of Events")
+                                       calc_trkNPV2,\
+                                       list_selections = [],\
+                                       bins = 13,\
+                                       range_low = -0.5,\
+                                       range_high = 12.5,\
+                                       xlabel ="NPV with 2 Tracks",\
+                                       ylabel = "Number of Events")
     WriteToFile(eventNPV2Hist, outFile)
 #    description = "Inclusive Selection"
 #    eventNPV2HistCanvas   = DrawDataVsMC(eventNPV2Hist,\
@@ -108,40 +105,40 @@ def FillingScript(plotter, outputRootFileName):
 #    if not os.path.exists(plotter_directory):
 #        os.mkdir(plotter_directory)
 
-    ################################################################################yy
-    #plot a histogram of the average event NPV
+#   ################################################################################yy
+   #plot a histogram of the average event NPV
     histogram_name = "eventNPV2Hist"
     eventNPV2Hist = plotter.GetHistograms(histogram_name,\
-                                        calc_trkNPV2,\
-                                        list_selections = [sel_Event],\
-                                        bins = 13,\
-                                        range_low = -0.5,\
-                                        range_high = 12.5,\
-                                        xlabel ="NPV with 2 Tracks",\
-                                        ylabel = "Number Events")
+                                       calc_trkNPV2,\
+                                       list_selections = [sel_Event],\
+                                       bins = 13,\
+                                       range_low = -0.5,\
+                                       range_high = 12.5,\
+                                       xlabel ="NPV with 2 Tracks",\
+                                       ylabel = "Number Events")
     WriteToFile(eventNPV2Hist, outFile)
- #   description = "Inclusive Selection"
- #   eventNPV2HistCanvas = DrawDataVsMC(eventNPV2Hist,\
- #                                      plotter.channelLabels,\
- #                                      MCKey='PythiaJetJet',\
- #                                      DataKey='LowMuData',\
- #                                      extra_description = description)
- #   eventNPV2HistCanvas.Draw()
- #   eventNPV2HistCanvas.Print(plotter_directory+"/EventNPV2Tracks_afterNPVReweight.png")
+##   description = "Inclusive Selection"
+##   eventNPV2HistCanvas = DrawDataVsMC(eventNPV2Hist,\
+##                                      plotter.channelLabels,\
+##                                      MCKey='PythiaJetJet',\
+##                                      DataKey='LowMuData',\
+##                                      extra_description = description)
+##   eventNPV2HistCanvas.Draw()
+##   eventNPV2HistCanvas.Print(plotter_directory+"/EventNPV2Tracks_afterNPVReweight.png")
 
 
-    ################################################################################yy
-    histogram_name = "eventAverageMu"
-    selections = [sel_Event]
-    eventAverageMuHist = plotter.GetHistograms(histogram_name,
-                                           calc_trkAverageMu,\
-                                           list_selections = selections,\
-                                           bins = 10,\
-                                           range_low = 0.0,\
-                                           range_high = 10.0,\
-                                           xlabel ='<#mu>',\
-                                           ylabel = 'Number of Events')
-    WriteToFile(eventAverageMuHist, outFile)
+#   ################################################################################yy
+   histogram_name = "eventAverageMu"
+   selections = [sel_Event]
+   eventAverageMuHist = plotter.GetHistograms(histogram_name,
+                                          calc_trkAverageMu,\
+                                          list_selections = selections,\
+                                          bins = 10,\
+                                          range_low = 0.0,\
+                                          range_high = 10.0,\
+                                          xlabel ='<#mu>',\
+                                          ylabel = 'Number of Events')
+   WriteToFile(eventAverageMuHist, outFile)
 #    description = "Inclusive Selection"
 #    DataVsMC = DrawDataVsMC(trkAverageMuHist,\
 #                            plotter.channelLabels,\
@@ -162,7 +159,7 @@ def FillingScript(plotter, outputRootFileName):
 #                                       range_high = 12.5,\
 #                                       xlabel ="NPV with 2 Tracks",\
 #                                       ylabel = "Number of tracks")
-#   
+   
 #   description = "Inclusive Selection"
 #   trkNPV2HistCanvas = DrawDataVsMC(trkNPV2Hist,\
 #                                      plotter.channelLabels,\

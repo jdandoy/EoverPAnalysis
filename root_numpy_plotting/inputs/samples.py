@@ -2,7 +2,7 @@ import os
 user = os.environ['USER']
 
 #TOP_DIRECTORY = "/tmp/" + user + "/HmumuTuplesVer_2_4/"
-TOP_DIRECTORY = "/Users/lukasadamek/cernbox/EOPTuples/haddedTogether/EOPTuples_v04/"
+TOP_DIRECTORY = "/eos/user/l/luadamek/EOPTuples/haddedTogether/EOPTuples_v04/"
 
 INPUT = \
 { "PythiaJetJet": ("Pythia8 LowMu and Dijet", [\

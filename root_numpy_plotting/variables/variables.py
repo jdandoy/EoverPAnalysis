@@ -3,6 +3,10 @@ from selections.selections import NonZeroEnergy
 import numpy as np
 from math import pi
 
+def trkCount(trk):
+    return np.zeros(len(trk))
+branches = []
+calc_trkCount = calculation(trkCount, branches)
 
 def trkHADFraction(trk):
     trk_total_nonzero = NonZeroEnergy(trk)
