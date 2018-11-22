@@ -51,7 +51,7 @@ class weightCalculation:
     def eval(self, data, isData, channel):
         if channel in self.reweightDictionary:
             extra_weight = np.ones(len(data))
-            for variable, histogram in zip(self.reweightDictionary[channel]["variables"], self.reweightDictionary[channel]["histograms"])
+            for variable, histogram in zip(self.reweightDictionary[channel]["variables"], self.reweightDictionary[channel]["histograms"]):
                 print("Reweighting variable " + variable.name + " in channel " + channel)
                 extra_weight *= WeightsToNormalizeToHistogram(variable.eval(data), histogram)
         return self.function(data, isData) * extra_weight
@@ -64,6 +64,9 @@ class weightCalculation:
             self.reweightDictionary[channel]["variable"].append(variable)
             self.reweightDictionary[channel]["histograms"].append(histogram)
             ##make sure that we always read the variable that we need for the histogram reweighting
+            for branch_name in variable.branches:
+                if branch_name not in self.branches:
+                    self.branches.append(branch_name):
             self.branches += variable.branches
         else:
             self.reweightDictionary[channel]["variables"].append(variable)

@@ -130,6 +130,11 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_etaEME2", &trk_etaEME2);
   m_tree->Branch("trk_phiEME2", &trk_phiEME2);
   m_tree->Branch("trk_nearest_dR", &trk_nearest_dR);
+  m_tree->Branch("trk_nclusters", &trk_nearest_dR);
+  m_tree->Branch("trk_nclusters_EM", &trk_nclusters_EM);
+  m_tree->Branch("trk_nclusters_hadlike", &trk_nclusters_hadlike);
+  m_tree->Branch("trk_nclusters_HAD", &trk_nclusters_HAD);
+  m_tree->Branch("trk_nclusters_emlike", &trk_nclusters_emlike);
   m_tree->Branch("trkWeight", &trkWeight);
 
   //All energy deposits at EM-Scale
@@ -478,6 +483,53 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
       trk_CellEnergy_E_Total_nopresampler_100 = trk_CellEnergy_E_EM_nopresampler_100 + trk_CellEnergy_E_HAD_100;
       trk_CellEnergy_E_Total_nopresampler_200 = trk_CellEnergy_E_EM_nopresampler_200 + trk_CellEnergy_E_HAD_200;
     }
+
+
+    ///////////////////////////////////////Information about the # of clusters ////////////////////////////////////////////////////////////////
+    trk_nclusters_EM = 0;
+    trk_nclusters_HAD = 0;
+    trk_nclusters_hadlike = 0;
+    trk_nclusters_emlike = 0;
+
+    SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_Energy("CALO_ClusterEnergy_Energy");
+    SG::AuxElement::ConstAccessor< std::vector<int> > acc_ClusterEnergy_maxEnergyLayer("CALO_ClusterEnergy_maxEnergyLayer");
+    SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_emProbability("CALO_ClusterEnergy_emProbability");
+
+    //make sure that the information is available
+    if (acc_ClusterEnergy_Energy.isAvailable(*trk) && acc_ClusterEnergy_maxEnergyLayer.isAvailable(*trk) && acc_ClusterEnergy_emProbability.isAvailable(*trk) ){
+      std::vector<float> trk_cluster_energies = acc_ClusterEnergy_Energy(*trk);
+      std::vector<int> trk_cluster_maxEnergyLayer = acc_ClusterEnergy_maxEnergyLayer(*trk);
+      std::vector<float> trk_cluster_emProbability = acc_ClusterEnergy_emProbability(*trk);
+
+      //make sure that number of clusters is consistent between different decorations
+      if (trk_cluster_energies.size() != trk_cluster_maxEnergyLayer.size()){
+         ANA_MSG_ERROR("The cluster vectors do not all have the same length for a given track");
+         return EL::StatusCode::FAILURE;
+      }
+
+      trk_nclusters = trk_cluster_energies.size();
+      ANA_MSG_DEBUG("The number of clusters associated with the track was " + std::to_string(trk_nclusters));
+
+      //Where were the clusters that are associated with the track
+      ANA_MSG_DEBUG("Printing out the layer of maximum energy of the clusters");
+      for (unsigned int i = 0; i < trk_cluster_maxEnergyLayer.size(); i ++)
+      {
+         int max_layer = trk_cluster_maxEnergyLayer.at(i);
+         ANA_MSG_DEBUG(m_id_to_layer.at(max_layer));
+
+         if (std::find(m_layer_EM.begin(), m_layer_EM.end(), m_id_to_layer.at(max_layer)) != m_layer_EM.end()) trk_nclusters_EM += 1;
+         if (std::find(m_layer_HAD.begin(), m_layer_HAD.end(), m_id_to_layer.at(max_layer)) != m_layer_HAD.end()) trk_nclusters_HAD += 1;
+
+         float em_probability = trk_cluster_emProbability.at(i);
+         if (em_probability > 0.5) trk_nclusters_emlike += 1;
+         else trk_nclusters_hadlike += 1;
+      }
+      ANA_MSG_DEBUG("This many clusters in the EM calorimeters: "  + std::to_string(trk_nclusters_EM));
+      ANA_MSG_DEBUG("This many clusters in the HAD calorimeters: "  + std::to_string(trk_nclusters_HAD));
+      ANA_MSG_DEBUG("This many clusters with EM prob greater than 0.5 : "  + std::to_string(trk_nclusters_emlike));
+      ANA_MSG_DEBUG("This many clusters with EM prob less than 0.5 : "  + std::to_string(trk_nclusters_hadlike));
+    }
+    else ANA_MSG_DEBUG("There was no information about the number of clusters associated with the track");
 
     ///////////////////////////////////////TRUTH INFORMATION ////////////////////////////////////////////////////////////////
 
