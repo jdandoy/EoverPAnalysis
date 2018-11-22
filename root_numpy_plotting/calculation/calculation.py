@@ -1,3 +1,9 @@
+from pyximport import install
+
+import numpy as np
+install(setup_args={"include_dirs":np.get_include()},
+                  reload_support=True)
+from util import getWeightsFromBins
 
 # a calculation that can be different in MC and in Data. E.G. reweighting the sample.
 class calculationDataMC:
@@ -20,4 +26,67 @@ class calculation:
 
     def eval(self, data):
         return self.function(data)
+
+def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
+    '''normalize the weights to the histogram'''
+    low_edges = []
+    high_edges = []
+    normalizations = []
+    #get the low bin edges of the histograms
+    for bin in range(1, histogram.GetNbinsX() + 1):
+        low_edges.append(histogram.GetBinLowEdge(bin))
+        high_edges.append(histogram.GetBinLowEdge(bin + 1))
+        normalizations.append(histogram.GetBinContent(bin))
+
+    low_edges = np.array(low_edges, np.float)
+    high_edges = np.array(high_edges, np.float)
+    hist_weights = np.array(normalizations, np.float)
+
+    weights = getWeightsFromBins(variable_in_histogram, low_edges, high_edges, hist_weights)
+
+    return weights
+
+class weightCalculation:
+    def __init__(self, function, list_of_branches):
+        self.function = function
+        self.name = function.__name__
+        self.branches = list_of_branches
+        self.reweightDictionary = {}
+        self.totalNumberWeightDictionary = {}
+
+    def eval(self, data, isData, channel):
+        weights = self.function(data, isData)
+        if channel in self.reweightDictionary:
+            extra_weight = np.ones(len(data))
+            for variable, histogram in zip(self.reweightDictionary[channel]["variables"], self.reweightDictionary[channel]["histograms"]):
+                print("Reweighting variable " + variable.name + " in channel " + channel)
+                extra_weight *= WeightsToNormalizeToHistogram(variable.eval(data), histogram)
+                weights *= extra_weight
+        if channel in self.totalNumberWeightDictionary:
+            weights *= self.totalNumberWeightDictionary[channel]
+        return weights
+
+    def addReweightHistogram(self, channel, variable, histogram):
+        if channel not in self.reweightDictionary:
+            self.reweightDictionary[channel] = {}
+            self.reweightDictionary[channel]["variables"] = []
+            self.reweightDictionary[channel]["histograms"] = []
+            self.reweightDictionary[channel]["variables"].append(variable)
+            self.reweightDictionary[channel]["histograms"].append(histogram)
+            ##make sure that we always read the variable that we need for the histogram reweighting
+            self.branches += variable.branches
+        else:
+            self.reweightDictionary[channel]["variables"].append(variable)
+            self.reweightDictionary[channel]["histograms"].append(histogram)
+            ##make sure that we always read the variable that we need for the histogram reweighting
+            self.branches += variable.branches
+
+    def addTotalNumberRenormalization(self, channel, weight):
+        if channel not in self.totalNumberWeightDictionary:
+            self.totalNumberWeightDictionary[channel] = weight
+        else:
+            self.totalNumberWeightDictionary[channel] *= weight
+
+
+
 

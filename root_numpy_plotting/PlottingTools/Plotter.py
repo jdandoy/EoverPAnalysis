@@ -1,16 +1,11 @@
 from atlasplots import atlas_style as astyle
 astyle.SetAtlasStyle()
 import numpy as np
-from variables.variables import calc_weight
 from array import array
 from root_numpy import fill_hist, fill_profile
 import ROOT
 from DataPrep import GetData
-from pyximport import install
-install(setup_args={"include_dirs":np.get_include()},
-                  reload_support=True)
 
-from util import getWeightsFromBins
 
 global_scope = []
 CANVAS_COUNTER = 0
@@ -39,24 +34,7 @@ def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
      global_scope.append(canvas)
      return canvas
 
-def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
-    '''normalize the weights to the histogram'''
-    low_edges = []
-    high_edges = []
-    normalizations = []
-    #get the low bin edges of the histograms
-    for bin in range(1, histogram.GetNbinsX() + 1):
-        low_edges.append(histogram.GetBinLowEdge(bin))
-        high_edges.append(histogram.GetBinLowEdge(bin + 1))
-        normalizations.append(histogram.GetBinContent(bin))
 
-    low_edges = np.array(low_edges, np.float)
-    high_edges = np.array(high_edges, np.float)
-    hist_weights = np.array(normalizations, np.float)
-
-    weights = getWeightsFromBins(variable_in_histogram, low_edges, high_edges, hist_weights)
-
-    return weights
 
 def DrawText(x, y, text, color=1, size=0.05):
     """Draw text.
@@ -392,19 +370,19 @@ def DivideTwoChannels(hist_dict, channel_numerator, channel_denomenator, new_zla
 
 
 class Plotter:
-    def __init__(self, inputs, treeName, base_selections = ""):
+    def __init__(self, inputs, treeName, weightCalculator, base_selections = "", partition_dictionary = None):
         self.channelFiles = {}
         self.channelLabels = {}
         self.AddInputDictionary(inputs)
         self.treeName = treeName
-        self.partitionSize = 10000000000
-        self.Process = 1
+        self.partition_dictionary = partition_dictionary
         self.normalization_dictionary = {}
         self.test = False
         self.verbose = False
         self.base_selections = base_selections
         self.NormalizationWeightsDictionary = {} # A dictionary of channel to variable to the weights needed for the reweighting of this variable
         self.object_counter = 0
+        self.weightCalculator = weightCalculator
 
     def AddInputDictionary(self, dictionary):
         '''Take an input dictionary of channel names to: tuple of (channel descriptor for legend, list of [input root filename strings])'''
@@ -412,14 +390,6 @@ class Plotter:
         for channel in self.channels:
             self.channelFiles[channel] = dictionary[channel][1]
             self.channelLabels[channel] = dictionary[channel][0]
-
-    def CheckForNormalizationWeights(self, channel, filename):
-        if channel not in self.NormalizationWeightsDictionary:
-            print "no normalization weights found for file " + filename
-            return False
-        if filename not in self.NormalizationWeightsDictionary[channel]: raise ValueError("There should have been a set of normalization weights for this file")
-        print "Found renormalization weights for file " + filename
-        return True
 
     def GetNumberOfTracks(self, channel, list_selections = [],variables = []):
         '''Get the total weighted number of Tracks. This is to normalize the distributions to each other'''
@@ -444,17 +414,8 @@ class Plotter:
         entries = input_tree.GetEntries()
         return entries
 
-    def UpdateNormalizationWeights(self, channel, filename, normalization):
-        selected_entries = self.GetNumSelectedEntries(filename)
-        if channel not in self.NormalizationWeightsDictionary:
-            self.NormalizationWeightsDictionary[channel] = {}
-        if filename not in self.NormalizationWeightsDictionary[channel]:
-            self.NormalizationWeightsDictionary[channel][filename] = np.ones(selected_entries)
-        self.NormalizationWeightsDictionary[channel][filename] *= normalization
-
     def SetTotalTrackNumberNormalization(self, channel, normalization):
-        for filename in self.channelFiles[channel]:
-            self.UpdateNormalizationWeights(channel, filename, normalization)
+        self.weightCalculator.addTotalNumberRenormalization(channel, normalization)
 
     def UseVariableAndHistogramToNormalize(self, variable, HistDict, ChannelToNormalize, ChannelToNormalizeTo):
          '''take a variable, and a histogram, and set up the plotter so that it always normalizes the ChannelToNormalize to the ChannelToNormalilzeTo'''
@@ -464,32 +425,29 @@ class Plotter:
 
          ratio_hist = TargetHist.Clone("NormalizationHistogram" + variable.name + ChannelToNormalize)
          ratio_hist.Divide(UnNormalizedHist)
-
-         for filename in self.channelFiles[ChannelToNormalize]:
-            variables = [variable]
-            list_selections = []
-            variable_dict, weights = self.GetVariablesAndWeights(ChannelToNormalize, filename, variables, list_selections)
-
-            variable_in_histogram = variable_dict[variable.name]
-            normalization = WeightsToNormalizeToHistogram(variable_in_histogram, ratio_hist)
-            self.UpdateNormalizationWeights(ChannelToNormalize, filename, normalization)
+         self.weightCalculator.addReweightHistogram(ChannelToNormalize, variable, ratio_hist)
 
     def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
         ''' Get the data from a specific file'''
         total_entries = self.GetNumEntries(filename)
         branches = GetListOfNeededBranches(variables, list_selections)
         #The configuration for the fetch results function.
-        result = GetData(partition = (0, total_entries), bare_branches = branches, filename = filename, treename = self.treeName, variables=variables, weightCalculator = calc_weight, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
+
+        partition = None
+        if self.partition_dictionary == None:
+            partition = (0, total_entries)
+        else:
+            partition = self.partition_dictionary[filename] #What partition of the file is this worker responsible for?
+            print("Found a partition")
+
+        print("Getting data for partition " + str(partition))
+
+        result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
 
         ##Get the resulting dictionary of variables, selections, and weights
         selection_dict = result["selection_dict"]
         variable_dict = result["variable_dict"]
         weights = result["weights"]
-
-        #Do we need to renormalize this channel?
-        toNormalize = self.CheckForNormalizationWeights(channel, filename)
-        if toNormalize:
-            weights = weights * self.NormalizationWeightsDictionary[channel][filename]
 
         #prepare to loop through the selections and apply all of them
         if self.verbose: print("\n\n\n\n\n===============\nPreselections are being applied")
@@ -511,21 +469,12 @@ class Plotter:
 
         return variable_dict, weights
 
-
-
-    def GetHistograms(self, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", normalize = False, HistogramPerFile=False):
+    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", normalize = False, HistogramPerFile=False):
         '''given a variable, Draw the histogram for the given variable'''
+
+
         variableNameToFill = variable.name
         variables = [variable]
-
-        description_string = "Histogram"
-        for variable in variables:
-            description_string += variable.name
-        for sel in list_selections:
-            description_string += sel.name
-
-        description_string += str(self.object_counter)
-        self.object_counter += 1
 
         #First go and get all of the histograms that we need
         histogram_dictionary = {}
@@ -533,9 +482,9 @@ class Plotter:
             for channel in self.channels:
                 if (type(bins) == list):
                     bins_array = array('d',bins)
-                    histogram_dictionary[channel] = ROOT.TH1D(description_string + channel, description_string + channel, len(bins_array)-1, bins_array)
+                    histogram_dictionary[channel] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, len(bins_array)-1, bins_array)
                 else:
-                    histogram_dictionary[channel] = ROOT.TH1D(description_string +channel, description_string + channel, bins, range_low + 0.0000001, range_high - 0.000001)
+                    histogram_dictionary[channel] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, bins, range_low + 0.0000001, range_high - 0.000001)
                 histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
                 histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
                 histogram_dictionary[channel].Sumw2()
@@ -560,15 +509,16 @@ class Plotter:
                     histogram_dictionary[channel].Scale(1./normalization_weight)
 
             return histogram_dictionary
+
         else:
             for channel in self.channels:
                 for filename in self.channelFiles[channel]:
                     histogram_dictionary[filename] = {}
                     if (type(bins) == list):
                         bins_array = array('d',bins)
-                        histogram_dictionary[filename] = ROOT.TH1D(description_string + channel, description_string + channel + filename.split("/")[-1], len(bins_array)-1, bins_array)
+                        histogram_dictionary[filename] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, len(bins_array)-1, bins_array)
                     else:
-                        histogram_dictionary[filename] = ROOT.TH1D(description_string +channel, description_string + channel + filename.split("/")[-1], bins, range_low + 0.0000001, range_high - 0.000001)
+                        histogram_dictionary[filename] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, bins, range_low + 0.0000001, range_high - 0.000001)
                     histogram_dictionary[filename].GetXaxis().SetTitle(xlabel)
                     histogram_dictionary[filename].GetYaxis().SetTitle(ylabel)
                     histogram_dictionary[filename].Sumw2()
@@ -592,7 +542,7 @@ class Plotter:
 
 
 
-    def Get2DHistograms(self, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="", normalize = False):
+    def Get2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="", normalize = False):
         '''given a variable, Draw the histogram for the given variable'''
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
@@ -613,9 +563,9 @@ class Plotter:
             if (type(bins_x) == list and type(bins_y) == list):
                 bins_array_x = array('d',bins_x)
                 bins_array_y = array('d',bins_y)
-                histogram_dictionary[channel] = ROOT.TH2D(description_string + channel, description_string + channel, len(bins_array_x)-1, bins_array_x, len(bins_array_y)-1, bins_array_y)
+                histogram_dictionary[channel] = ROOT.TH2D(histogram_name + channel, histogram_name + channel, len(bins_array_x)-1, bins_array_x, len(bins_array_y)-1, bins_array_y)
             elif (type(bins_x) != list and type(bins_y) != list):
-                histogram_dictionary[channel] = ROOT.TH2D(description_string + channel, description_string + channel, bins_x, range_low_x + 0.0000001, range_high_x - 0.000001, bins_y, range_low_y+0.0000001, range_high_y + 0.0000001)
+                histogram_dictionary[channel] = ROOT.TH2D(histogram_name + channel, histogram_name + channel, bins_x, range_low_x + 0.0000001, range_high_x - 0.000001, bins_y, range_low_y+0.0000001, range_high_y + 0.0000001)
             else:
                 raise ValueError("both of the bins_x and bins_y variables need to be the same type. Both integers, or both lists")
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
@@ -653,7 +603,7 @@ class Plotter:
         return histogram_dictionary
 
 
-    def GetTProfileHistograms(self, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="", normalize = False):
+    def GetTProfileHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="", normalize = False):
         '''given a variable, Draw the histogram for the given variable'''
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
@@ -673,9 +623,9 @@ class Plotter:
         for channel in self.channels:
             if (type(bins) == list):
                 bins_array = array('d',bins)
-                histogram_dictionary[channel] = ROOT.TProfile(description_string + channel, description_string + channel, len(bins_array)-1, bins_array)
+                histogram_dictionary[channel] = ROOT.TProfile(histogram_name + channel, histogram_name + channel, len(bins_array)-1, bins_array)
             else:
-                histogram_dictionary[channel] = ROOT.TProfile(description_string + channel, description_string + channel, bins, range_low + 0.0000001, range_high - 0.000001)
+                histogram_dictionary[channel] = ROOT.TProfile(histogram_name + channel, histogram_name + channel, bins, range_low + 0.0000001, range_high - 0.000001)
             histogram_dictionary[channel].Sumw2()
 
         for channel in self.channels:

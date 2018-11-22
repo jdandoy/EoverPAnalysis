@@ -34,7 +34,7 @@ def getXSectionWeight(filename):
 def getIsData(filename):
     return "Data" in filename or "data" in filename
 
-def GetData(partition = (0, 0), bare_branches = [], filename = None, treename = None, variables = [], weightCalculator = None, selections = [], selection_string = "",  verbose = False):
+def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = None, treename = None, variables = [], weightCalculator = None, selections = [], selection_string = "",  verbose = False):
     '''a function used for multiprocessing. It makes all of the selections used by the analysis'''
     global process
 
@@ -60,7 +60,8 @@ def GetData(partition = (0, 0), bare_branches = [], filename = None, treename = 
     variable_dict = {}
 
     print("Evaluating weights")
-    weights = weightCalculator.eval(data, isData)
+    weights = weightCalculator.eval(data, isData, channel)
+
     if not isData:
         print("getting the xsection weight")
         xsec_weight = getXSectionWeight(filename)
