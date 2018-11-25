@@ -6,9 +6,12 @@ from root_numpy import fill_hist, fill_profile
 import ROOT
 from DataPrep import GetData
 
-
 global_scope = []
 CANVAS_COUNTER = 0
+
+def toGlobalScope(obj):
+    global_scope.append(obj)
+
 
 def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
      global CANVAS_COUNTER
@@ -33,8 +36,6 @@ def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
      canvas.Update()
      global_scope.append(canvas)
      return canvas
-
-
 
 def DrawText(x, y, text, color=1, size=0.05):
     """Draw text.
@@ -90,10 +91,6 @@ def handle_underflow_overflow(h):
     return h
 
 #Keep things alive at the global scope
-
-def toGlobalScope(obj):
-    global_scope.append(obj)
-
 def cleanUpHistograms(h):
     h.SetLineStyle(1)
     h.SetLineWidth(3)
@@ -167,6 +164,13 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
         if content < minimum_bin and content > 0.0:
             minimum_bin = content
 
+    for bin in range(1, DataHist.GetNbinsX() + 1):
+        content = DataHist.GetBinContent(bin)
+        if content > maximum_bin:
+            maximum_bin = content
+        if content < minimum_bin and content > 0.0:
+            minimum_bin = content
+
     title_offset = 0.7
 
     if doLogy:
@@ -176,11 +180,15 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
         if minimum_bin <= 0.0:
             minimum_bin = 1
         MCHist.SetMaximum(maximum_bin * scale_factor)
-        MCHist.SetMinimum(minimum_bin * 1.0)
+        MCHist.SetMinimum(minimum_bin * 0.5)
+        DataHist.SetMaximum(maximum_bin * scale_factor)
+        DataHist.SetMinimum(minimum_bin * 0.5)
 
     else:
         MCHist.SetMaximum(maximum_bin * 1.5)
         MCHist.SetMinimum(minimum_bin * 0.5)
+        DataHist.SetMaximum(maximum_bin * 1.5)
+        DataHist.SetMinimum(minimum_bin * 0.5)
 
     MCHist.GetYaxis().SetTitleOffset(title_offset)
     MCHist.Draw("HIST")
@@ -309,7 +317,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     top_pad.Update()
 
     canvas.SetRightMargin(0.15);
-
+    canvas.SetCanvasSize(1400,900)
     canvas.Modified()
     canvas.Update()
 
@@ -358,7 +366,7 @@ def DivideTwoChannels(hist_dict, channel_numerator, channel_denomenator, new_zla
     hist_numerator = hist_dict[channel_numerator]
     hist_denomenator = hist_dict[channel_denomenator]
 
-    Hist_clone = hist_numerator.Clone(hist_dict1[channel].GetName() + "divided" + hist_dict2[channel].GetName())
+    Hist_clone = hist_numerator.Clone(hist_dict[channel_numerator].GetName() + "divided" + hist_dict[channel_numerator].GetName())
 
     Hist_clone.Divide(hist_denomenator)
 
@@ -413,19 +421,6 @@ class Plotter:
         input_tree = input_file.Get(self.treeName)
         entries = input_tree.GetEntries()
         return entries
-
-    def SetTotalTrackNumberNormalization(self, channel, normalization):
-        self.weightCalculator.addTotalNumberRenormalization(channel, normalization)
-
-    def UseVariableAndHistogramToNormalize(self, variable, HistDict, ChannelToNormalize, ChannelToNormalizeTo):
-         '''take a variable, and a histogram, and set up the plotter so that it always normalizes the ChannelToNormalize to the ChannelToNormalilzeTo'''
-         #Take the ratio of the histograms that we want to use for normalization
-         TargetHist = HistDict[ChannelToNormalizeTo]
-         UnNormalizedHist = HistDict[ChannelToNormalize]
-
-         ratio_hist = TargetHist.Clone("NormalizationHistogram" + variable.name + ChannelToNormalize)
-         ratio_hist.Divide(UnNormalizedHist)
-         self.weightCalculator.addReweightHistogram(ChannelToNormalize, variable, ratio_hist)
 
     def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
         ''' Get the data from a specific file'''

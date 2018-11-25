@@ -2,7 +2,6 @@
 from sys import path as sys_path
 from os import path as os_path
 Curr_DIR = os_path.expandvars('$PWD')
-print Curr_DIR
 sys_path.insert(1, Curr_DIR)
 import os
 from inputs.samples import INPUT
@@ -41,7 +40,7 @@ def GeneratePartitions(Entries, NPartitions):
         raise ValueError("The number of events per partition is so small. What is the point?")
     step = int(Entries/NPartitions) - 10
 
-    print(step)
+    #print(step)
     count = 1
     for i in range(0, NPartitions):
         return_list.append( ( (i * step), (i+1) * step) )
@@ -51,7 +50,7 @@ def GeneratePartitions(Entries, NPartitions):
     if return_list[-1][0] > return_list[-1][1]:
         raise ValueError("The order of the last partition doesn't makse sense")
 
-    print(len(return_list))
+    #print(len(return_list))
 
     if len(return_list) != NPartitions + 1:
         raise ValueError("The number of partitions for this file was not NPartions = " + str(NPartitions))
@@ -84,7 +83,14 @@ partitions = GenerateListOfPartitions(EntriesPerFile, NPartitions)
 leading_script = file("submit_" + jobName + ".sh", "w")
 
 cwd = os.getcwd()
+
 #Create a plotter for each partition, and also a submission script:
+#get the reweighting histograms
+from variables.variables import calc_trkCount
+trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight.root", "READ")
+trkCount_histogram = trkCount_histogram_file.Get("TrkCountReweightHistogram")
+calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
+
 for i in range(0, len(partitions)):
     partition = partitions[i]
     plots = Plotter(INPUT, treeName, calc_weight, base_selections = "", partition_dictionary = partition)
@@ -94,7 +100,7 @@ for i in range(0, len(partitions)):
     file.write("source batchPlottingSubmission/env.sh\n")
     file.write("python batchPlottingSubmission/submit.py --num " + str(i) + " --picklefile " + submission_pickle_file + " --jobname " + jobName + "\n")
     #file.write("cp *.root " + cwd + "\n")
-    leading_script.write("bsub -q 8nm -J sub" + str(i) +  " < " + outputDir + "/submission" + str(i) + ".sh" + "\n")
+    leading_script.write("bsub -q 1nh -J sub" + str(i) +  " < " + outputDir + "/submission" + str(i) + ".sh" + "\n")
 
 #create a pickle file for each submission
 pickle.dump( submission_list, open(submission_pickle_file, "wb" ) )

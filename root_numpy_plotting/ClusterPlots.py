@@ -42,7 +42,7 @@ def FillingScript(plotter, outputRootFileName):
                                                          list_selections = selections,\
                                                          bins = 1,\
                                                          range_low = -0.5,\
-                                                         range_high = +1.5,\
+                                                         range_high = +0.5,\
                                                          xlabel ='Always 0',\
                                                          ylabel = 'Number of Tracks')
     WriteToFile(trkCountHist, outFile)
@@ -75,7 +75,7 @@ def FillingScript(plotter, outputRootFileName):
    ################################################################################
    #plot a histogram of the average event NPV
     histogram_name = "trkNPV2"
-    eventNPV2Hist = plotter.GetHistograms(histogram_name,\
+    trkNPV2Hist = plotter.GetHistograms(histogram_name,\
                                        calc_trkNPV2,\
                                        list_selections = [],\
                                        bins = 13,\
@@ -83,7 +83,7 @@ def FillingScript(plotter, outputRootFileName):
                                        range_high = 12.5,\
                                        xlabel ="NPV with 2 Tracks",\
                                        ylabel = "Number of Events")
-    WriteToFile(eventNPV2Hist, outFile)
+    WriteToFile(trkNPV2Hist, outFile)
 #    description = "Inclusive Selection"
 #    eventNPV2HistCanvas   = DrawDataVsMC(eventNPV2Hist,\
 #                                       plotter.channelLabels,\
@@ -255,45 +255,51 @@ def FillingScript(plotter, outputRootFileName):
 #                                                 )
 #               trkMultiplicity_canvas.Print(plotter_directory+"/TrkPtUnweighted"+file_description+".png")
 
-#   ################################################################################
-#   trkEtaIDHist = plotter.GetHistograms(calc_trkEtaID,\
-#                                      list_selections = [],\
-#                                      bins = 100,\
-#                                      range_low = -5,\
-#                                      range_high = +5,\
-#                                      xlabel ="Track #eta ID",\
-#                                      ylabel = "Number of Tracks")
-#   description = "Inclusive Selection"
-#   DataVsMCHistCanvas = DrawDataVsMC(trkEtaIDHist,\
-#                                     plotter.channelLabels,\
-#                                     MCKey='PythiaJetJet',\
-#                                     DataKey='LowMuData',\
-#                                     ratio_min = 0.9,\
-#                                     ratio_max = 1.1,\
-#                                     extra_description = description)
-#   DataVsMCHistCanvas.Draw()
-#   DataVsMCHistCanvas.Print(plotter_directory+"/TrkEtaInInnerDetector_unweighted.png")
-#   CloseCanvas(DataVsMCHistCanvas)
+    ################################################################################
+    histogramName = "TrackEtaID"
+    trkEtaIDHist = plotter.GetHistograms(histogramName,\
+                                       calc_trkEtaID,\
+                                       list_selections = [],\
+                                       bins = 100,\
+                                       range_low = -5,\
+                                       range_high = +5,\
+                                       xlabel ="Track #eta ID",\
+                                       ylabel = "Number of Tracks")
+    WriteToFile(trkEtaIDHist, outFile)
+    #description = "Inclusive Selection"
+    #DataVsMCHistCanvas = DrawDataVsMC(trkEtaIDHist,\
+    #                                  plotter.channelLabels,\
+    #                                  MCKey='PythiaJetJet',\
+    #                                  DataKey='LowMuData',\
+    #                                  ratio_min = 0.9,\
+    #                                  ratio_max = 1.1,\
+    #                                  extra_description = description)
+    #DataVsMCHistCanvas.Draw()
+#    DataVsMCHistCanvas.Print(plotter_directory+"/TrkEtaInInnerDetector_unweighted.png")
+#    CloseCanvas(DataVsMCHistCanvas)
 
 
 #   ################################################################################yy
-#   bin_size = 0.1
-#   max_bin = 2.4
-#   min_bin = -2.4
-#   eta_bins = []
-#   eta_bins.append(min_bin)
-#   while abs(eta_bins[-1] - max_bin) > 0.0001:
-#       eta_bins.append(eta_bins[-1] + bin_size)
-#   TwoDtrkPvstrkEta = plotter.Get2DHistograms(calc_trkEtaID,\
-#                                            calc_trkP,\
-#                                            list_selections=[],\
-#                                            bins_x=eta_bins,\
-#                                            xlabel="Track #eta ID",\
-#                                            bins_y=p_bins,\
-#                                            ylabel="Track P [GeV]",\
-#                                            zlabel="Number of Tracks",\
-#                                            normalize=False)
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkEta["PythiaJetJet"], doLogx = False, doLogy = True)
+    histogramName = "TwoDTrackPvsTrkEtaID"
+    bin_size = 0.1
+    max_bin = 2.4
+    min_bin = -2.4
+    eta_bins = []
+    eta_bins.append(min_bin)
+    while abs(eta_bins[-1] - max_bin) > 0.0001:
+        eta_bins.append(eta_bins[-1] + bin_size)
+    TwoDtrkPvstrkEta = plotter.Get2DHistograms(histogramName,\
+                                             calc_trkEtaID,\
+                                             calc_trkP,\
+                                             list_selections=[],\
+                                             bins_x=eta_bins,\
+                                             xlabel="Track #eta ID",\
+                                             bins_y=p_bins,\
+                                             ylabel="Track P [GeV]",\
+                                             zlabel="Number of Tracks",\
+                                             normalize=False)
+    WriteToFile(TwoDtrkPvstrkEta, outFile)
+ #   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkEta["PythiaJetJet"], doLogx = False, doLogy = True)
 #   can.Draw()
 #   can.Print(plotter_directory+"/PythiaJetJetTwoDHistogramEtaTrackP.png")
 
@@ -302,17 +308,19 @@ def FillingScript(plotter, outputRootFileName):
 #   can.Print(plotter_directory+"/LowMuDataTwoDHistogramEtaTrackP.png")
 
 #   ################################################################################yy
+    histogramName = "TwoDTrackPtVsEtaHistogram"
+    TwoDtrkPtvstrkEta = plotter.Get2DHistograms(histogramName,\
+                                             calc_trkEtaID,\
+                                             calc_trkPt,\
+                                             list_selections=[],\
+                                             bins_x=eta_bins,\
+                                             xlabel="Track #eta ID",\
+                                             bins_y=p_bins,\
+                                             ylabel="Track P_{T} [GeV]",\
+                                             zlabel="Number of Tracks",\
+                                             normalize=False)
 
-#   TwoDtrkPvstrkEta = plotter.Get2DHistograms(calc_trkEtaID,\
-#                                            calc_trkPt,\
-#                                            list_selections=[],\
-#                                            bins_x=eta_bins,\
-#                                            xlabel="Track #eta ID",\
-#                                            bins_y=p_bins,\
-#                                            ylabel="Track P_{T} [GeV]",\
-#                                            zlabel="Number of Tracks",\
-#                                            normalize=False)
-
+    WriteToFile(TwoDtrkPtvstrkEta, outFile)
 #   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkEta["PythiaJetJet"], doLogx = False, doLogy = True)
 #   can.Draw()
 #   can.Print(plotter_directory+"/PythiaJetJetTwoDHistogramEtaTrackPt.png")
@@ -323,14 +331,17 @@ def FillingScript(plotter, outputRootFileName):
 
 
 #   ################################################################################
-#   trkEtaECALHist = plotter.GetHistograms(calc_trkEtaECAL,
-#                                         list_selections = [],
-#                                         bins = 100,
-#                                         range_low = -5,
-#                                         range_high = +5,
-#                                         xlabel ="Track #eta EM Layer 2",
-#                                         ylabel = "Number of Tracks",
-#                                      )
+    histogramName = "trkEtaECALHist"
+    trkEtaECALHist = plotter.GetHistograms(histogramName,\
+                                          calc_trkEtaECAL,
+                                          list_selections = [],
+                                          bins = 100,
+                                          range_low = -5,
+                                          range_high = +5,
+                                          xlabel ="Track #eta EM Layer 2",
+                                          ylabel = "Number of Tracks",
+                                       )
+    WriteToFile(trkEtaECALHist, outFile)
 #   description = "Inclusive Selection"
 #   DataVsMCHistECALCanvas = DrawDataVsMC(trkEtaECALHist,
 #                                          plotter.channelLabels,
@@ -345,27 +356,29 @@ def FillingScript(plotter, outputRootFileName):
 
 
 #   ################################################################################
-#   dPhi_bins = []
-#   min_bin = 0.0
-#   max_bin = pi
-#   NBins = 100.0
-#   bin_size = (max_bin-min_bin)/NBins
-#   dPhi_bins = []
-#   dPhi_bins.append(min_bin)
-#   while abs(dPhi_bins[-1] - max_bin) > 0.0001:
-#       dPhi_bins.append(dPhi_bins[-1] + bin_size)
+    histogramName = "TwoDHistTrkDPhiInnerToExtrapolEM2"
+    dPhi_bins = []
+    min_bin = 0.0
+    max_bin = pi
+    NBins = 100.0
+    bin_size = (max_bin-min_bin)/NBins
+    dPhi_bins = []
+    dPhi_bins.append(min_bin)
+    while abs(dPhi_bins[-1] - max_bin) > 0.0001:
+        dPhi_bins.append(dPhi_bins[-1] + bin_size)
 
-#   from variables.variables import calc_trkDPhi
-#   TwoDtrkPvstrkDPhi = plotter.Get2DHistograms(calc_trkDPhi,\
-#                                            calc_trkPt,\
-#                                            list_selections=[],\
-#                                            bins_x=dPhi_bins,\
-#                                            xlabel="|#phi_{ID} - #phi_{EM2}|",\
-#                                            bins_y=p_bins,\
-#                                            ylabel="Track P_{T} [GeV]",\
-#                                            zlabel="Number of Tracks",\
-#                                            normalize=False)
-
+    from variables.variables import calc_trkDPhi
+    TwoDtrkPvstrkDPhi = plotter.Get2DHistograms(histogramName,\
+                                             calc_trkDPhi,\
+                                             calc_trkPt,\
+                                             list_selections=[],\
+                                             bins_x=dPhi_bins,\
+                                             xlabel="|#phi_{ID} - #phi_{EM2}|",\
+                                             bins_y=p_bins,\
+                                             ylabel="Track P_{T} [GeV]",\
+                                             zlabel="Number of Tracks",\
+                                             normalize=False)
+    WriteToFile(TwoDtrkPvstrkDPhi, outFile)
 #   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkDPhi["PythiaJetJet"], doLogx = False, doLogy = True)
 #   can.Draw()
 #   can.Print(plotter_directory+"/PythiaJetJetTwoDHistogramDPhiTrackPt.png")
@@ -1704,3 +1717,4 @@ def FillingScript(plotter, outputRootFileName):
 #                                         doLogy = False\
 #                                         )
 #       trkAnulus_canvas.Print(plotter_directory+"/AverageEOPBkgVsMomentumInEtaBin" + str(eta_range[0]) + "_" + str(eta_range[1]) + ".png")
+    print("THEJOBFINISHED!")
