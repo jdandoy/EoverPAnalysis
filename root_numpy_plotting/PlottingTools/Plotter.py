@@ -464,7 +464,7 @@ class Plotter:
 
         return variable_dict, weights
 
-    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", normalize = False, HistogramPerFile=False):
+    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "",, HistogramPerFile=False):
         '''given a variable, Draw the histogram for the given variable'''
 
 
@@ -497,11 +497,6 @@ class Plotter:
                     if self.verbose: print to_weight
                     if self.verbose: print("Filling Variable " + variable.name)
                     fill_hist(histogram_dictionary[channel], to_fill, to_weight)
-                    if normalize:
-                        normalization_weight += np.sum(to_weight)
-
-                if normalize:
-                    histogram_dictionary[channel].Scale(1./normalization_weight)
 
             return histogram_dictionary
 
@@ -529,15 +524,12 @@ class Plotter:
                     if self.verbose: print to_weight
                     if self.verbose: print("Filling Variable " + variable.name)
                     fill_hist(histogram_dictionary[filename], to_fill, to_weight)
-                    if normalize:
-                         normalization_weight += np.sum(to_weight)
-                         histogram_dictionary[filename].Scale(1./normalization_weight)
 
             return histogram_dictionary
 
 
 
-    def Get2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="", normalize = False):
+    def Get2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
         '''given a variable, Draw the histogram for the given variable'''
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
@@ -589,16 +581,10 @@ class Plotter:
 
                 print("Finished filling histogram")
 
-                if normalize:
-                    normalization_weight += np.sum(to_weight)
-
-            if normalize:
-                histogram_dictionary[channel].Scale(1./normalization_weight)
-
         return histogram_dictionary
 
 
-    def GetTProfileHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="", normalize = False):
+    def GetTProfileHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="",):
         '''given a variable, Draw the histogram for the given variable'''
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
@@ -642,16 +628,10 @@ class Plotter:
 
                 print("Finished filling histogram")
 
-                if normalize:
-                    normalization_weight += np.sum(to_weight)
-
             #convert the tprofile histogram to a refular histogram, for division later
             histogram_dictionary[channel] = histogram_dictionary[channel].ProjectionX()
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
-
-            if normalize:
-                histogram_dictionary[channel].Scale(1./normalization_weight)
 
         return histogram_dictionary
 

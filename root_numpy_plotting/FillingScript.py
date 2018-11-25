@@ -9,11 +9,6 @@ import os
 from math import pi
 import pickle
 
-def CloseCanvas(canv):
-    canv.Close()
-    ROOT.gSystem.ProcessEvents()
-    del canv
-
 def WriteToFile(histogram_dictionary, outFile):
     outFile.cd()
     for key in histogram_dictionary:
@@ -82,7 +77,7 @@ def FillingScript(plotter, outputRootFileName):
                                        range_low = -0.5,\
                                        range_high = 12.5,\
                                        xlabel ="NPV with 2 Tracks",\
-                                       ylabel = "Number of Events")
+                                       ylabel = "Number of Tracks")
     WriteToFile(trkNPV2Hist, outFile)
 #    description = "Inclusive Selection"
 #    eventNPV2HistCanvas   = DrawDataVsMC(eventNPV2Hist,\
