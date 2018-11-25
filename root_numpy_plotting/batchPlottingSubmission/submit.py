@@ -6,7 +6,7 @@ sys_path.insert(1, Curr_DIR)
 print Curr_DIR
 
 from PlottingTools.Plotter import Plotter
-from ClusterPlots import FillingScript
+from FillingScript import FillingScript
 import pickle
 import ROOT
 

@@ -5,7 +5,6 @@ Curr_DIR = os_path.expandvars('$PWD')
 sys_path.insert(1, Curr_DIR)
 import os
 from inputs.samples import INPUT
-from ClusterPlots import FillingScript
 from PlottingTools.Plotter import Plotter
 from variables.variables import calc_weight
 import ROOT
