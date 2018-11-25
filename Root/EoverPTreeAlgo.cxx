@@ -1,5 +1,5 @@
 // E/p analysis for run 2
-// Joakim Olsson (joakim.olsson@cern.ch)
+// Lukas Adamek (lukas.adamek@cern.ch)
 
 #include <EventLoop/Job.h>
 #include <EventLoop/StatusCode.h>

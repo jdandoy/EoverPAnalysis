@@ -3,9 +3,10 @@
 
 This package is based on the [xAODAnaHelpers (xAH)](https://github.com/UCATLAS/xAODAnaHelpers) RootCore package, thus I strongly recommend you check out the [xAH documentation first](https://xaodanahelpers.readthedocs.io/en/latest/).
 
-For questions please contact: joakim.olsson[at]cern.ch
+For questions please contact: lukas.adamek[at]cern.ch, or joakim.olsson[at]cern.ch
 
-Ported to release 21 by: Lukas Adamek (lukas.adamek[at]cern.ch)
+Package created by Joakim Olsson
+Ported to release 21 and modified by: Lukas Adamek (lukas.adamek[at]cern.ch)
 
 ## Setup in Release 21
 ```
