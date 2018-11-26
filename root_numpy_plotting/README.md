@@ -37,7 +37,7 @@ cd Output/testPlotting
 hadd testPlotting_hadded.root *.root
 ```
 
-#draw histograms
+## Draw histograms
 ```
 python
 from CreatePlots import CreatePlots
