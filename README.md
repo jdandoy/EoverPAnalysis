@@ -41,4 +41,4 @@ python $TestArea/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 21.
 
 
 ## Plotting
-Plotting macros can be found the root_numpy_plotting folder. See the ipynb files for examples of how to create plots.
+Plotting macros can be found the root_numpy_plotting folder. See the README contained in that folder.
