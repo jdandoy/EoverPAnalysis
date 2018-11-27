@@ -85,10 +85,10 @@ cwd = os.getcwd()
 
 #Create a plotter for each partition, and also a submission script:
 #get the reweighting histograms
-#from variables.variables import calc_trkCount
-#trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight.root", "READ")
-#trkCount_histogram = trkCount_histogram_file.Get("TrkCountReweightHistogram")
-#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
+from variables.variables import calc_trkCount
+trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight_LoosePrimary_VertexAssociated.root", "READ")
+trkCount_histogram = trkCount_histogram_file.Get("trkCountLowMuDatadividedtrkCountLowMuData")
+calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
 
 for i in range(0, len(partitions)):
     partition = partitions[i]
