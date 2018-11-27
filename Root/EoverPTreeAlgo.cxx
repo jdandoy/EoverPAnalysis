@@ -130,7 +130,7 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_etaEME2", &trk_etaEME2);
   m_tree->Branch("trk_phiEME2", &trk_phiEME2);
   m_tree->Branch("trk_nearest_dR", &trk_nearest_dR);
-  m_tree->Branch("trk_nclusters", &trk_nearest_dR);
+  m_tree->Branch("trk_nclusters", &trk_nclusters);
   m_tree->Branch("trk_nclusters_EM", &trk_nclusters_EM);
   m_tree->Branch("trk_nclusters_hadlike", &trk_nclusters_hadlike);
   m_tree->Branch("trk_nclusters_HAD", &trk_nclusters_HAD);
