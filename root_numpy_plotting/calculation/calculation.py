@@ -1,8 +1,7 @@
 from pyximport import install
 
 import numpy as np
-install(setup_args={"include_dirs":np.get_include()},
-                  reload_support=True)
+install(setup_args={"include_dirs":np.get_include()},reload_support=True)
 from util import getWeightsFromBins
 
 class calculationDataMC:

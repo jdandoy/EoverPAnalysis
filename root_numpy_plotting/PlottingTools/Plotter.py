@@ -464,7 +464,7 @@ class Plotter:
 
         return variable_dict, weights
 
-    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "",, HistogramPerFile=False):
+    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False):
         '''given a variable, Draw the histogram for the given variable'''
 
 

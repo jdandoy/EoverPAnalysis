@@ -13,7 +13,7 @@ import pickle
 import argparse
 parser = argparse.ArgumentParser(description='Submit plotting batch jobs for the EoverPAnalysis plotting')
 parser.add_argument('--treeName', '-tn', dest="treeName", type=str, required=True, help='the name of the tree to read from')
-parser.add_argument('--NPartitions', '-np', dest="NPartitions", type=int, default='""', help='the number of plotting jobs to submit')
+parser.add_argument('--NPartitions', '-np', dest="NPartitions", type=int, default='0', help='the number of plotting jobs to submit')
 parser.add_argument('--jobName', '-jobName', dest="jobName", type=str, default='""', help='the name of the job to be submitted')
 
 args = parser.parse_args()
@@ -85,10 +85,10 @@ cwd = os.getcwd()
 
 #Create a plotter for each partition, and also a submission script:
 #get the reweighting histograms
-from variables.variables import calc_trkCount
-trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight.root", "READ")
-trkCount_histogram = trkCount_histogram_file.Get("TrkCountReweightHistogram")
-calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
+#from variables.variables import calc_trkCount
+#trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight.root", "READ")
+#trkCount_histogram = trkCount_histogram_file.Get("TrkCountReweightHistogram")
+#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
 
 for i in range(0, len(partitions)):
     partition = partitions[i]

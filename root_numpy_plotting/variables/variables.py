@@ -11,18 +11,17 @@ calc_trkCount = calculation(trkCount, branches)
 def trkHADFraction(trk):
     trk_total_nonzero = NonZeroEnergy(trk)
     return_value = np.zeros(len(trk))
-    return_value[trk_total_nonzero] = trk["trk_E_HAD_200"][trk_total_nonzero]/trk["trk_sumE_Total_200"][trk_total_nonzero]
+    return_value[trk_total_nonzero] = ((trk["trk_ClusterEnergy_HAD_200"])[trk_total_nonzero])/((trk["trk_ClusterEnergy_HAD_200"] + trk["trk_ClusterEnergy_EM_200"])[trk_total_nonzero])
     return return_value
-branches = ["trk_sumE_Total_200", "trk_E_HAD_200"]
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 calc_trkHADFraction = calculation(trkHADFraction, branches)
 
 def trkEMFraction(trk):
     trk_total_nonzero = NonZeroEnergy(trk)
-    trk_EM_200 = trk["trk_sumE_EM_200"]
     return_value = np.zeros(len(trk))
-    return_value[trk_total_nonzero] = trk_EM_200[trk_total_nonzero]/trk["trk_sumE_Total_200"][trk_total_nonzero]
+    return_value[trk_total_nonzero] = trk["trk_ClusterEnergy_EM_200"]/(trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])[trk_total_nonzero]
     return return_value
-branches = ["trk_sumE_Total_200", "trk_sumE_EM_200"]
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 calc_trkEMFraction = calculation(trkEMFraction, branches)
 
 def trkPt(trk):
@@ -105,18 +104,18 @@ branches = ["trk_etaEMB2"]
 calc_trkEtaEMB2 = calculation(trkEtaEMB2, branches)
 
 def EnergyAnulus(trk):
-    return trk["trk_sumE_EM_200"] - trk["trk_sumE_EM_100"]
-branches = ["trk_sumE_EM_200", "trk_sumE_EM_100"]
+    return trk["trk_ClusterEnergy_EM_200"] - trk["trk_ClusterEnergy_EM_100"]
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_100"]
 calc_EnergyAnulus = calculation(EnergyAnulus, branches)
 
 def EOPBkg(trk):
     return (1./trk["trk_p"]) * (4.0/3.0) * (EnergyAnulus(trk))
-branches = ["trk_sumE_EM_200", "trk_sumE_EM_100", "trk_p"]
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_100", "trk_p"]
 calc_EOPBkg = calculation(EOPBkg, branches)
 
 def EOP(trk):
-    return trk["trk_sumE_Total_200"]/trk["trk_p"]
-branches = ["trk_sumE_Total_200", "trk_p"]
+    return (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])/trk["trk_p"]
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200", "trk_p"]
 calc_EOP = calculation(EOP, branches)
 
 def DPhi(trk):
@@ -133,6 +132,19 @@ def DPhi(trk):
     return dphi
 branches = ["trk_phiEMB2", "trk_phiEME2","trk_phiID"]
 calc_trkDPhi = calculation(DPhi, branches)
+
+def DEta(trk):
+    deta = np.ones(len(trk)) * 100000000.0
+    hasEMB2 = np.abs(trk["trk_etaEMB2"]) < 40
+    hasEME2 = np.abs(trk["trk_etaEME2"]) < 40
+    if np.any(hasEMB2 & hasEME2):
+        print("This many tracks had an extrapolation to both EME and EMB " + str(np.sum(1.0 * (hasEMB2 & hasEME2))))
+    deta[hasEME2] = np.abs(trk["trk_etaID"] - trk["trk_etaEME2"])[hasEME2]
+    deta[hasEMB2] = np.abs(trk["trk_etaID"] - trk["trk_etaEMB2"])[hasEMB2]
+    return deta
+
+branches = ["trk_etaEMB2", "trk_etaEME2","trk_etaID"]
+calc_trkDEta = calculation(DEta, branches)
 
 def weight(trk, isData):
     if not isData:
