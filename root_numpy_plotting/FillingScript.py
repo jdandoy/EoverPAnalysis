@@ -733,7 +733,7 @@ def FillingScript(plotter, outputRootFileName):
                                                        xlabel ="Track P [GeV]",\
                                                        ylabel = "N(E<=0)/N",\
                                                        )
-        WriteToFile(trkMultiplicity_Eta, outFile)
+        WriteToFile(trkMultiplicity_Eta_Zero, outFile)
 
     ################################################################################
     from variables.variables import calc_trkEta_ABS
