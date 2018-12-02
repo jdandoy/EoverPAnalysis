@@ -17,7 +17,7 @@ import argparse
 parser = argparse.ArgumentParser(description='Submit plotting batch jobs for the EoverPAnalysis plotting')
 parser.add_argument('--num', '-n', dest="num", type=int, required=True, help='Which submission number was this?')
 parser.add_argument('--picklefile' '-p', dest='picklefile', type=str, default="", help='Where to get the plotter')
-parser.add_argument('--jobname', '-j', dest="jobname", type=str, default='""', help='the names of the batch jobs')
+parser.add_argument('--jobName', '-j', dest="jobname", type=str, default='""', help='the names of the batch jobs')
 
 args = parser.parse_args()
 

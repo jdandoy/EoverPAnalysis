@@ -103,7 +103,6 @@ if not os.path.exists(jobName+"/Submission"):
     os.makedirs(jobName+"/Submission")
 submission_pickle_file = jobName + "/Submission/" + jobName + ".pickle"
 
-leading_script.write('Requirements = OpSysAndVer =?= "SL6"\n')
 leading_script.write("Error = " +jobName + "/Error/job.$(Process)\n")
 leading_script.write("Output = " +jobName + "/Output/job.$(Process)\n")
 leading_script.write("Log = "+jobName+"/Log/job.$(Process)\n")
@@ -120,7 +119,7 @@ for i in range(0, len(partitions)):
     partition = partitions[i]
     plots = Plotter(INPUT, treeName, calc_weight, base_selections = "", partition_dictionary = partition)
     submission_list.append(plots)
-    leading_script.write("Arguments = " + str(i) + " "  +  submission_pickle_file.split("/")[-1] + " " + jobName + "\n")
+    leading_script.write("Arguments = $(Process) "  +  submission_pickle_file.split("/")[-1] + " " + jobName + "\n")
     leading_script.write("Queue 1\n")
     leading_script.write("\n")
 
