@@ -15,6 +15,7 @@ asetup AnalysisBase,21.2.23
 ## Submit batch plotting macros
 ```
 python condorSubmission/PrepareSubmission.py --treeName NAME --NPartitions 100 --jobName testPlotting
+condor_submit condor_testPlotting.sub
 ```
 
 ## Upon job completion
