@@ -156,6 +156,11 @@ def ELessEqual0(trk):
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 sel_ELessEqual0 = calculation(ELessEqual0, branches)
 
+def EHadFracAbove70(trk):
+    return (trk["trk_ClusterEnergy_HAD_200"]) / (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"]) >= 0.7
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
+sel_EHadFracAbove70 = calculation(EHadFracAbove70, branches)
+
 #A general function to pick different regions of the atlas detector based on track eta in the ID
 def IDAcceptanceCalculator(trk, min_cut, max_cut):
     trk_etaID = np.abs(trk["trk_etaID"])

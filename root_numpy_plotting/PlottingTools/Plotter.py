@@ -1,5 +1,3 @@
-from atlasplots import atlas_style as astyle
-astyle.SetAtlasStyle()
 import numpy as np
 from array import array
 from root_numpy import fill_hist, fill_profile
@@ -460,7 +458,7 @@ class Plotter:
         weights = weights[total_selection]
         for variable in variable_dict:
             print "applying selection to variable " + variable
-            variable_dict[variable] = variable_dict[variable][total_selection]  ##for some reason it gets stuck here... what a shame...
+            variable_dict[variable] = variable_dict[variable][total_selection]
 
         return variable_dict, weights
 
