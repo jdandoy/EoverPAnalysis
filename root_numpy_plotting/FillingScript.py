@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
 from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas
 import ROOT
 #from variables.variables import calc_weight
@@ -16,7 +15,7 @@ def WriteToFile(histogram_dictionary, outFile):
         if not outFile.cd(key):
             outFile.mkdir(key)
         outFile.cd(key)
-        print("Writing histogram " + key)
+        print("Writing histogram " + histogram_dictionary[key].GetName())
         histogram_dictionary[key].Write()
 
 #This is a script that fills the histograms for
@@ -566,7 +565,7 @@ def FillingScript(plotter, outputRootFileName):
     bins = []
     min_p = []
     for i in range(0, nBins + 1):
-        bins.append(0.5 * (base) ** i )
+        bins.append(binLow * (base) ** i )
     histogramName = "InclusiveZeroFractionVsPDenomenator"
     trkMultiplicity = plotter.GetHistograms(histogramName,\
                                           calc_trkP,\
@@ -708,7 +707,7 @@ def FillingScript(plotter, outputRootFileName):
         base = (binMax/binLow) ** (1./float(nBins))
         bins = []
         for i in range(0, nBins + 1):
-           bins.append(0.5 * (base) ** i )
+           bins.append(binLow * (base) ** i )
 
         #do the eta selection and count the inclusive number of tracks in the bin
         selections = [etaSelection]
@@ -747,7 +746,7 @@ def FillingScript(plotter, outputRootFileName):
         base = (binMax/binLow) ** (1./float(nBins))
         bins = []
         for i in range(0, nBins + 1):
-           bins.append(0.5 * (base) ** i )
+           bins.append(binLow * (base) ** i )
 
         #do the eta selection and count the inclusive number of tracks in the bin
         selections = [etaSelection] + [sel_NTRT20]
@@ -774,56 +773,33 @@ def FillingScript(plotter, outputRootFileName):
                                                        )
         WriteToFile(trkMultiplicity_Eta_Zero, outFile)
 
-#  ################################################################################
-#  from selections.selections import sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_PGreater2, sel_PGreater2_5, sel_PGreater3
-#  MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
-#  selections = [] + MIP_selection
-#  trkEOPHist = plotter.GetHistograms(calc_EOP,
-#                                   list_selections = selections,
-#                                   bins = 50,
-#                                   range_low = -1,
-#                                   range_high = 5,
-#                                   xlabel ="E/p",
-#                                   ylabel = "Number of Tracks",
-#                                   )
-#  description  = ["MIP Selection",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHist,
-#                              plotter.channelLabels,
-#                              MCKey='PythiaJetJet',
-#                              DataKey='LowMuData',
-#                              ratio_min = 0.6,
-#                             ratio_max = 1.4,
-#                             extra_description = description,
-#                             )
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/InclusiveEOPDisitrbution_MIP.png")
-#  CloseCanvas(DataVsMCEOP)
+    ################################################################################
+    from selections.selections import sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_PGreater2, sel_PGreater2_5, sel_PGreater3
+    MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
+    selections = [] + MIP_selection
+    histogramName = "MIPSelection_HadBetween30And90OfMomentum_EOP"
+    trkEOPHist = plotter.GetHistograms(histogramName,
+                                     calc_EOP,
+                                     list_selections = selections,
+                                     bins = 50,
+                                     range_low = -1,
+                                     range_high = 5,
+                                     xlabel ="E/p",
+                                     ylabel = "Number of Tracks",
+                                     )
 
 
-#  ################################################################################yy
-#  selections = [sel_PGreater1, sel_ECALEta0_6] + MIP_selection
-#  trkEOPHistPGreater1 = plotter.GetHistograms(calc_EOP,
-#                                             list_selections = selections,
-#                                             bins = 50,
-#                                             range_low = -1,
-#                                             range_high = 5,
-#                                             xlabel ="E/p",
-#                                             ylabel = "Number of Tracks")
-#  description = ["MIP Selection",\
-#                 "P[GeV]>1",\
-#                 "|#eta_{EM2}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater1,
-#                             plotter.channelLabels,
-#                              MCKey='PythiaJetJet',
-#                             DataKey='LowMuData',
-#                             ratio_min = 0.5,\
-#                             ratio_max = 1.5,\
-#                             extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/Eta06EOPDistribution_MIP.png")
-#  CloseCanvas(DataVsMCEOP)
+    ################################################################################yy
+    selections = [sel_ECALEta0_6] + MIP_selection
+    histogramName = "MIPSelection_HadBetween30And90OfMomentum_ECALEta00_06_EOP"
+    trkEOPHistPGreater1 = plotter.GetHistograms(histogramName,\
+                                               calc_EOP,
+                                               list_selections = selections,
+                                               bins = 50,
+                                               range_low = -1,
+                                               range_high = 5,
+                                               xlabel ="E/p",
+                                               ylabel = "Number of Tracks")
 
 #  ################################################################################yy
 #  selections = [sel_PGreater1_5, sel_IDEta00_06] + MIP_selection
@@ -1200,65 +1176,216 @@ def FillingScript(plotter, outputRootFileName):
 #                                                 )
 #               trkMultiplicity_canvas.Print(plotter_directory+"/TrkHADFractionReweighted"+file_description+".png")
 
-#   ################################################################################
-#   ##Create a set of p and eta bins for the measurement ##########################
-#   from calculation.calculation import calculation
-#   from selections.selections import EtaBin, PBin
+    ################################################################################
+    ##Create a set of p and eta bins for the measurement ##########################
+    from calculation.calculation import calculation
+    from selections.selections import EtaBin, PBin
+    from variables.variables import calc_EOPBkg, calc_EnergyAnulus
 
-#   #prepare the momentum bins
-#   binMax = 10.05
-#   binLow = 0.5
-#   nBins = 10
-#   base = (binMax/binLow) ** (1./float(nBins))
-#   p_bins = []
-#   min_p = []
-#   for i in range(0, nBins + 1):
-#       p_bins.append(0.5 * (base) ** i )
+    #create a set of strings that could describe the eta or momentum selections
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    eta_descriptors = []
+    eta_binSelections = []
+    for eta_range in eta_ranges:
+        EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
+        sel_EtaBin = calculation(EtaBinFunction, ["trk_etaID"])
+        eta_binSelections.append(sel_EtaBin)
 
-#   #These are the pbins that we will use for the measurement
-#   p_ranges = [(x, y) for x, y in zip(p_bins[0:-2], p_bins[1:-1])]
-#   p_descriptors = []
-#   p_binSelection = []
-#   for p_range in p_ranges:
-#       PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
-#       sel_PBin = calculation(PBinFunction, ["trk_p"])
-#       p_binSelection.append(sel_PBin)
-#       p_descriptors.append('{0:.2f}'.format(p_range[0]) + '<P[GeV]<' + '{0:.2f}'.format(p_range[1]))
+    #go and get the average E/P for MIP particles in each of the eta bins.
+    for eta_range, eta_binSelection in zip(eta_ranges, eta_binSelections):
 
-#   #create a set of strings that could describe the eta or momentum selections
-#   eta_bins = [0.0, 0.6, 1.1, 1.7, 2.3]
-#   eta_ranges = [(0.0, 0.6),(0.6,1.1),(1.1, 1.7),(1.7,2.3)]
-#   eta_descriptors = []
-#   eta_binSelections = []
-#   for eta_range in eta_ranges:
-#       EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
-#       sel_EtaBin = calculation(EtaBinFunction, ["trk_etaID"])
-#       eta_binSelections.append(sel_EtaBin)
-#       eta_descriptors.append('{0:.1f}'.format(eta_range[0]) + "<|#eta_{ID}|<" + '{0:.1f}'.format(eta_range[1]))
+        center = eta_range[1]
+        binMax = 10.05
+        binLow = 0.5 / np.cos(2 * np.arctan(np.exp(-1.0 * center))) ## get the lower bin right for each plot
+        nBins = 15
+        base = (binMax/binLow) ** (1./float(nBins))
+        p_bins = []
+        for i in range(0, nBins + 1):
+           p_bins.append(binLow * (base) ** i )
 
-#   #go and get the average E/P for MIP particles in each of the eta bins.
-#   for eta_range, eta_descriptor, eta_binSelection in zip(eta_ranges, eta_descriptors, eta_binSelections):
-#       selections = MIP_selection + [eta_binSelection]
-#       AverageEOP  =  plotter.GetTProfileHistograms(calc_trkP,\
-#                                                  calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = p_bins,\
-#                                                 xlabel ="P[GeV]",\
-#                                                 ylabel = "<E/p>",\
-#                                                 )
-#       description = ["MIP Selection"] + [eta_descriptor] + ["P_{T} Reweighted"]
-#       trkEOP_canvas = DrawDataVsMC(     AverageEOP,\
-#                                         plotter.channelLabels,\
-#                                         MCKey='PythiaJetJet',\
-#                                         DataKey='LowMuData',\
-#                                         extra_description = description,\
-#                                         scale_factor = scale_factor,\
-#                                         ratio_min = 0.6,\
-#                                         ratio_max = 1.4,\
-#                                         doLogx = True,\
-#                                         doLogy = False\
-#                                         )
-#       trkEOP_canvas.Print(plotter_directory+"/EOPProfileVsMomentumInEtaBin" + str(eta_range[0]) + "_" + str(eta_range[1]) + ".png")
+        eop_bins_min = -1
+        eop_bins_max = 5
+        nbins = 120
+        step = float(eop_bins_max-eop_bins_min)/float(nbins)
+        eop_bins = []
+        for i in range(0, nBins + 1):
+            eop_bins.append(eop_bins_min + i * step)
+
+
+        MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
+        selections = MIP_selection + [eta_binSelection]
+        histogramName = "EOPProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "2DHist_EOPVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Get2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "EnergyBkgProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{BKG}/p",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [(x,y) for x,y in zip(p_bins[0:-1], p_bins[1:])]
+        for p_range in p_ranges:
+            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = MIP_selection + [eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOP  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+            WriteToFile(AverageEOP, outFile)
+
+        from selections.selections import sel_EHadFracAbove70
+
+        MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70]
+        selections = MIP_selection + [eta_binSelection]
+        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "2DHist_EOPVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Get2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "EnergyBkgProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{BKG}/p",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [(x,y) for x,y in zip(p_bins[0:-2], p_bins[1:-1])]
+        for p_range in p_ranges:
+            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = MIP_selection + [eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOP  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+            WriteToFile(AverageEOP, outFile)
+
 
 #   #go and get the average eneryg in the EM anulus for MIP particles in each of the eta bins.
 #   from variables.variables import calc_EnergyAnulus
