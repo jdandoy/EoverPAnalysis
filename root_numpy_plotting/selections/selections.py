@@ -157,7 +157,7 @@ branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 sel_ELessEqual0 = calculation(ELessEqual0, branches)
 
 def EHadFracAbove70(trk):
-    return (trk["trk_ClusterEnergy_HAD_200"]) / (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"]) >= 0.7
+    return ((trk["trk_ClusterEnergy_HAD_200"]) / (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"]) >= 0.7) & ((trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"]) > 0.0)
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 sel_EHadFracAbove70 = calculation(EHadFracAbove70, branches)
 

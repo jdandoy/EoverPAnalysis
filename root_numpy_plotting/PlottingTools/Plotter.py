@@ -5,7 +5,24 @@ import ROOT
 from DataPrep import GetData
 
 global_scope = []
-CANVAS_COUNTER = 0
+CANVAS_COUNTER = 1
+
+def getLogBins(minBin, maxBin, nBins):
+    bins = []
+    base = (float(maxBin)/float(minBin)) ** (1.0/float(nBins))
+    for i in range(0, nBins+1):
+        bins.append(minBin * (base) ** i)
+    return bins
+
+def getBins(minBin, maxBin, nBins):
+    bins = []
+    step = float(maxBin - minBin)/float(nBins)
+    for i in range(0, nBins+1):
+        bins.append(minBin + (i*step))
+    return bins
+
+def getP(Pt, eta):
+    return Pt*np.cosh(eta)
 
 def toGlobalScope(obj):
     global_scope.append(obj)
@@ -464,8 +481,6 @@ class Plotter:
 
     def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False):
         '''given a variable, Draw the histogram for the given variable'''
-
-
         variableNameToFill = variable.name
         variables = [variable]
 
@@ -533,15 +548,6 @@ class Plotter:
         variableNameToFill_y = variable_y.name
         variables = [variable_x, variable_y]
 
-        #Create a unique name for the 2D histogram
-        description_string = "2DHistogram"
-        for variable in variables:
-            description_string += variable.name
-        for sel in list_selections:
-            description_string += sel.name
-        description_string += str(self.object_counter)
-        self.object_counter += 1
-
         #First go and get all of the histograms that we need
         histogram_dictionary = {}
         for channel in self.channels:
@@ -587,15 +593,6 @@ class Plotter:
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
         variables = [variable_x, variable_y]
-
-        #Create a unique name for the 2D histogram
-        description_string = "TProfileHistogram"
-        for variable in variables:
-            description_string += variable.name
-        for sel in list_selections:
-            description_string += sel.name
-        description_string += str(self.object_counter)
-        self.object_counter += 1
 
         #First go and get all of the histograms that we need
         histogram_dictionary = {}

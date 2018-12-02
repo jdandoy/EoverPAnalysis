@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas
+from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas, getP, getBins, getLogBins
 import ROOT
 #from variables.variables import calc_weight
 #from inputs.samples import INPUT
@@ -95,13 +95,9 @@ def FillingScript(plotter, outputRootFileName):
 #    ################################################################################yy
     #prepare the momentum bins
     binMax = 30.0
-    binLow = 0.5
+    binMin = 0.5
     nBins = 100
-    base = (binMax/binLow) ** (1./float(nBins))
-    p_bins = []
-    min_p = []
-    for i in range(0, nBins + 1):
-        p_bins.append(0.5 * (base) ** i )
+    p_bins = getLogBins(binMin, binMax, nBins)
     histogram_name = "trkPtHist"
     trkPtHistZoom = plotter.GetHistograms(histogram_name,\
                                        calc_trkPt,\
@@ -158,13 +154,10 @@ def FillingScript(plotter, outputRootFileName):
 
 #   ################################################################################yy
     histogramName = "TwoDTrackPvsTrkEtaID"
-    bin_size = 0.1
     max_bin = 2.4
     min_bin = -2.4
-    eta_bins = []
-    eta_bins.append(min_bin)
-    while abs(eta_bins[-1] - max_bin) > 0.0001:
-        eta_bins.append(eta_bins[-1] + bin_size)
+    nBins = 48
+    eta_bins = getBins(min_bin, max_bin, nBins)
     TwoDtrkPvstrkEta = plotter.Get2DHistograms(histogramName,\
                                              calc_trkEtaID,\
                                              calc_trkP,\
@@ -210,12 +203,8 @@ def FillingScript(plotter, outputRootFileName):
     dPhi_bins = []
     min_bin = 0.0
     max_bin = pi
-    NBins = 100.0
-    bin_size = (max_bin-min_bin)/NBins
-    dPhi_bins = []
-    dPhi_bins.append(min_bin)
-    while abs(dPhi_bins[-1] - max_bin) > 0.0001:
-        dPhi_bins.append(dPhi_bins[-1] + bin_size)
+    NBins = 100
+    dPhi_bins = getBins(min_bin, max_bin, NBins)
 
     from variables.variables import calc_trkDPhi
     TwoDtrkPvstrkDPhi = plotter.Get2DHistograms(histogramName,\
@@ -561,11 +550,8 @@ def FillingScript(plotter, outputRootFileName):
     binMax = 10.05
     binLow = 0.5
     nBins = 15
-    base = (binMax/binLow) ** (1./float(nBins))
-    bins = []
-    min_p = []
-    for i in range(0, nBins + 1):
-        bins.append(binLow * (base) ** i )
+    bins = getLogBins(binLow, binMax, nBins)
+
     histogramName = "InclusiveZeroFractionVsPDenomenator"
     trkMultiplicity = plotter.GetHistograms(histogramName,\
                                           calc_trkP,\
@@ -702,12 +688,9 @@ def FillingScript(plotter, outputRootFileName):
 
     for (etaSelection, eta_selectionDescription, file_description, center) in zip(etaSelections, eta_selectionDescriptions, file_descriptions, centers):
         binMax = 10.05
-        binLow = 0.5 / np.cos(2 * np.arctan(np.exp(-1.0 * center))) ## get the lower bin right for each plot
+        binLow = getP(0.5, center)
         nBins = 15
-        base = (binMax/binLow) ** (1./float(nBins))
-        bins = []
-        for i in range(0, nBins + 1):
-           bins.append(binLow * (base) ** i )
+        bins = getLogBins(binLow, binMax, nBins)
 
         #do the eta selection and count the inclusive number of tracks in the bin
         selections = [etaSelection]
@@ -741,12 +724,9 @@ def FillingScript(plotter, outputRootFileName):
 
     for (etaSelection, eta_selectionDescription, file_description, center) in zip(etaSelections, eta_selectionDescriptions, file_descriptions, centers):
         binMax = 10.05
-        binLow = 0.5 / np.cos(2 * np.arctan(np.exp(-1.0 * center))) ## get the lower bin right for each plot
+        binLow = getP(0.5, center)
         nBins = 15
-        base = (binMax/binLow) ** (1./float(nBins))
-        bins = []
-        for i in range(0, nBins + 1):
-           bins.append(binLow * (base) ** i )
+        bins = getLogBins(binLow, binMax, nBins)
 
         #do the eta selection and count the inclusive number of tracks in the bin
         selections = [etaSelection] + [sel_NTRT20]
@@ -1186,30 +1166,27 @@ def FillingScript(plotter, outputRootFileName):
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
 
     #go and get the average E/P for MIP particles in each of the eta bins.
-    for eta_range, eta_binSelection in zip(eta_ranges, eta_binSelections):
+    for eta_range in eta_ranges:
         #get the function that selectts tracks in that bin
         EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
-        sel_EtaBin = calculation(EtaBinFunction, ["trk_etaID"])
+        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
 
         #calculate the lowest momentum track that can end up in that bin
-        center = eta_range[1]
-        binMax = 10.05
-        binLow = 0.5 / np.cos(2 * np.arctan(np.exp(-1.0 * center))) ## get the lower bin right for each plot
+        eta = eta_range[1]
+        p_bins_max = 10.05
+        p_bins_min = getP(0.5, eta)
         nBins = 15
-        base = (binMax/binLow) ** (1./float(nBins))
-        p_bins = []
-        for i in range(0, nBins + 1):
-           p_bins.append(binLow * (base) ** i )
+        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
 
-        #get the bins of the EOP variable
         eop_bins_min = -1
         eop_bins_max = 5
-        nbins = 120
-        step = float(eop_bins_max-eop_bins_min)/float(nbins)
-        eop_bins = []
-        for i in range(0, nBins + 1):
-            eop_bins.append(eop_bins_min + i * step)
+        nBins = 120
+        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
+        print("+" * 50)
+        print("for Eta " + str(eta))
+        print(eop_bins)
+        print(p_bins)
 
         MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
         selections = MIP_selection + [eta_binSelection]
@@ -1283,7 +1260,7 @@ def FillingScript(plotter, outputRootFileName):
         WriteToFile(AverageAnulus, outFile)
 
         #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [(x,y) for x,y in zip(p_bins[0:-1], p_bins[1:])]
+        p_ranges = [[x,y] for x,y in zip(p_bins[0:-1], p_bins[1:])]
         for p_range in p_ranges:
             PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
@@ -1371,7 +1348,7 @@ def FillingScript(plotter, outputRootFileName):
         WriteToFile(AverageAnulus, outFile)
 
         #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [(x,y) for x,y in zip(p_bins[0:-2], p_bins[1:-1])]
+        p_ranges = [[x,y] for x,y in zip(p_bins[0:-2], p_bins[1:-1])]
         for p_range in p_ranges:
             PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])

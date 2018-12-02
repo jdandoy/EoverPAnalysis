@@ -26,4 +26,4 @@ file = args.picklefile
 name = args.jobname
 
 plots = pickle.load(open(file, "rb"))[i]
-FillingScript(plots, "Outputs/" + name + "/" + name + "_" + str(i) + ".root")
+FillingScript(plots, name + "_" + str(i) + ".root")
