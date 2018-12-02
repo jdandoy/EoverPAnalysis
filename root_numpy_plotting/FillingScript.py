@@ -1184,16 +1184,14 @@ def FillingScript(plotter, outputRootFileName):
 
     #create a set of strings that could describe the eta or momentum selections
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
-    eta_descriptors = []
-    eta_binSelections = []
-    for eta_range in eta_ranges:
-        EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
-        sel_EtaBin = calculation(EtaBinFunction, ["trk_etaID"])
-        eta_binSelections.append(sel_EtaBin)
 
     #go and get the average E/P for MIP particles in each of the eta bins.
     for eta_range, eta_binSelection in zip(eta_ranges, eta_binSelections):
+        #get the function that selectts tracks in that bin
+        EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
+        sel_EtaBin = calculation(EtaBinFunction, ["trk_etaID"])
 
+        #calculate the lowest momentum track that can end up in that bin
         center = eta_range[1]
         binMax = 10.05
         binLow = 0.5 / np.cos(2 * np.arctan(np.exp(-1.0 * center))) ## get the lower bin right for each plot
@@ -1203,6 +1201,7 @@ def FillingScript(plotter, outputRootFileName):
         for i in range(0, nBins + 1):
            p_bins.append(binLow * (base) ** i )
 
+        #get the bins of the EOP variable
         eop_bins_min = -1
         eop_bins_max = 5
         nbins = 120

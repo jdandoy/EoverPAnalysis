@@ -1,6 +1,4 @@
-from multiprocessing import Pool, cpu_count
 from ROOT import TFile, TH1D, TTree
-from numpy import loadtxt
 from root_numpy import tree2array
 
 #These are python JZW samples. I normalize to the number of generated events, the cross section and the filter efficiency
