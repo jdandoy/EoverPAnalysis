@@ -21,12 +21,14 @@ c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
                                  "m_applyPrimaryVertexCut": True,
                                  "m_applyEventCleaningCut": True,
                                  "m_applyCoreFlagsCut": True,
-                                 "m_applyTriggerCut": False, #This should be true for data
+                                 "m_applyTriggerCut": True, #This should be true for data
                                  #"m_useCutflow": True,
-                                 "m_GRLxml": "EoverPAnalysis/data17_13TeV.periodN_DetStatus-v98-pro21-16_Unknown_PHYS_StandardGRL_All_Good_25ns_ignore_GLOBAL_LOWMU_for_specific_run341294.xml",
+                                 #"m_GRLxml": "EoverPAnalysis/data17_13TeV.periodN_DetStatus-v98-pro21-16_Unknown_PHYS_StandardGRL_All_Good_25ns_ignore_GLOBAL_LOWMU_for_specific_run341294.xml",
+                                 "m_GRLxml": "/afs/cern.ch/work/l/luadamek/public/EOPCode/myEoverPAnalysis/build/x86_64-slc6-gcc62-opt/data/EoverPAnalysis/data17_13TeV.periodN_DetStatus-v98-pro21-16_Unknown_PHYS_StandardGRL_All_Good_25ns_ignore_GLOBAL_LOWMU.xml",
                                  "m_lumiCalcFileNames": "EoverPAnalysis/ilumicalc_histograms_HLT_mb_sptrk_341294_OflLumi-13TeV-010.root",
                                  "m_PRWFileNames": "EoverPAnalysis/ntup_prw_36102_JZ012.root",
                                  "m_triggerSelection": "HLT_mb_sptrk",
+                                 "m_applyPrimaryVertexCut": True,
                                  "m_PVNTrack": 2,
                                  "m_useMetaData": False,
                                  "m_checkDuplicatesData": False,
@@ -100,5 +102,5 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_ti
                                     "m_inTrackContainerName": track_container,
                                     "m_energyCalibList": "ClusterEnergy,CellEnergy,ClusterEnergyLCW", # ClusterEnergy, ClusterEnergyLCW, or CellEnergy
                                     "m_useCutFlow": True,
-                                    "m_msgLevel": "debug"})
+                                    "m_msgLevel": "info"})
 
