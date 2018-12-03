@@ -396,6 +396,7 @@ class Plotter:
     def __init__(self, inputs, treeName, weightCalculator, base_selections = "", partition_dictionary = None):
         self.channelFiles = {}
         self.channelLabels = {}
+        self.binningHistograms = {}
         self.AddInputDictionary(inputs)
         self.treeName = treeName
         self.partition_dictionary = partition_dictionary
@@ -406,6 +407,11 @@ class Plotter:
         self.NormalizationWeightsDictionary = {} # A dictionary of channel to variable to the weights needed for the reweighting of this variable
         self.object_counter = 0
         self.weightCalculator = weightCalculator
+
+    def BookHistogramForBinning(self, histogram, histogramName):
+        '''This saves a histogram that can be used later to determine bin sizes. This could be a track multiplicity distribution, for example'''
+        self.binningHistograms[histogramName] = histogram
+        toGlobalScope(histogram)
 
     def AddInputDictionary(self, dictionary):
         '''Take an input dictionary of channel names to: tuple of (channel descriptor for legend, list of [input root filename strings])'''
@@ -441,17 +447,16 @@ class Plotter:
         ''' Get the data from a specific file'''
         total_entries = self.GetNumEntries(filename)
         branches = GetListOfNeededBranches(variables, list_selections)
-        #The configuration for the fetch results function.
 
+        #get the parition of the ttree to be read
         partition = None
         if self.partition_dictionary == None:
             partition = (0, total_entries)
         else:
-            partition = self.partition_dictionary[filename] #What partition of the file is this worker responsible for?
+            partition = self.partition_dictionary[filename]
             print("Found a partition")
 
         print("Getting data for partition " + str(partition))
-
         result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
 
         ##Get the resulting dictionary of variables, selections, and weights
@@ -465,7 +470,7 @@ class Plotter:
         total_selection = np.ones(len(weights)) > 0.0
         for selection in list_selections:
             if self.verbose: print("applying selection " + str(selection.name))
-            if self.verbose: print(selection_dict[selection.name])
+            #if self.verbose: print(selection_dict[selection.name])
             total_selection &= selection_dict[selection.name]
             #cutflowsWeighted.Fill(selection_name, np.sum(weights[total_selection]))
             #cutflows.Fill(selection_name, np.sum(1*total_selection))

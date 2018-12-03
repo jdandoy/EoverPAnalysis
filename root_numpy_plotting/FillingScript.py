@@ -781,380 +781,6 @@ def FillingScript(plotter, outputRootFileName):
                                                xlabel ="E/p",
                                                ylabel = "Number of Tracks")
 
-#  ################################################################################yy
-#  selections = [sel_PGreater1_5, sel_IDEta00_06] + MIP_selection
-#  trkEOPHistPGreater1_5 = plotter.GetHistograms(calc_EOP,
-#                                              list_selections = selections,
-#                                               bins = 50,
-#                                               range_low = -1,
-#                                               range_high = 5,
-#                                               xlabel ="E/p",
-#                                               ylabel = "Number of Tracks")
-#  description = ["MIP Selection",\
-#                 "P[GeV]>1.5",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater1_5,
-#                              plotter.channelLabels,
-#                              MCKey='PythiaJetJet',
-#                             DataKey='LowMuData',
-#                             ratio_min = 0.5,\
-#                             ratio_max = 1.5,\
-#                             extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP1_5Eta0_6_reweighted_MIP.png")
-#  CloseCanvas(DataVsMCEOP)
-
-#  ################################################################################yy
-#  from calculation.calculation import calculation
-#  from selections.selections import EtaBin, PBin
-#  PBinFunction = lambda x: PBin(x, 0.5, 1.0)
-#  sel_Pbin = calculation(PBinFunction, ["trk_p"])
-#  selections = [sel_Pbin, sel_IDEta00_06] + MIP_selection
-#  trkEOP                 = plotter.GetHistograms(calc_EOP,
-#                                              list_selections = selections,
-#                                               bins = 50,
-#                                               range_low = -1,
-#                                               range_high = 3,
-#                                               xlabel ="E/p",
-#                                               ylabel = "Number of Tracks")
-#  description = ["MIP Selection",\
-#                 "0.5<p[GeV]<1.0",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHist,\
-#                              plotter.channelLabels,
-#                              MCKey='PythiaJetJet',
-#                             DataKey='LowMuData',
-#                             ratio_min = 0.6,\
-#                             ratio_max = 1.4,\
-#                             extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP05_08Eta06_reweighted_MIP.png")
-#  CloseCanvas(DataVsMCEOP)
-
-
-
-#  ################################################################################yy
-#  selections = [sel_PGreater2, sel_IDEta00_06] + MIP_selection
-#  trkEOPHistPGreater2 = plotter.GetHistograms(calc_EOP,
-#                                            list_selections = selections,
-#                                            bins = 50,
-#                                             range_low = -1,
-#                                            range_high = 5,
-#                                            xlabel ="E/p",
-#                                             ylabel = "Number of Tracks",
-#                                            )
-#  description = ["MIP Selection",\
-#                 "P[GeV]>2",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater2,
-#                              plotter.channelLabels,
-#                              MCKey='PythiaJetJet',
-#                              DataKey='LowMuData',
-#                             extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP2Eta0_6_reweighted_MIP.png")
-#  CloseCanvas(DataVsMCEOP)
-
-
-#  ################################################################################yy
-#  selections = [sel_PGreater2_5, sel_IDEta00_06] + MIP_selection
-#  trkEOPHistPGreater2 = plotter.GetHistograms(calc_EOP,
-#                                            list_selections = selections,
-#                                            bins = 50,
-#                                             range_low = -1,
-#                                            range_high = 5,
-#                                            xlabel ="E/p",
-#                                             ylabel = "Number of Tracks",
-#                                            )
-#  description = ["MIP Selection",\
-#                 "P[GeV]>2.5",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater2,
-#                              plotter.channelLabels,
-#                              MCKey='PythiaJetJet',
-#                              DataKey='LowMuData',
-#                             extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP2_5Eta0_6_reweighted_MIP.png")
-#  CloseCanvas(DataVsMCEOP)
-
-#  ################################################################################yy
-#  selections = [sel_PGreater3, sel_IDEta00_06] + MIP_selection
-#  trkEOPHistPGreater2 = plotter.GetHistograms(calc_EOP,
-#                                            list_selections = selections,
-#                                            bins = 50,
-#                                             range_low = -1,
-#                                            range_high = 5,
-#                                            xlabel ="E/p",
-#                                             ylabel = "Number of Tracks",
-#                                            )
-#  description = ["MIP Selection",\
-#                 "P[GeV]>3",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater2,
-#                              plotter.channelLabels,
-#                              MCKey='PythiaJetJet',
-#                              DataKey='LowMuData',
-#                             extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP3Eta0_6_reweighted_MIP.png")
-#  CloseCanvas(DataVsMCEOP)
-
-
-#  ################################################################################yy
-#  from selections.selections import sel_IDEta19_23, sel_IDEta00_06, sel_PBetween12_18, sel_PBetween22_28, sel_PBetween28_36
-#  selections = [sel_PBetween12_18, sel_IDEta00_06] + MIP_selection
-#  trkEOPHistFig2a = plotter.GetHistograms(calc_EOP,
-#                                            list_selections = selections,
-#                                            bins = 50,
-#                                             range_low = -1,
-#                                            range_high = 5,
-#                                            xlabel ="E/p",
-#                                             ylabel = "Number of Tracks",
-#                                            )
-#  description = ["MIP Selection",\
-#                 "1.2<P[GeV]<1.8",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2a,\
-#                             plotter.channelLabels,\
-#                             MCKey='PythiaJetJet',\
-#                             DataKey='LowMuData',\
-#                             ratio_min = 0.5,\
-#                             ratio_max = 1.5,\
-#                             extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP12_18_Eta0_6_reweighted_MIP.png")
-
-#  ################################################################################yy
-#  from selections.selections import sel_PBetween22_28
-#  selections = [sel_PBetween22_28, sel_IDEta00_06] + MIP_selection
-#  trkEOPHistFig2b = plotter.GetHistograms(calc_EOP,\
-#                                        list_selections = selections,\
-#                                        bins = 50,\
-#                                        range_low = -0.75,\
-#                                        range_high = 4,\
-#                                        xlabel ="E/p",\
-#                                        ylabel = "Number of Tracks",\
-#                                       )
-#  description = ["MIP Selection",\
-#                 "2.2<P[GeV]<2.8",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2b,\
-#                              plotter.channelLabels,\
-#                              MCKey='PythiaJetJet',\
-#                              DataKey='LowMuData',\
-#                             ratio_min = 0.5,\
-#                             ratio_max = 1.5,\
-#                              extra_description = description)
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP22_28_Eta0_6_reweighted_MIP.png")
-
-#  ################################################################################yy
-#  selections = [sel_PBetween28_36, sel_IDEta19_23] + MIP_selection
-#  trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                        list_selections = selections,\
-#                                        bins = 50,\
-#                                        range_low = -0.75,\
-#                                        range_high = 4,\
-#                                        xlabel ="E/p",\
-#                                        ylabel = "Number of Tracks",\
-#                                        )
-#  description = ["MIP Selection",\
-#                 "2.8<P[GeV]<3.6",\
-#                 "1.9<|#eta_{ID}|<2.3",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                             plotter.channelLabels,\
-#                             MCKey='PythiaJetJet',\
-#                             DataKey='LowMuData',\
-#                             ratio_min = 0.5,\
-#                             ratio_max = 1.5,\
-#                             extra_description = description\
-#                             )
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta19_23_reweighted_MIP.png")
-
-#  ################################################################################yy
-#  selections = [sel_PBetween28_36, sel_IDEta00_06] + MIP_selection
-#  trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                        list_selections = selections,\
-#                                        bins = 50,\
-#                                        range_low = -0.5,\
-#                                        range_high = 3,\
-#                                        xlabel ="E/p",\
-#                                        ylabel = "Number of Tracks",\
-#                                        )
-#  description = ["MIP Selection",\
-#                 "2.8<P[GeV]<3.6",\
-#                 "|#eta_{ID}|<0.6",\
-#                 "P_{T} Reweighted"]
-#  DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                             plotter.channelLabels,\
-#                             MCKey='PythiaJetJet',\
-#                             DataKey='LowMuData',\
-#                             ratio_min = 0.5,\
-#                             ratio_max = 1.5,\
-#                             extra_description = description\
-#                             )
-#  DataVsMCEOP.Draw()
-#  DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta0_6_reweighted_MIP.png")
-
-#   ################################################################################yy
-#   ## Look in different bins of pseudorapidity
-#   from variables.variables import calc_trkEta_ABS
-#   base_description = []
-#   etaSelections = [sel_IDEta00_06,\
-#                    sel_IDEta06_11,\
-#                    sel_IDEta11_14,\
-#                    sel_IDEta14_15,\
-#                    sel_IDEta15_18,\
-#                    sel_IDEta18_23]
-
-#   eta_selectionDescriptions = [\
-#                              "|#eta_{ID}|<0.6",\
-#                              "0.6<|#eta_{ID}|<1.1",\
-#                              "1.1<|#eta_{ID}|<1.4",\
-#                              "1.4<|#eta_{ID}|<1.5",\
-#                              "1.5<|#eta_{ID}|<1.8",\
-#                              "1.8<|#eta_{ID}|<2.3"\
-#                              ]
-
-#   file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection] + MIP_selection
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkPt,\
-#                                                         list_selections = selections,\
-#                                                         bins = 80,\
-#                                                         range_low = 0.5,\
-#                                                         range_high = 5,\
-#                                                         xlabel ="Track P_{T} [GeV]",\
-#                                                         ylabel = "Number of Tracks",\
-#                                                         )
-
-#               description = ["MIP Selection", eta_selectionDescription] + ["P_{T} Reweighted"]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.8,\
-#                                                 ratio_max = 1.2,\
-#                                                 doLogx = False,\
-#                                                 doLogy = False\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkPtReweighted"+file_description+"MIP.png")
-
-#           ################################################################################
-#           from variables.variables import calc_trkEMFraction, calc_trkHADFraction
-#           from variables.variables import calc_trkEta_ABS
-#           from selections.selections import sel_NonZeroEnergy
-
-#           base_description = []
-#           etaSelections = [sel_IDEta00_06,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23\
-#                            ]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection] + [sel_NonZeroEnergy]
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkEMFraction,\
-#                                                         list_selections = selections,\
-#                                                         bins = 22,\
-#                                                         range_low = -1.0,\
-#                                                         range_high = 1.2,\
-#                                                         xlabel ="E_{EM}/E_{Total}",\
-#                                                         ylabel = "Number of Tracks",\
-#                                                         )
-
-#               description = ["E_{Total} != 0", eta_selectionDescription] + ["P_{T} Reweighted"]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.6,\
-#                                                 ratio_max = 1.4,\
-#                                                 doLogx = False,\
-#                                                 doLogy = False\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkEMFractionReweighted"+file_description+".png")
-
-#           ################################################################################
-#           from variables.variables import calc_trkEMFraction, calc_trkHADFraction
-#           from variables.variables import calc_trkEta_ABS
-#           from selections.selections import sel_NonZeroEnergy
-
-#           base_description = []
-#           etaSelections = [sel_IDEta00_06,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23\
-#                            ]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection] + [sel_NonZeroEnergy]
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkHADFraction,\
-#                                                         list_selections = selections,\
-#                                                         bins = 22,\
-#                                                         range_low = -1.0,\
-#                                                         range_high = 1.2,\
-#                                                         xlabel ="E_{HAD}/E_{Total}",\
-#                                                         ylabel = "Number of Tracks",\
-#                                                         )
-
-#               description = ["E_{Total} != 0", eta_selectionDescription] + ["P_{T} Reweighted"]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.6,\
-#                                                 ratio_max = 1.4,\
-#                                                 doLogx = False,\
-#                                                 doLogy = False\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkHADFractionReweighted"+file_description+".png")
 
     ################################################################################
     ##Create a set of p and eta bins for the measurement ##########################
@@ -1169,14 +795,17 @@ def FillingScript(plotter, outputRootFileName):
     for eta_range in eta_ranges:
         #get the function that selectts tracks in that bin
         EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
+        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
         eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
 
         #calculate the lowest momentum track that can end up in that bin
+        #create nbins where there are at least 10,000 entries per bin
         eta = eta_range[1]
-        p_bins_max = 10.05
+        p_bins_max = 15.05
         p_bins_min = getP(0.5, eta)
-        nBins = 15
+        nBins = 20
         p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 1000)
 
         eop_bins_min = -1
         eop_bins_max = 5
@@ -1190,6 +819,16 @@ def FillingScript(plotter, outputRootFileName):
 
         MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
         selections = MIP_selection + [eta_binSelection]
+        histogramName = "TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMulitplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
         histogramName = "EOPProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
                                                   calc_trkP,\
@@ -1255,29 +894,50 @@ def FillingScript(plotter, outputRootFileName):
                                                   bins_x = p_bins,\
                                                   bins_y = eop_bins,\
                                                   xlabel ="P[GeV]",\
-                                                  ylabel = "E_{BKG}/p",\
+                                                  ylabel = "E/p BKG",\
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
         #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [[x,y] for x,y in zip(p_bins[0:-1], p_bins[1:])]
+        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
         for p_range in p_ranges:
+            print("The prange is " + str(p_range))
             PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = MIP_selection + [eta_binSelection, sel_PBin]
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
             histogramName = "EOPDistribution_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            AverageEOP  =  plotter.GetHistograms(histogramName,
+            EOPDist  =  plotter.GetHistograms(histogramName,
                                                       calc_EOP,\
                                                       list_selections = selections,\
                                                       bins = eop_bins,\
                                                       xlabel ="E/p",\
                                                       )
-            WriteToFile(AverageEOP, outFile)
+            WriteToFile(EOPDist, outFile)
+
+            histogramName = "EOPBkgDistribution_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            WriteToFile(EOPBkgDist, outFile)
 
         from selections.selections import sel_EHadFracAbove70
-
         MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70]
         selections = MIP_selection + [eta_binSelection]
+
+        histogramName = "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMulitplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P [GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
         histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
                                                   calc_trkP,\
@@ -1296,7 +956,7 @@ def FillingScript(plotter, outputRootFileName):
                                                   list_selections = selections,\
                                                   bins_x = p_bins,\
                                                   bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
+                                                  xlabel ="P [GeV]",\
                                                   ylabel = "E/p",\
                                                   )
         WriteToFile(AverageEOP, outFile)
@@ -1343,24 +1003,34 @@ def FillingScript(plotter, outputRootFileName):
                                                   bins_x = p_bins,\
                                                   bins_y = eop_bins,\
                                                   xlabel ="P[GeV]",\
-                                                  ylabel = "E_{BKG}/p",\
+                                                  ylabel = "E/p BKG",\
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
         #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [[x,y] for x,y in zip(p_bins[0:-2], p_bins[1:-1])]
+        p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
         for p_range in p_ranges:
             PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = MIP_selection + [eta_binSelection, sel_PBin]
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
             histogramName = "EOPDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            AverageEOP  =  plotter.GetHistograms(histogramName,
+            EOPDist  =  plotter.GetHistograms(histogramName,
                                                       calc_EOP,\
                                                       list_selections = selections,\
                                                       bins = eop_bins,\
                                                       xlabel ="E/p",\
                                                       )
-            WriteToFile(AverageEOP, outFile)
+            WriteToFile(EOPDist, outFile)
+
+            histogramName = "EOPBkgDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            WriteToFile(AverageEOPBkg, outFile)
 
 
 #   #go and get the average eneryg in the EM anulus for MIP particles in each of the eta bins.
