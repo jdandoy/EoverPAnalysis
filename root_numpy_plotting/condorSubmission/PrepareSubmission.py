@@ -107,12 +107,11 @@ leading_script.write("Error = " +jobName + "/Error/job.$(Process)\n")
 leading_script.write("Output = " +jobName + "/Output/job.$(Process)\n")
 leading_script.write("Log = "+jobName+"/Log/job.$(Process)\n")
 leading_script.write("+ProjectName='atlas-eopplotting'\n")
-leading_script.write('+JobFlavour = "longlunch"\n')
+leading_script.write('+JobFlavour = "workday"\n')
 leading_script.write("should_transfer_files = YES\n")
 leading_script.write("when_to_transfer_output = ON_Exit\n")
 leading_script.write("transfer_output         = True\n")
-Home_DIR = os_path.expandvars('$HOME')
-leading_script.write("transfer_input_files    = " +Home_DIR + "/CondorPythonLocal, variables, PlottingTools, selections, condorSubmission/submit.py ,calculation, FillingScript.py, " + submission_pickle_file + "\n")
+leading_script.write("transfer_input_files    = CondorPythonLocal, variables, PlottingTools, selections, condorSubmission/submit.py ,calculation, FillingScript.py, " + submission_pickle_file + "\n")
 leading_script.write("transfer_output_files   = " + jobName + "_$(Process).root\n")
 leading_script.write("\n")
 
@@ -126,5 +125,3 @@ for i in range(0, len(partitions)):
 
 #create a pickle file for each submission
 pickle.dump( submission_list, open(submission_pickle_file, "wb" ) )
-
-

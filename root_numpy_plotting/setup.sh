@@ -8,8 +8,8 @@ pip uninstall cython
 pip uninstall root_numpy
 pip unistall psutil
 
-pip install --install-option="--prefix=~/CondorPythonLocal" --ignore-installed cython
-pip install --install-option="--prefix=~/CondorPythonLocal" --ignore-installed root_numpy
-pip install --install-option="--prefix=~/CondorPythonLocal" --ignore-installed psutil
+pip install --install-option="--prefix=CondorPythonLocal" --ignore-installed cython
+pip install --install-option="--prefix=CondorPythonLocal" --ignore-installed root_numpy
+pip install --install-option="--prefix=CondorPythonLocal" --ignore-installed psutil
 
 echo "READY TO GO!"
