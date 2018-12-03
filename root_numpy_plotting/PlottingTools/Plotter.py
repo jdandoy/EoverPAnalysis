@@ -628,8 +628,6 @@ class Plotter:
 
                 print("Finished filling histogram")
 
-            #convert the tprofile histogram to a refular histogram, for division later
-            histogram_dictionary[channel] = histogram_dictionary[channel].ProjectionX()
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
 
