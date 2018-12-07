@@ -3,6 +3,8 @@ from array import array
 from root_numpy import fill_hist, fill_profile
 import ROOT
 from DataPrep import GetData
+from atlasplots import atlas_style as astyle
+astyle.SetAtlasStyle()
 
 global_scope = []
 CANVAS_COUNTER = 1
@@ -332,7 +334,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     top_pad.Update()
 
     canvas.SetRightMargin(0.15);
-    canvas.SetCanvasSize(1400,900)
     canvas.Modified()
     canvas.Update()
 

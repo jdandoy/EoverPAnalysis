@@ -13,9 +13,13 @@ class HistogramManager:
        for channel in self.channels:
            self.histograms = [key.replace(channel, "") for key in self.histograms]
        self.histograms = list(set(self.histograms))
-       print "channels " + str(self.channels)
-       print "histograms " + str(self.histograms)
        tFile.Close()
+
+    def listHistograms(self):
+       print "=" * 50
+       print "listing all histograms:"
+       for histogram in sorted(self.histograms, key=str.lower):
+           print histogram
 
     def getHistograms(self, histogramName):
        tFile = ROOT.TFile(self.filename, "READ")

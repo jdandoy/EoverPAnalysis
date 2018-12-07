@@ -3,9 +3,9 @@ from root_numpy import tree2array
 
 #These are python JZW samples. I normalize to the number of generated events, the cross section and the filter efficiency
 weight_dictionary = {\
-"361020" : (1/(1000000.0)) * 78420000 * 0.9755,
-"361021" : (1/(1000000.0)) * 78420000 * 0.00067143,
-"361022" : (1/(999000.0)) *  2433200 * 0.00033423,
+"361020" : (1./(1000000.0)) * 78420000 * 0.9755,
+"361021" : (1./(1000000.0)) * 78420000 * 0.00067143,
+"361022" : (1./(999000.0)) *  2433200 * 0.00033423,
 }
 
 #particle_labels_dictionary = {\
