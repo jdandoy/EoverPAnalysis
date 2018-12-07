@@ -3,13 +3,25 @@ from array import array
 from root_numpy import fill_hist, fill_profile
 import ROOT
 from DataPrep import GetData
-from atlasplots import atlas_style as astyle
-astyle.SetAtlasStyle()
+import imp
+
+try:
+    imp.find_module('atlasplots')
+    foundAtlasPlots = True
+    print "Found atlas plots module. Setting atlas style"
+except ImportError:
+    foundAtlasPlots = False
+    print "Didn't find atlas plots module. Did NOT set atlas style. Continuing"
+
+if foundAtlasPlots:
+    from atlasplots import atlas_style as astyle
+    astyle.SetAtlasStyle()
 
 global_scope = []
 CANVAS_COUNTER = 1
 
 def getLogBins(minBin, maxBin, nBins):
+    '''Get nBins logarithmically-evenly spaced bins ranging from minBin to maxBin'''
     bins = []
     base = (float(maxBin)/float(minBin)) ** (1.0/float(nBins))
     for i in range(0, nBins+1):
@@ -17,6 +29,7 @@ def getLogBins(minBin, maxBin, nBins):
     return bins
 
 def getBins(minBin, maxBin, nBins):
+    '''Get nBins evenly spaced bins ranging from minBin to maxBin'''
     bins = []
     step = float(maxBin - minBin)/float(nBins)
     for i in range(0, nBins+1):
@@ -24,13 +37,15 @@ def getBins(minBin, maxBin, nBins):
     return bins
 
 def getP(Pt, eta):
+    '''Given a value of pT and eta, return the momentum'''
     return Pt*np.cosh(eta)
 
 def toGlobalScope(obj):
+    '''Keep TObjects alive at global scope'''
     global_scope.append(obj)
 
-
 def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
+     '''Take a 2-D histogram and plot it on a canvas. Options for a logarithmic x and y axis are available.'''
      global CANVAS_COUNTER
      ROOT.gStyle.SetPalette(ROOT.kInvertedDarkBodyRadiator)
      canvas_name = TwoDHist.GetName() + "_" + str(CANVAS_COUNTER)
@@ -107,8 +122,8 @@ def handle_underflow_overflow(h):
 
     return h
 
-#Keep things alive at the global scope
 def cleanUpHistograms(h):
+   '''Create a histogram with it's characteristics set to standard values.'''
     h.SetLineStyle(1)
     h.SetLineWidth(3)
     h.SetFillStyle(0)
@@ -120,7 +135,7 @@ MCColor = ROOT.kRed
 DataColor = ROOT.kBlack
 
 def GetHistogramOfErrors(hist_dict):
-    '''take the histograms from two different dictionaries, and divide them by matching keys'''
+    '''Given an input dictionary of histograms, return a dictionary of histograms with the bin content set to the error of the bin'''
     dict_keys = hist_dict.keys()
 
     for key in dict_keys:
@@ -142,13 +157,30 @@ def GetHistogramOfErrors(hist_dict):
     return return_dict
 
 def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505):
-    ''' Draw the data vs MC ratio for the MC and data histograms'''
+    '''
+    This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
+    inputs
+    -----------------------------------------------------------------------------------------------------
+    histogram_dict: a dictionary of string channel name to TH1 or TProfile
+    LegendLabels: a dictionary of string channel name to string description of channel to be used in the legend.
+    MCKey: A string corresponding to the key for the MC histogram
+    DataKey: a string correponding to the key for the data histogram
+    doLogy: Bool. When true, the y axis is drawn with logarithmic scale
+    doLogx: Bool. When true, the x axis is drawn with logarithmic scale
+    ratio_min: the minimum value of the range of the y-axis in the data/MC ratio plot
+    ratio_max: the maximum value of the range of the y-axis in the data/MC ratio plot
+    extra_desction: list of strings corresponding to be drawn on the plot. These are used to describe what is being plotted.
+    extra_desx: the x co-ordinate of the extra descriptions in NDC coordinates
+    extra_desy: the y co-ordinate of the extra descriptions in NDC coordinates
+    scale_dactor: the maximual value of the y-axis is set to scale_factor * (largest bin entry)
+    xTicksNumber: change the number of ticks on the x-axis
+    yTicksNumber: set the number of ticks on the y-axis
+    -----------------------------------------------------------------------------------------------------
+    '''
     MCHist = histogram_dict[MCKey]
     DataHist = histogram_dict[DataKey]
-
     MCHist = cleanUpHistograms(MCHist)
-
     MCHist.SetLineColor(MCColor)
     DataHist.SetLineColor(DataColor)
 
@@ -160,7 +192,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     canvas_name = "Canvas" + MCKey + DataKey + MCHist.GetTitle() + str(CANVAS_COUNTER)
     CANVAS_COUNTER = CANVAS_COUNTER + 1
     canvas = ROOT.TCanvas(canvas_name, canvas_name, 1300, 800)
-
 
     top_pad = ROOT.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
     top_pad.Draw()
@@ -254,7 +285,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
     variableLabel = MCHist.GetXaxis().GetTitle()
 
-
     data_ratio.GetYaxis().SetNdivisions(yTicksNumber)
 
     data_ratio.GetYaxis().SetTitle("Data/MC")
@@ -273,11 +303,11 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     data_ratio.Draw("HIST E")
     toGlobalScope(data_ratio)
 
+    ##Draw a set of solid and dotted lines on the ratio plot to guide the reader's eyes
     straight_line = ROOT.TF1("line1", str(1.0) , -10e6, + 10e6)
     straight_line.SetLineWidth(2)
     straight_line.Draw("Same")
     toGlobalScope(straight_line)
-    ##input("Does this look OK?")
 
     straight_line_up = ROOT.TF1("line2",  str(1.0 + (2.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
     straight_line_up.SetLineWidth(1)
@@ -326,7 +356,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     if xTicksNumber != None:
         data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
 
-
     bottom_pad.Modified()
     bottom_pad.Update()
 
@@ -356,7 +385,7 @@ def GetListOfNeededBranches(variables, selections):
     return branches
 
 def DivideHistograms(hist_dict1, hist_dict2):
-    '''take the histograms from two different dictionaries, and divide them by matching keys'''
+    '''take the histograms from two dictionaries hist_dict1 and hist_dict2, and divide them by matching keys. Return a dictionary with each key corresponding to the divided histogram.'''
     dict1_keys = hist_dict1.keys()
     dict2_keys = hist_dict2.keys()
 
@@ -378,7 +407,7 @@ def DivideHistograms(hist_dict1, hist_dict2):
     return return_dict
 
 def DivideTwoChannels(hist_dict, channel_numerator, channel_denomenator, new_zlabel = "", z_low = 0.0, z_high = 2.0):
-    '''Divide two specific histograms by eachother'''
+    '''Given a dictionary string channel to TH1D or TProfile histogram, divide the histogram with key channel_numerator by the histogram with key channel denomenator'''
     hist_numerator = hist_dict[channel_numerator]
     hist_denomenator = hist_dict[channel_denomenator]
 
@@ -394,6 +423,8 @@ def DivideTwoChannels(hist_dict, channel_numerator, channel_denomenator, new_zla
 
 
 class Plotter:
+    '''
+    '''
     def __init__(self, inputs, treeName, weightCalculator, base_selections = "", partition_dictionary = None):
         self.channelFiles = {}
         self.channelLabels = {}
@@ -421,32 +452,8 @@ class Plotter:
             self.channelFiles[channel] = dictionary[channel][1]
             self.channelLabels[channel] = dictionary[channel][0]
 
-    def GetNumberOfTracks(self, channel, list_selections = [],variables = []):
-        '''Get the total weighted number of Tracks. This is to normalize the distributions to each other'''
-        branches = []
-        weightedNumber = 0
-
-        for filename in self.channelFiles[channel]:
-            if self.verbose: print "Reading from file " + filename
-            variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
-            weightedNumber += np.sum(weights)
-        return weightedNumber
-
-    def GetNumSelectedEntries(self, filename):
-        input_file = ROOT.TFile(filename, "READ")
-        input_tree = input_file.Get(self.treeName)
-        selected_entries = input_tree.GetEntries(self.base_selections)
-        return selected_entries
-
-    def GetNumEntries(self, filename):
-        input_file = ROOT.TFile(filename, "READ")
-        input_tree = input_file.Get(self.treeName)
-        entries = input_tree.GetEntries()
-        return entries
-
     def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
-        ''' Get the data from a specific file'''
-        total_entries = self.GetNumEntries(filename)
+        '''Given a string channel, string filename, a list of calculation variables and a list of calculations list_selections, return a dictionary keys selection_dict, variable_dict and weights. selection_dict is a dictionary of key selection name to numpy array of bool. variable_dict is a dictionary of string variable name to numpy array variable. weights is a numpy array of floats'''
         branches = GetListOfNeededBranches(variables, list_selections)
 
         #get the parition of the ttree to be read
@@ -460,7 +467,7 @@ class Plotter:
         print("Getting data for partition " + str(partition))
         result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
 
-        ##Get the resulting dictionary of variables, selections, and weights
+        #Get the selections, variables and weights
         selection_dict = result["selection_dict"]
         variable_dict = result["variable_dict"]
         weights = result["weights"]
@@ -486,11 +493,10 @@ class Plotter:
         return variable_dict, weights
 
     def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False):
-        '''given a variable, Draw the histogram for the given variable'''
+        '''Get the histogram for variable after list_selections is applied.'''
+
         variableNameToFill = variable.name
         variables = [variable]
-
-        #First go and get all of the histograms that we need
         histogram_dictionary = {}
         if not HistogramPerFile:
             for channel in self.channels:
@@ -516,45 +522,13 @@ class Plotter:
                     if self.verbose: print to_weight
                     if self.verbose: print("Filling Variable " + variable.name)
                     fill_hist(histogram_dictionary[channel], to_fill, to_weight)
-
             return histogram_dictionary
-
-        else:
-            for channel in self.channels:
-                for filename in self.channelFiles[channel]:
-                    histogram_dictionary[filename] = {}
-                    if (type(bins) == list):
-                        bins_array = array('d',bins)
-                        histogram_dictionary[filename] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, len(bins_array)-1, bins_array)
-                    else:
-                        histogram_dictionary[filename] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, bins, range_low + 0.0000001, range_high - 0.000001)
-                    histogram_dictionary[filename].GetXaxis().SetTitle(xlabel)
-                    histogram_dictionary[filename].GetYaxis().SetTitle(ylabel)
-                    histogram_dictionary[filename].Sumw2()
-
-                    normalization_weight = 0.0
-                    print "Reading files for channel " + channel
-                    variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
-                    to_fill = variable_dict[variableNameToFill]
-                    to_weight = weights
-                    if self.verbose: print(len(to_fill))
-                    if self.verbose: print(len(to_weight))
-                    if self.verbose: print to_fill
-                    if self.verbose: print to_weight
-                    if self.verbose: print("Filling Variable " + variable.name)
-                    fill_hist(histogram_dictionary[filename], to_fill, to_weight)
-
-            return histogram_dictionary
-
-
 
     def Get2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
-        '''given a variable, Draw the histogram for the given variable'''
+        '''the 2-d histgram with variable_x and variable_y drawn'''
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
         variables = [variable_x, variable_y]
-
-        #First go and get all of the histograms that we need
         histogram_dictionary = {}
         for channel in self.channels:
             if (type(bins_x) == list and type(bins_y) == list):
@@ -588,19 +562,16 @@ class Plotter:
                 if self.verbose: print("Filling Variable " + variable.name)
                 print("Filling Histogram")
                 fill_hist(histogram_dictionary[channel], to_fill, to_weight)
-
                 print("Finished filling histogram")
-
         return histogram_dictionary
 
 
     def GetTProfileHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="",):
-        '''given a variable, Draw the histogram for the given variable'''
+        '''Get a TProfile histogram with variable_y profiled against variable_x, after selections list_selections have been applied'''
+
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
         variables = [variable_x, variable_y]
-
-        #First go and get all of the histograms that we need
         histogram_dictionary = {}
         for channel in self.channels:
             if (type(bins) == list):
@@ -626,16 +597,8 @@ class Plotter:
                 if self.verbose: print("Filling Variable " + variable.name)
                 print("Filling Histogram")
                 fill_profile(histogram_dictionary[channel], to_fill, to_weight)
-
                 print("Finished filling histogram")
 
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
-
         return histogram_dictionary
-
-
-
-
-
-
