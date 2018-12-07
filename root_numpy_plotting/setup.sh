@@ -4,12 +4,16 @@ source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh
 export EOPPlottingDir=$(pwd)
 asetup AnalysisBase,21.2.23
 
-pip uninstall cython
-pip uninstall root_numpy
-pip unistall psutil
+#pip uninstall cython
+#pip uninstall root_numpy
+#pip uninstall psutil
 
-pip install --install-option="--prefix=CondorPythonLocal" --ignore-installed cython
-pip install --install-option="--prefix=CondorPythonLocal" --ignore-installed root_numpy
-pip install --install-option="--prefix=CondorPythonLocal" --ignore-installed psutil
+mkdir -p $PWD/CondorPythonLocal/lib/python2.7/site-packages
+export PYTHONPATH=$PWD/CondorPythonLocal/lib/python2.7/site-packages:$PYTHONPATH
+export BLAS=None LAPACK=None ATLAS=None
+
+pip install --install-option="--prefix=$PWD/CondorPythonLocal" --ignore-installed cython
+pip install --install-option="--prefix=$PWD/CondorPythonLocal" --ignore-installed root_numpy
+pip install --install-option="--prefix=$PWD/CondorPythonLocal" --ignore-installed psutil 
 
 echo "READY TO GO!"

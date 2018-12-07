@@ -1280,6 +1280,254 @@ def FillingScript(plotter, outputRootFileName):
                                                       xlabel ="E/p Bkg",\
                                                       )
             WriteToFile(AverageEOPBkg, outFile)
+    
+    #Select only those tracks with a cluster
+    ################################################################################
+    ##Create a set of p and eta bins for the measurement ##########################
+    from calculation.calculation import calculation
+    from selections.selections import EtaBin, PBin, sel_NonZeroEnergy
+    from variables.variables import calc_EOPBkg, calc_EnergyAnulus
+
+    #create a set of strings that could describe the eta or momentum selections
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+
+    #go and get the average E/P for MIP particles in each of the eta bins.
+    for eta_range in eta_ranges:
+        #get the function that selectts tracks in that bin
+        EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
+        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
+        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+
+        #calculate the lowest momentum track that can end up in that bin
+        #create nbins where there are at least 10,000 entries per bin
+        eta = eta_range[1]
+        p_bins_max = 15.05
+        p_bins_min = getP(0.5, eta)
+        nBins = 20
+        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 1000)
+
+        eop_bins_min = -1
+        eop_bins_max = 5
+        nBins = 120
+        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
+
+        print("+" * 50)
+        print("for Eta " + str(eta))
+        print(eop_bins)
+        print(p_bins)
+
+        selections = [sel_NonZeroEnergy, eta_binSelection]
+        histogramName = "TrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMulitplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
+        histogramName = "EOPProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "2DHist_EOPVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Get2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "EnergyAnulusProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "EnergyBkgProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+            WriteToFile(EOPDist, outFile)
+
+            histogramName = "EOPBkgDistribution_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            WriteToFile(EOPBkgDist, outFile)
+
+        selections = [eta_binSelection]
+
+        histogramName = "TrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMulitplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P [GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
+        histogramName = "EOPProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "2DHist_EOPVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Get2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P [GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "EnergyAnulusProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "EnergyBkgProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [eta_binSelection, sel_PBin, sel_NonZeroEnergy]
+            histogramName = "EOPDistribution_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+            WriteToFile(EOPDist, outFile)
+
+            histogramName = "EOPBkgDistribution_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            WriteToFile(AverageEOPBkg, outFile)
 
 
 #   #go and get the average eneryg in the EM anulus for MIP particles in each of the eta bins.
