@@ -70,7 +70,7 @@ def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
      return canvas
 
 def DrawText(x, y, text, color=1, size=0.05):
-    """Draw text.
+    '''Draw text.
 
     Parameters
     ----------
@@ -87,7 +87,7 @@ def DrawText(x, y, text, color=1, size=0.05):
     size : float, optional
         Text size
         See https://root.cern.ch/doc/master/classTLatex.html
-    """
+    '''
     l = ROOT.TLatex()
     l.SetTextSize(size)
     l.SetNDC()
@@ -95,9 +95,9 @@ def DrawText(x, y, text, color=1, size=0.05):
     l.DrawLatex(x, y, text)
 
 def handle_underflow_overflow(h):
-    """
+    '''
     add the underflow and overflow (underflow = 0, overflow=nbins+1)
-    """
+    '''
 
     # underflow
     underflow = h.GetBinContent(0)
@@ -123,7 +123,7 @@ def handle_underflow_overflow(h):
     return h
 
 def cleanUpHistograms(h):
-   '''Create a histogram with it's characteristics set to standard values.'''
+    '''Create a histogram with it's characteristics set to standard values.'''
     h.SetLineStyle(1)
     h.SetLineWidth(3)
     h.SetFillStyle(0)
