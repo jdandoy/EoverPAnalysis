@@ -14,9 +14,9 @@ trks_loose_isolated_vertex = trks_loose_isolated + "VertexAssociated"
 trks_tight_isolated_vertex = trks_tight_isolated + "VertexAssociated"
 
 
-''' Set up all the algorithms '''
+''' Set up all the Basic Event Selection '''
 c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
-                                 "m_applyGRLCut": True,
+                                 "m_applyGRLCut": False,
                                  "m_doPUreweighting": False,
                                  "m_applyPrimaryVertexCut": True,
                                  "m_applyEventCleaningCut": True,
@@ -60,7 +60,7 @@ c.setalg("TrackExtrapolationIsolationTool", {"m_name": "TrackIso_" + trks_loose,
                                         "m_trkIsoDRmax": 0.4,
                                         "m_msgLevel": "info"})
 
-''' Fill histograms with tracking details, after LoosePrimary selection '''
+''' Fill histograms with tracking details, after LoosePrimary + Isolation selection '''
 c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated,
                             "m_inContainerName": trks_loose_isolated,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
@@ -72,7 +72,7 @@ c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_tight_isolated 
                                     "m_CutLevel": "TightPrimary",
                                     "m_msgLevel": "info"})
 
-''' Fill histograms with tracking details, after LoosePrimary selection '''
+''' Fill histograms with tracking details, after LoosePrimary + Isolation + tight primary selection '''
 c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated,
                             "m_inContainerName": trks_tight_isolated,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
@@ -86,6 +86,12 @@ c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociatio
                                             "m_msgLevel": "info",
                                             })
 
+''' Fill histograms with tracking details, after LoosePrimary + Isolation + vertex association cut'''
+c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated_vertex,
+                            "m_inContainerName": trks_loose_isolated_vertex,
+                            "m_detailStr": "2D IPDetails HitCounts Chi2Details",
+                            "m_msgLevel": "info"})
+
 c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociatedTool",\
                                             "m_inputTrackContainer": trks_tight_isolated,\
                                             "m_outputTrackContainer": trks_tight_isolated_vertex,\
@@ -93,6 +99,12 @@ c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociated
                                             "m_d0_cut":0.5,
                                             "m_msgLevel": "info",
                                             })
+
+''' Fill histograms with tracking details, after LoosePrimary + Isolation + Tight Primary + vertex association cut'''
+c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated_vertex,
+                            "m_inContainerName": trks_tight_isolated_vertex,
+                            "m_detailStr": "2D IPDetails HitCounts Chi2Details",
+                            "m_msgLevel": "info"})
 
 #### Make E/p ttree
 for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_tight_isolated, trks_tight_isolated_vertex]:
