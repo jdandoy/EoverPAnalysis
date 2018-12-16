@@ -60,6 +60,7 @@ class weightCalculation:
         return weights
 
     def addReweightHistogram(self, channel, variable, histogram):
+        histogram.SetDirectory(0)
         if channel not in self.reweightDictionary:
             self.reweightDictionary[channel] = {}
             self.reweightDictionary[channel]["variables"] = []

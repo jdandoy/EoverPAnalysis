@@ -87,6 +87,37 @@ trkPtReweight_file = ROOT.TFile("reweightHistograms/TrackPtReweighting_LoosePrim
 trkPtReweight_histogram = trkPtReweight_file.Get("trkPtHistLowMuDatadividedtrkPtHistLowMuData")
 calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
 
+#get the histograms used for detemining the bin sizes:
+histogramList = [\
+"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_20_24LowMuData",\
+"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_16_20LowMuData",\
+"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_12_16LowMuData",\
+"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_8_12LowMuData",\
+"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_4_8LowMuData",\
+"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_0_4LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_20_24LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_16_20LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_12_16LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_8_12LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_4_8LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_0_4LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_20_24LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_16_20LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_12_16LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_8_12LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_4_8LowMuData",\
+"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_0_4LowMuData",\
+]
+
+f = ROOT.TFile("FriDec7/Output/FriDec7.root", "READ")
+binningHistogramDictionary = {}
+for histogramNameInFile in histogramList:
+    hist = f.Get(histogramNameInFile)
+    histogramName = histogramNameInFile.replace("LowMuData/","").replace("LowMuData","")
+    binningHistogramDictionary[histogramName] = hist
+    print histogramName
+    hist.GetBinContent(1) #test that the histogram was retrieved 
+
 leading_script.write("Universe = vanilla\n")
 leading_script.write("Executable = condorSubmission/plot.sh\n")
 
@@ -118,6 +149,10 @@ leading_script.write("\n")
 for i in range(0, len(partitions)):
     partition = partitions[i]
     plots = Plotter(INPUT, treeName, calc_weight, base_selections = "", partition_dictionary = partition)
+
+    for histogramName in binningHistogramDictionary:
+        plots.BookHistogramForBinning(binningHistogramDictionary[histogramName], histogramName)
+
     submission_list.append(plots)
     leading_script.write("Arguments = $(Process) "  +  submission_pickle_file.split("/")[-1] + " " + jobName + "\n")
     leading_script.write("Queue 1\n")

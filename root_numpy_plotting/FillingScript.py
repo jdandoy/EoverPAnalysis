@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
-from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas, getP, getBins, getLogBins
+from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas, getP, getBins, getLogBins, GetBinsFromHistogram
 import ROOT
 #from variables.variables import calc_weight
 #from inputs.samples import INPUT
@@ -68,7 +68,7 @@ def FillingScript(plotter, outputRootFileName):
                                        xlabel ="NPV with 2 Tracks",\
                                        ylabel = "Number of Tracks")
     WriteToFile(trkNPV2Hist, outFile)
-#   ################################################################################yy
+#   ################################################################################
    #plot a histogram of the average event NPV
     histogram_name = "eventNPV2Hist"
     eventNPV2Hist = plotter.GetHistograms(histogram_name,\
@@ -80,7 +80,7 @@ def FillingScript(plotter, outputRootFileName):
                                        xlabel ="NPV with 2 Tracks",\
                                        ylabel = "Number Events")
     WriteToFile(eventNPV2Hist, outFile)
-#   ################################################################################yy
+#   ################################################################################
     histogram_name = "eventAverageMu"
     selections = [sel_Event]
     eventAverageMuHist = plotter.GetHistograms(histogram_name,
@@ -92,7 +92,7 @@ def FillingScript(plotter, outputRootFileName):
                                           xlabel ='<#mu>',\
                                           ylabel = 'Number of Events')
     WriteToFile(eventAverageMuHist, outFile)
-#    ################################################################################yy
+#    ################################################################################
     #prepare the momentum bins
     binMax = 30.0
     binMin = 0.5
@@ -107,7 +107,7 @@ def FillingScript(plotter, outputRootFileName):
                                        ylabel = "Number of Tracks")
 
     WriteToFile(trkPtHistZoom, outFile)
-#           ################################################################################yy
+#           ################################################################################
 #           ## Look in different bins of pseudorapidity
     base_description = []
     etaSelections = [sel_IDEta00_06,\
@@ -152,7 +152,7 @@ def FillingScript(plotter, outputRootFileName):
                                        ylabel = "Number of Tracks")
     WriteToFile(trkEtaIDHist, outFile)
 
-#   ################################################################################yy
+#   ################################################################################
     histogramName = "TwoDTrackPvsTrkEtaID"
     max_bin = 2.4
     min_bin = -2.4
@@ -170,7 +170,7 @@ def FillingScript(plotter, outputRootFileName):
                                              )
     WriteToFile(TwoDtrkPvstrkEta, outFile)
 
-#   ################################################################################yy
+#   ################################################################################
     histogramName = "TwoDTrackPtVsEtaHistogram"
     TwoDtrkPtvstrkEta = plotter.Get2DHistograms(histogramName,\
                                              calc_trkEtaID,\
@@ -277,79 +277,7 @@ def FillingScript(plotter, outputRootFileName):
     from selections.selections import sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_PGreater2, sel_PGreater2_5, sel_PGreater3
     MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
 
-#  ################################################################################yy
-#  #count the prevalence of certain hadrons in the measurement
-#  from selections.selections import sel_Pion, sel_AntiPion, sel_Proton, sel_AntiProton, sel_Kaon, sel_AntiKaon, sel_Fake, sel_Pileup, sel_HardScatter, sel_Muon, sel_AntiMuon, sel_Electron, sel_AntiElectron
-
-#  #The total number of tracks
-#  selections = []
-#  total_tracks = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_Fake]
-#  total_fakes = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_Pileup]
-#  total_pileup = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_HardScatter]
-#  total_hardScatter = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  #What different species of hadrons are present??
-#  selections = [sel_Pion]
-#  total_Pion = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_AntiPion]
-#  total_AntiPion = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_Proton]
-#  total_Proton = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_AntiProton]
-#  total_AntiProton = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_Kaon]
-#  total_Kaon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_AntiKaon]
-#  total_AntiKaon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_Electron]
-#  total_Electron = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_AntiElectron]
-#  total_AntiElectron = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_Muon]
-#  total_Muon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  selections = [sel_AntiMuon]
-#  total_AntiMuon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#  print(10 * "\n")
-#  print(50 * "=")
-#  print("The total number of tracks was " + str(total_tracks))
-#  print("The total number of fakes was " + str(total_fakes))
-#  print("The total number of pileup tracks was " + str(total_pileup))
-#  print("The total number of truth-matched tracks was " + str(total_hardScatter))
-#  print("The fraction of truth-matched tracks was " + str(total_hardScatter/total_tracks))
-#  print("The fraction of pileup tracks was " + str(total_pileup/total_tracks))
-#  print("The fraction of fake tracks was " + str(total_fakes/total_tracks))
-#  print("\n")
-#  print("The following fractions are w.r.t the total number of truth matched tracks")
-#  print("The fraction of pi + tracks was " + str(total_Pion/total_hardScatter))
-#  print("The fraction of pi - tracks was " + str(total_AntiPion/total_hardScatter))
-#  print("The fraction of k + tracks was " + str(total_Kaon/total_hardScatter))
-#  print("The fraction of k - tracks was " + str(total_AntiKaon/total_hardScatter))
-#  print("The fraction of p + tracks was " + str(total_Proton/total_hardScatter))
-#  print("The fraction of p - tracks was " + str(total_AntiProton/total_hardScatter))
-#  print("The fraction of e - tracks was " + str(total_Electron/total_hardScatter))
-#  print("The fraction of e + tracks was " + str(total_AntiElectron/total_hardScatter))
-#  print("The fraction of mu - tracks was " + str(total_Muon/total_hardScatter))
-#  print("The fraction of mu + tracks was " + str(total_AntiMuon/total_hardScatter))
-#  print(5 * "\n")
-#  print(50 * "=")
-
-    ################################################################################yy
+    ################################################################################
     selections = []
     histogramName = "InclusiveEOP"
     trkEOPHist = plotter.GetHistograms(histogramName,\
@@ -364,7 +292,7 @@ def FillingScript(plotter, outputRootFileName):
     WriteToFile(trkEOPHist, outFile)
 
 
-    ################################################################################yy
+    ################################################################################
     from selections.selections import sel_NonZeroEnergy
     selections = [sel_NonZeroEnergy]
     histogramName = "NonZeroEnergy_InclusiveEOP"
@@ -379,7 +307,7 @@ def FillingScript(plotter, outputRootFileName):
                                      )
     WriteToFile(trkEOPHist, outFile)
 
-    ################################################################################yy
+    ################################################################################
     selections = [sel_PGreater1, sel_ECALEta0_6]
     histogramName = "EtaID0_6_PGreater1_0_EOPHist"
     trkEOPHistPGreater1 = plotter.GetHistograms(histogramName,\
@@ -392,7 +320,7 @@ def FillingScript(plotter, outputRootFileName):
                                                ylabel = "Number of Tracks")
     WriteToFile(trkEOPHistPGreater1, outFile)
 
-    ################################################################################yy
+    ################################################################################
     selections = [sel_PGreater1_5, sel_IDEta00_06]
     histogramName = "EtaID0_6_PGreater1_5_EOPHist"
     trkEOPHistPGreater1_5 = plotter.GetHistograms(histogramName,
@@ -405,7 +333,7 @@ def FillingScript(plotter, outputRootFileName):
                                                  ylabel = "Number of Tracks")
     WriteToFile(trkEOPHistPGreater1_5, outFile)
 
-    ################################################################################yy
+    ################################################################################
     selections = [sel_PGreater2, sel_IDEta00_06]
     histogramName = "EtaID0_6_PGreater2_0_EOPHist"
     trkEOPHistPGreater2 = plotter.GetHistograms(histogramName,
@@ -420,7 +348,7 @@ def FillingScript(plotter, outputRootFileName):
     WriteToFile(trkEOPHistPGreater2, outFile)
 
 
-    ################################################################################yy
+    ################################################################################
     from selections.selections import sel_IDEta19_23, sel_IDEta00_06, sel_PBetween12_18, sel_PBetween22_28, sel_PBetween28_36
     # This is figure 2a and 2d in the paper:
     selections = [sel_PBetween12_18, sel_IDEta00_06]
@@ -436,7 +364,7 @@ def FillingScript(plotter, outputRootFileName):
                                               )
     WriteToFile(trkEOPHistFig2a, outFile)
 
-    ################################################################################yy
+    ################################################################################
     from selections.selections import sel_PBetween22_28
     histogramName = "EtaID0_6_PBetween22_28_EOPHist"
     selections = [sel_PBetween22_28, sel_IDEta00_06]
@@ -451,7 +379,7 @@ def FillingScript(plotter, outputRootFileName):
                                          )
     WriteToFile(trkEOPHistFig2b, outFile)
 
-    ################################################################################yy
+    ################################################################################
     # This is figure 2c in the paper:
     selections = [sel_PBetween28_36, sel_IDEta19_23]
     histogramName = "EtaIDBetween19_23_PBetween28_36_EOPHist"
@@ -466,7 +394,7 @@ def FillingScript(plotter, outputRootFileName):
                                           )
     WriteToFile(trkEOPHistFig2c, outFile)
 
-    ################################################################################yy
+    ################################################################################
     # This is figure 2c in the paper:
     selections = [sel_PBetween28_36, sel_IDEta00_06]
     histogramName = "EtaID0_6_PBetween28_36_EOPHist"
@@ -497,7 +425,7 @@ def FillingScript(plotter, outputRootFileName):
                                               )
     WriteToFile(trkEOPHistFig2a, outFile)
 
-    ################################################################################yy
+    ################################################################################
     from selections.selections import sel_PBetween22_28
     selections = [sel_PBetween22_28, sel_IDEta00_06, sel_NonZeroEnergy]
     histogramName = "NonZero_EtaID0_6_PBetween22_28_EOPHist"
@@ -512,7 +440,7 @@ def FillingScript(plotter, outputRootFileName):
                                          )
     WriteToFile(trkEOPHistFig2b, outFile)
 
-    ################################################################################yy
+    ################################################################################
     # This is figure 2c in the paper:
     selections = [sel_PBetween28_36, sel_IDEta19_23, sel_NonZeroEnergy]
     histogramName = "NonZero_EtaIDBetween19_23_PBetween22_28_EOPHist"
@@ -527,7 +455,7 @@ def FillingScript(plotter, outputRootFileName):
                                           )
     WriteToFile(trkEOPHistFig2c, outFile)
 
-    ################################################################################yy
+    ################################################################################
     # This is figure 2c in the paper:
     selections = [sel_PBetween28_36, sel_IDEta00_06, sel_NonZeroEnergy]
     histogramName = "NonZero_EtaID0_6_PBetween28_36_EOPHist"
@@ -561,6 +489,7 @@ def FillingScript(plotter, outputRootFileName):
                                           ylabel = "Number of Tracks",\
                                           )
     WriteToFile(trkMultiplicity, outFile)
+
     from selections.selections import sel_ELessEqual0
     histogramName = "InclusiveZeroFractionVsPNumerator"
     selections = [sel_ELessEqual0]
@@ -572,26 +501,8 @@ def FillingScript(plotter, outputRootFileName):
                                                     ylabel = "N(E<=0)/N",\
                                                     )
     WriteToFile(trkMultiplicity_ELessZero, outFile)
-#  ratio_histogram = DivideHistograms(trkMultiplicity_ELessZero, trkMultiplicity)
-#  description = ["Inclusive Selection",\
-#                  "Track P_{T} Reweighted"]
-#  scale_factor = 5.0
-#  DataVsMCTrackLess0 = DrawDataVsMC(ratio_histogram,\
-#                                     plotter.channelLabels,\
-#                                     MCKey='PythiaJetJet',\
-#                                     DataKey='LowMuData',\
-#                                     extra_description = description,\
-#                                     scale_factor = scale_factor,\
-#                                     ratio_min = 0.8,\
-#                                     ratio_max = 1.2,\
-#                                     doLogx = True,\
-#                                     doLogy = False,\
-#                                     xTicksNumber = 510\
-#                                     )
-#  DataVsMCTrackLess0.Draw()
-#  DataVsMCTrackLess0.Print(plotter_directory+"/EOPAcceptanceVsPInclusive_reweighted.png")
 
-    ################################################################################yy
+    ################################################################################
     #This is figure 3b of the paper
     bins = [-2.3, -1.8, -1.5, -1.4, -1.1, -0.6, 0.0, 0.6, 1.1, 1.4, 1.5, 1.8, 2.3]
     selections = []
@@ -615,22 +526,8 @@ def FillingScript(plotter, outputRootFileName):
                                                    ylabel = "N(E<=0)/N",\
                                                    )
     WriteToFile(trkMultiplicity_Eta_Zero, outFile)
-#  DataVsMCTrackLess0 = DrawDataVsMC(ratio_histogram,\
-#                                     plotter.channelLabels,\
-#                                     MCKey='PythiaJetJet',\
-#                                     DataKey='LowMuData',\
-#                                     extra_description = description,\
-#                                     scale_factor = scale_factor,\
-#                                     ratio_min = 0.9,\
-#                                     ratio_max = 1.1,\
-#                                     doLogx = False,\
-#                                     doLogy = False\
-#                                     )
-#  DataVsMCTrackLess0.Draw()
-#  DataVsMCTrackLess0.Print(plotter_directory+"/EOPAcceptanceVsEtaInclusive_reweighted.png")
 
-
-    ################################################################################yy
+    ################################################################################
     bins = [0.0, 0.6, 1.1, 1.4, 1.5, 1.8, 2.3]
     from variables.variables import calc_trkEta_ABS
     selections = []
@@ -668,16 +565,6 @@ def FillingScript(plotter, outputRootFileName):
                      sel_IDEta14_15,\
                      sel_IDEta15_18,\
                      sel_IDEta18_23]
-
-#    eta_selectionDescriptions = [\
-#                               "|#eta_{ID}|<0.6",\
-#                               "0.6<|#eta_{ID}|<1.1",\
-#                               "1.1<|#eta_{ID}|<1.4",\
-#                               "1.4<|#eta_{ID}|<1.5",\
-#                               "1.5<|#eta_{ID}|<1.8",\
-#                               "1.8<|#eta_{ID}|<2.3"\
-#                               ]
-
 
 
     canvases = []
@@ -769,7 +656,7 @@ def FillingScript(plotter, outputRootFileName):
                                      )
 
 
-    ################################################################################yy
+    ################################################################################
     selections = [sel_ECALEta0_6] + MIP_selection
     histogramName = "MIPSelection_HadBetween30And90OfMomentum_ECALEta00_06_EOP"
     trkEOPHistPGreater1 = plotter.GetHistograms(histogramName,\
@@ -805,7 +692,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_min = getP(0.5, eta)
         nBins = 20
         p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
-        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 1000)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
 
         eop_bins_min = -1
         eop_bins_max = 5
@@ -819,8 +706,21 @@ def FillingScript(plotter, outputRootFileName):
 
         MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
         selections = MIP_selection + [eta_binSelection]
+
+        histogramName = "UnweightedTrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
+
         histogramName = "TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMulitplicity =  plotter.GetHistograms(histogramName,
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
                                                   calc_trkP,\
                                                   list_selections = selections,\
                                                   bins = p_bins_fine,\
@@ -829,12 +729,29 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(trkMultiplicity, outFile)
 
+        #get the binning histograms for the histograms to be used for fitting
+        binningHistogram = plotter.binningHistograms[histogramName]
+        FourThousandTracks_pbins = GetBinsFromHistogram(binningHistogram, 4000.0)[0]
+
+        print FourThousandTracks_pbins
+
         histogramName = "EOPProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
                                                   calc_trkP,\
                                                   calc_EOP,\
                                                   list_selections = selections,\
                                                   bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "EOPProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "<E/p>",\
                                                   )
@@ -852,12 +769,35 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageEOP, outFile)
 
+        histogramName = "2DHist_EOPVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Get2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
         histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
                                                   calc_trkP,\
                                                   calc_EnergyAnulus,\
                                                   list_selections = selections,\
                                                   bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "<E_{EM Anulus}>[GeV]",\
                                                   )
@@ -875,6 +815,18 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
+        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
         histogramName = "EnergyBkgProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
                                                   calc_trkP,\
@@ -886,12 +838,36 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
+
+        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
         histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.Get2DHistograms(histogramName,\
                                                   calc_trkP,\
                                                   calc_EOPBkg,\
                                                   list_selections = selections,\
                                                   bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
                                                   bins_y = eop_bins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "E/p BKG",\
@@ -924,12 +900,50 @@ def FillingScript(plotter, outputRootFileName):
                                                       )
             WriteToFile(EOPBkgDist, outFile)
 
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1])  for i in range(0, len(FourThousandTracks_pbins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+            WriteToFile(EOPDist, outFile)
+
+            histogramName = "EOPBkgDistribution_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            WriteToFile(EOPBkgDist, outFile)
+
         from selections.selections import sel_EHadFracAbove70
         MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70]
         selections = MIP_selection + [eta_binSelection]
 
+        histogramName = "UnweightedTrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
         histogramName = "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMulitplicity =  plotter.GetHistograms(histogramName,
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
                                                   calc_trkP,\
                                                   list_selections = selections,\
                                                   bins = p_bins_fine,\
@@ -938,12 +952,27 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(trkMultiplicity, outFile)
 
+        #get the binning histograms for the histograms to be used for fitting
+        binningHistogram = plotter.binningHistograms[histogramName]
+        FourThousandTracks_pbins = GetBinsFromHistogram(binningHistogram, 4000.0)[0]
+
         histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
                                                   calc_trkP,\
                                                   calc_EOP,\
                                                   list_selections = selections,\
                                                   bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "EOPProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "<E/p>",\
                                                   )
@@ -961,6 +990,18 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageEOP, outFile)
 
+        histogramName = "2DHist_EOPVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Get2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P [GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
         histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
                                                   calc_trkP,\
@@ -972,12 +1013,36 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
+        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+
         histogramName = "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.Get2DHistograms(histogramName,\
                                                   calc_trkP,\
                                                   calc_EnergyAnulus,\
                                                   list_selections = selections,\
                                                   bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
                                                   bins_y = eop_bins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "E_{EM Anulus} [GeV]",\
@@ -995,6 +1060,17 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
+        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
         histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.Get2DHistograms(histogramName,\
                                                   calc_trkP,\
@@ -1007,8 +1083,45 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
+        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
         #go and get the E/p distribution in each of the E/p bins
         p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+            WriteToFile(EOPDist, outFile)
+
+            histogramName = "EOPBkgDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            WriteToFile(AverageEOPBkg, outFile)
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1] ) for i in range(0, len(FourThousandTracks_pbins)-1) ]
         for p_range in p_ranges:
             PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
@@ -1056,7 +1169,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_min = getP(0.5, eta)
         nBins = 20
         p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
-        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 1000)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
 
         eop_bins_min = -1
         eop_bins_max = 5
@@ -1069,8 +1182,20 @@ def FillingScript(plotter, outputRootFileName):
         print(p_bins)
 
         selections = [eta_binSelection]
+
+        histogramName = "UnweightedTrkMultiplicityVsP_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
         histogramName = "TrkMultiplicityVsP_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMulitplicity =  plotter.GetHistograms(histogramName,
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
                                                   calc_trkP,\
                                                   list_selections = selections,\
                                                   bins = p_bins_fine,\
@@ -1078,6 +1203,7 @@ def FillingScript(plotter, outputRootFileName):
                                                   ylabel = "Number of Tracks",\
                                                   )
         WriteToFile(trkMultiplicity, outFile)
+
 
         histogramName = "EOPProfileVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
@@ -1173,7 +1299,7 @@ def FillingScript(plotter, outputRootFileName):
                                                       xlabel ="E/p Bkg",\
                                                       )
             WriteToFile(AverageEOPBkg, outFile)
-    
+
     #Select only those tracks with a cluster
     ################################################################################
     ##Create a set of p and eta bins for the measurement ##########################
@@ -1198,7 +1324,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_min = getP(0.5, eta)
         nBins = 20
         p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
-        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 1000)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
 
         eop_bins_min = -1
         eop_bins_max = 5
@@ -1211,8 +1337,19 @@ def FillingScript(plotter, outputRootFileName):
         print(p_bins)
 
         selections = [sel_NonZeroEnergy, eta_binSelection]
+        histogramName = "UnweightedTrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False\
+                                                  )
+        WriteToFile(trkMultiplicity, outFile)
+
         histogramName = "TrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMulitplicity =  plotter.GetHistograms(histogramName,
+        trkMultiplicity =  plotter.GetHistograms(histogramName,
                                                   calc_trkP,\
                                                   list_selections = selections,\
                                                   bins = p_bins_fine,\
@@ -1221,12 +1358,27 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(trkMultiplicity, outFile)
 
+        #get the custom bins for the EOP Measurement
+        hist = plotter.binningHistograms[histogramName]
+        FourThousandTracks_pbins = GetBinsFromHistogram(hist, 4000.0)[0]
+
         histogramName = "EOPProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
                                                   calc_trkP,\
                                                   calc_EOP,\
                                                   list_selections = selections,\
                                                   bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
+        histogramName = "EOPProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.GetTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "<E/p>",\
                                                   )
@@ -1244,12 +1396,35 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageEOP, outFile)
 
+        histogramName = "2DHist_FourThousandTracks_EOPVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Get2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+        WriteToFile(AverageEOP, outFile)
+
         histogramName = "EnergyAnulusProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
                                                   calc_trkP,\
                                                   calc_EnergyAnulus,\
                                                   list_selections = selections,\
                                                   bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "<E_{EM Anulus}>[GeV]",\
                                                   )
@@ -1267,6 +1442,18 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
+        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
         histogramName = "EnergyBkgProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
                                                   calc_trkP,\
@@ -1278,12 +1465,35 @@ def FillingScript(plotter, outputRootFileName):
                                                   )
         WriteToFile(AverageAnulus, outFile)
 
+        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.GetTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
         histogramName = "2DHist_EnergyBkgVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         AverageAnulus =  plotter.Get2DHistograms(histogramName,\
                                                   calc_trkP,\
                                                   calc_EOPBkg,\
                                                   list_selections = selections,\
                                                   bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+        WriteToFile(AverageAnulus, outFile)
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Get2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
                                                   bins_y = eop_bins,\
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "E/p BKG",\
@@ -1308,6 +1518,31 @@ def FillingScript(plotter, outputRootFileName):
             WriteToFile(EOPDist, outFile)
 
             histogramName = "EOPBkgDistribution_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            WriteToFile(EOPBkgDist, outFile)
+
+        p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1])  for i in range(0, len(FourThousandTracks_pbins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_FourThousandTracks_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.GetHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+            WriteToFile(EOPDist, outFile)
+
+            histogramName = "EOPBkgDistribution_FourThousandTracks_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
             EOPBkgDist  =  plotter.GetHistograms(histogramName,
                                                       calc_EOPBkg,\
                                                       list_selections = selections,\

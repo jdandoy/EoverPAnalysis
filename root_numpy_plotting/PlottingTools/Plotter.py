@@ -20,6 +20,21 @@ if foundAtlasPlots:
 global_scope = []
 CANVAS_COUNTER = 1
 
+def GetBinsFromHistogram(hist, entriesPerBin):
+    ''' Get bins with # of entries entriesPerBin inside of it'''
+    bins = [] #a list of floats to store the bin edges of the new histograms
+    bins.append(hist.GetBinLowEdge(1)) #append the bin edge of the lowest bin
+    tracks = [] # list of the number of tracks in each bin
+    runningCount = 0.0 #keep a running count of the number of tracks
+    for binx in range(1,hist.GetNbinsX() + 1):
+        runningCount += hist.GetBinContent(binx)
+        if runningCount > entriesPerBin or binx == hist.GetNbinsX():
+            bins.append(hist.GetBinLowEdge(binx) + hist.GetBinWidth(binx))
+            tracks.append(runningCount)
+            runningCount = 0.0
+
+    return bins, tracks
+
 def getLogBins(minBin, maxBin, nBins):
     '''Get nBins logarithmically-evenly spaced bins ranging from minBin to maxBin'''
     bins = []
@@ -442,8 +457,10 @@ class Plotter:
 
     def BookHistogramForBinning(self, histogram, histogramName):
         '''This saves a histogram that can be used later to determine bin sizes. This could be a track multiplicity distribution, for example'''
+        histogram.SetDirectory(0)
         self.binningHistograms[histogramName] = histogram
-        toGlobalScope(histogram)
+        print self.binningHistograms
+        toGlobalScope(histogram) #keep the histogram alive at the global scope
 
     def AddInputDictionary(self, dictionary):
         '''Take an input dictionary of channel names to: tuple of (channel descriptor for legend, list of [input root filename strings])'''
@@ -492,7 +509,7 @@ class Plotter:
 
         return variable_dict, weights
 
-    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False):
+    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
         '''Get the histogram for variable after list_selections is applied.'''
 
         variableNameToFill = variable.name
@@ -521,7 +538,11 @@ class Plotter:
                     if self.verbose: print to_fill
                     if self.verbose: print to_weight
                     if self.verbose: print("Filling Variable " + variable.name)
-                    fill_hist(histogram_dictionary[channel], to_fill, to_weight)
+                    if useWeights:
+                        fill_hist(histogram_dictionary[channel], to_fill, to_weight)
+                    else:
+                        fill_hist(histogram_dictionary[channel], to_fill)
+
             return histogram_dictionary
 
     def Get2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
