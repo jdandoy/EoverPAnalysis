@@ -171,6 +171,12 @@ def GetHistogramOfErrors(hist_dict):
 
     return return_dict
 
+def ProjectProfiles(hist_dict):
+    '''Get the X Projection of a TProfile histogram. This is useful for dividing TProfile histograms later'''
+    for channel in hist_dict:
+        hist_dict[channel] = hist_dict[channel].ProjectionX()
+    return hist_dict
+
 def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.

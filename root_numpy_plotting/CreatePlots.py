@@ -9,7 +9,7 @@ def CloseCanvas(canv):
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "SunDec3.root"
+filename = "FriDec15.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
@@ -501,28 +501,96 @@ DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doL
 DataCanvas.Draw()
 DataCanvas.Print(plotter_directory + "/" + histogramName + "LowMuData.png")
 
-histogramNames = ["TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_0_4" , "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_12_16", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_16_20", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_20_24", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_4_8", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_8_12"]
+#histogramNames = ["TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_0_4" , "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_12_16", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_16_20", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_20_24", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_4_8", "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_8_12"]
+#
+eta_descriptors = ["0.0<|#eta_{ID}|<0.4", "1.2<|#eta_{ID}|<1.6", "1.6<|#eta_{ID}|<2.0", "2.0<|#eta_{ID}|<2.4", "0.4<|#eta_{ID}|<0.8", "0.8<|#eta_{ID}|<1.2"]
+#
+#for histogramName, descriptor in zip(histogramNames, eta_descriptors):
+#    description = base_description + [descriptor, "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "E^{dR<0.1}_{EM} < 1.1 GeV"]
+#    histograms = HM.getHistograms(histogramName)
+#
+#    for key in histograms:
+#        histograms[key].Rebin(20)
+#
+#    DataVSMC10 = DrawDataVsMC(histograms,\
+#                          channelLabels,\
+#                          MCKey = "PythiaJetJet",\
+#                          DataKey = "LowMuData",\
+#                          doLogx = True,\
+#                          doLogy = False,
+#                          ratio_min = 0.6,\
+#                          ratio_max = 1.4,\
+#                          extra_description = description)
+#    DataVSMC10.Draw()
+#    DataVSMC10.Print(plotter_directory + "/" + histogramName + ".png")
 
-descriptors = ["0.0<|#eta_{ID}|<0.4", "1.2<|#eta_{ID}|<1.6", "1.6<|#eta_{ID}|<2.0", "2.0<|#eta_{ID}|<2.4", "0.4<|#eta_{ID}|<0.8", "0.8<|#eta_{ID}|<1.2"]
 
-for histogramName, descriptor in zip(histogramNames, descriptors):
-    description = base_description + [descriptor, "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
-    histograms = HM.getHistograms(histogramName)
 
-    for key in histograms:
-        histograms[key].Rebin(20)
+eta_ranges = [(0.0, 0.4), (0.4, 0.8), (0.8, 1.2), (1.2, 1.6), (1.6, 2.0), (2.0, 2.4)]
+profileNames = ["EOPProfileVsMomentum", "EOPProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum", "EOPProfileVsMomentum_MIPSelection_HadFracAbove70", "EOPProfileVsMomentum_NonZeroE"]
+TwoDHistNames = ["2DHist_EOPVsMomentum", "2DHist_EOPVsMomentum_MIPSelection_HadBetween30And90OfMomentum", "2DHist_EOPVsMomentum_MIPSelection_HadFracAbove70", "2DHist_EOPVsMomentum_NonZeroE"]
+plotDescriptors = [ [], ["0.3 P < E_{HAD} < 0.9 P", "E^{dR<0.1}_{EM} < 1.1 GeV", "N_{TRT} >= 20"], ["E_{HAD}/E_{TOTAL} > 0.7", "E^{dR<0.1}_{EM} < 1.1 GeV", "N_{TRT} >= 20"], ["E_{TOTAL} != 0.0"]]
 
-    DataVSMC10 = DrawDataVsMC(histograms,\
-                          channelLabels,\
-                          MCKey = "PythiaJetJet",\
-                          DataKey = "LowMuData",\
-                          doLogx = True,\
-                          doLogy = False,
-                          ratio_min = 0.6,\
-                          ratio_max = 1.4,\
-                          extra_description = description)
-    DataVSMC10.Draw()
-    DataVSMC10.Print(plotter_directory + "/" + histogramName + ".png")
+for eta_range, eta_descriptor in zip(eta_ranges, eta_descriptors):
+    for profileName, TwoDHistName, plotDescriptor in zip(profileNames, TwoDHistNames, plotDescriptors):
+        description = ["P_{T} Reweighted", eta_descriptor] + plotDescriptor
+
+        histogramName = profileName + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        histograms = HM.getHistograms(histogramName)
+        histograms = ProjectProfiles(histograms)
+        DataVSMC10 = DrawDataVsMC(histograms,\
+                              channelLabels,\
+                              MCKey = "PythiaJetJet",\
+                              DataKey = "LowMuData",\
+                              doLogx = True,\
+                              doLogy = False,
+                              ratio_min = 0.6,\
+                              ratio_max = 1.4,\
+                              extra_description = description)
+        DataVSMC10.Draw()
+        DataVSMC10.Print(plotter_directory + "/" + histogramName + ".png")
+
+        histogramName = TwoDHistName + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        histograms = HM.getHistograms(histogramName)
+
+        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas.Print(plotter_directory + "/" + histogramName + "LowMuData.png")
+
+        MCCanvas = Draw2DHistogramOnCanvas(histograms["PythiaJetJet"], doLogx = True, doLogy = False)
+        MCCanvas.Print(plotter_directory + "/" + histogramName + "PythiaJetJet.png")
+
+#plot the average energy in the anulus
+profileNames = ["EnergyAnulusProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum", "EnergyAnulusProfileVsMomentum_MIPSelection_HadFracAbove70"]
+TwoDHistNames = ["2DHist_EnergyAnulusVsMomentum_MIPSelection_HadBetween30And90OfMomentum", "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadFracAbove70"]
+profileDescriptors = [ ["0.3 P < E_{HAD} < 0.9 P", "E^{dR<0.1}_{EM} < 1.1 GeV", "N_{TRT} >= 20"], ["E_{HAD}/E_{TOTAL} > 0.7", "E^{dR<0.1}_{EM} < 1.1 GeV", "N_{TRT} >= 20"], ["E_{TOTAL} != 0.0"] ]
+
+for eta_range, eta_descriptor in zip(eta_ranges, eta_descriptors):
+    for profileName, TwoDHistName, profileDescriptor in zip(profileNames, TwoDHistNames,  profileDescriptors):
+        description = ["P_{T} Reweighted", eta_descriptor] + profileDescriptor
+
+        histogramName = profileName + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        histograms = HM.getHistograms(histogramName)
+        histograms = ProjectProfiles(histograms)
+        DataVSMC10 = DrawDataVsMC(histograms,\
+                              channelLabels,\
+                              MCKey = "PythiaJetJet",\
+                              DataKey = "LowMuData",\
+                              doLogx = True,\
+                              doLogy = False,
+                              ratio_min = 0.4,\
+                              ratio_max = 1.6,\
+                              extra_description = description)
+        DataVSMC10.Draw()
+        DataVSMC10.Print(plotter_directory + "/" + histogramName + ".png")
+
+        histogramName = TwoDHistName + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        histograms = HM.getHistograms(histogramName)
+        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas.Print(plotter_directory + "/" + histogramName + "LowMuData.png")
+
+        MCCanvas = Draw2DHistogramOnCanvas(histograms["PythiaJetJet"], doLogx = True, doLogy = False)
+        MCCanvas.Print(plotter_directory + "/" + histogramName + "PythiaJetJet.png")
+
 
 raw_input()
 #['NTRT20ZeroFractionVsPetaID00_06Denomenator', 'TrkPtHisteta15_18', 'trkNPV2', 'eventAverageMu', 'trkCount', 'trkAverageMu', 'NTRT20ZeroFractionVsPetaID06_11Denomenator', 'NTRT20ZeroFractionVsPetaID02_04Numerator', 'EtaID0_6_PGreater2_0_EOPHist', 'NonZero_EtaID0_6_PBetween12_18_EOPHist', 'NTRT20ZeroFractionVsPetaID00_02Denomenator', 'NonZero_EtaIDBetween19_23_PBetween22_28_EOPHist', 'EtaID0_6_PGreater1_5_EOPHist', 'EtaLess08_TwoDHistTrkPvsPhiInnerToExtrapolEM2', 'InclusiveZeroFractionVsPNumerator', 'TrkPtHisteta06', 'NTRT20ZeroFractionVsPetaID11_14Numerator', 'NTRT20ZeroFractionVsPetaID00_06Numerator', 'NonZeroEnergy_InclusiveEOP', 'TrkPtHisteta18_23', 'InclusiveEOP', 'ZeroFractionVsPetaID06_11Denomenator', 'ZeroFractionVsPetaID02_04Denomenator', 'NTRT20ZeroFractionVsPetaID04_06Numerator', 'trkPtHist', 'NTRT20ZeroFractionVsPetaID00_02Numerator', 'TrkPtHisteta06_11', 'InclusiveZeroFractionVsAbsEtaNumerator', 'ZeroFractionVsPetaID04_06Denomenator', 'NearestDRHist', 'TrackEtaID', 'NonZero_EtaID0_6_PBetween22_28_EOPHist', 'NTRT20ZeroFractionVsPetaID06_11Numerator', 'InclusiveZeroFractionVsEtaNumerator', 'InclusiveZeroFractionVsPDenomenator', 'TwoDTrackPtVsEtaHistogram', 'ZeroFractionVsPetaID11_14Denomenator', 'ZeroFractionVsPetaID00_02Denomenator', 'eventNPV2Hist', 'trkEtaECALHist', 'TrkPtHisteta14_15', 'InclusiveZeroFractionVsEtaDenomenator', 'EtaID0_6_PBetween22_28_EOPHist', 'EtaID0_6_PGreater1_0_EOPHist', 'EtaIDBetween19_23_PBetween28_36_EOPHist', 'NonZero_EtaID0_6_PBetween28_36_EOPHist', 'TrkPtHisteta11_14', 'lowPTLess07_TwoDHistTrkEtavsDEtaInnerToExtrapolEM2', 'NTRT20ZeroFractionVsPetaID04_06Denomenator', 'ZeroFractionVsPetaID00_06Denomenator', 'TwoDHistTrkPvsPhiInnerToExtrapolEM2', 'EtaID0_6_PBetween12_18_EOPHist', 'NTRT20ZeroFractionVsPetaID11_14Denomenator', 'InclusiveZeroFractionVsAbsEtaDenomenator', 'TwoDTrackPvsTrkEtaID', 'NTRT20ZeroFractionVsPetaID02_04Denomenator', 'EtaID0_6_PBetween28_36_EOPHist']
