@@ -115,7 +115,6 @@ for histogramNameInFile in histogramList:
     hist = f.Get(histogramNameInFile)
     histogramName = histogramNameInFile.replace("LowMuData/","").replace("LowMuData","")
     binningHistogramDictionary[histogramName] = hist
-    print histogramName
     hist.GetBinContent(1) #test that the histogram was retrieved 
 
 leading_script.write("Universe = vanilla\n")

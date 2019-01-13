@@ -1127,7 +1127,7 @@ def FillingScript(plotter, outputRootFileName):
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            histogramName = "EOPDistribution_FourThousandTracks_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
             EOPDist  =  plotter.GetHistograms(histogramName,
                                                       calc_EOP,\
                                                       list_selections = selections,\
@@ -1136,7 +1136,7 @@ def FillingScript(plotter, outputRootFileName):
                                                       )
             WriteToFile(EOPDist, outFile)
 
-            histogramName = "EOPBkgDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            histogramName = "EOPBkgDistribution_FourThousandTracks_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
             AverageEOPBkg  =  plotter.GetHistograms(histogramName,
                                                       calc_EOPBkg,\
                                                       list_selections = selections,\
