@@ -25,7 +25,7 @@ class HistogramManager:
        tFile = ROOT.TFile(self.filename, "READ")
        histogram_dict = {}
        if not histogramName in self.histograms:
-           raise ValueError("Couldn't find the histogram in the file")
+           raise ValueError("Couldn't find histogram " + histogramName  + " in the file")
 
        for channel in self.channels:
            tFile.cd(channel)
