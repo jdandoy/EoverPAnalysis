@@ -46,3 +46,10 @@ python $TestArea/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 21.
 
 ## Plotting
 Plotting macros can be found the root_numpy_plotting folder. See the README contained in that folder.
+
+## Hadding together large root files.
+A macro exists for hadding together root files that are too large (> ~ 100 Gb). To use the macro, do:
+```
+python hadd_bigfiles.py __outputfilename__ __directorywithfiles__
+```
+Do this on the /tmp/user/ directory of LxPlus nodes, and then move the large file to the final destination.
