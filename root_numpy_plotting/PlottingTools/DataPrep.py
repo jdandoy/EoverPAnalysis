@@ -1,5 +1,6 @@
 from ROOT import TFile, TH1D, TTree
 from root_numpy import tree2array
+import time
 
 #These are python JZW samples. I normalize to the number of generated events, the cross section and the filter efficiency
 weight_dictionary = {\
@@ -44,13 +45,26 @@ def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = Non
     if verbose: print branches
 
     if verbose: print "Reading from file " + filename
-    f = TFile(filename, "READ")
-    t = f.Get(treename)
-    data = tree2array(t, branches, selection_string, start = partition[0], stop = partition[1])
+
+    data = None
+    for i in range(1, 50):
+        try:
+            f = TFile(filename, "READ")
+            t = f.Get(treename)
+            data = tree2array(t, branches, selection_string, start = partition[0], stop = partition[1])
+            f.Close()
+            del f
+            del t
+        except:
+            print "Catching a failed attempt to retrieve data error. Trying agagin in 5 seconds"
+            time.sleep(5) #try again in 5 seconds
+        else:
+            break
+
+    if data == None:
+        raise ValueError("Could not retrieve the data.")
+
     if verbose: print "Got the data for parition " + str(partition)
-    #f.Close()
-    #del f
-    #del t
 
     # a dictionary of selections
     selection_dict = {}
