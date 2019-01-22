@@ -9,6 +9,7 @@ from PlottingTools.Plotter import Plotter
 from variables.variables import calc_weight
 import ROOT
 import pickle
+import glob
 
 import argparse
 parser = argparse.ArgumentParser(description='Submit plotting batch jobs for the EoverPAnalysis plotting')
@@ -25,13 +26,35 @@ NPartitions = args.NPartitions
 
 submission_list = []
 EntriesPerFile = {}
+tree_dict = {}
 
 for key in INPUT:
     filenames = INPUT[key][1]
     for filename in filenames:
-        tfile = ROOT.TFile(filename, "READ")
-        tree = tfile.Get(treeName)
+        print "Adding files in " + filename
+        isFile = os.path.isfile(filename)
+        tree = ROOT.TChain(treeName)
+        if not isFile:
+            if filename[-1] != "/":
+                search_for = filename + "/*.root"
+            else:
+                search_for = filename + "*.root*"
+            files =  glob.glob(search_for)
+            files.sort()
+            for f in files:
+                tfile = ROOT.TFile(f, "READ")
+                print "Adding "+f
+                tree.Add(f)
+                tfile.Close()
+        else:
+            tree.Add(filename)
+
         EntriesPerFile[filename] = tree.GetEntries()
+        f = tree.GetCurrentFile()
+        tree.SetDirectory(0)
+        f.Close()
+
+        tree_dict[filename] = tree
 
 def GeneratePartitions(Entries, NPartitions):
     return_list = []
@@ -76,16 +99,16 @@ cwd = os.getcwd()
 #get the reweighting histograms
 from variables.variables import calc_trkCount, calc_trkNPV2, calc_trkPt
 trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight_LoosePrimary_VertexAssociated.root", "READ")
-trkCount_histogram = trkCount_histogram_file.Get("trkCountLowMuDatadividedtrkCountLowMuData")
+trkCount_histogram = trkCount_histogram_file.Get("trkCountLowMuData")
 calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
 
-eventNPV2_histogram_file = ROOT.TFile("reweightHistograms/EventNPV2Reweight_LoosePrimary_VertexAssociated.root", "READ")
-eventNPV2_histogram = eventNPV2_histogram_file.Get("eventNPV2HistLowMuDatadividedeventNPV2HistLowMuData")
-calc_weight.addReweightHistogram("PythiaJetJet", calc_trkNPV2, eventNPV2_histogram)
+#eventNPV2_histogram_file = ROOT.TFile("reweightHistograms/EventNPV2Reweight_LoosePrimary_VertexAssociated.root", "READ")
+#eventNPV2_histogram = eventNPV2_histogram_file.Get("eventNPV2HistLowMuDatadividedeventNPV2HistLowMuData")
+#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkNPV2, eventNPV2_histogram)
 
-trkPtReweight_file = ROOT.TFile("reweightHistograms/TrackPtReweighting_LoosePrimary_VertexAssociated.root", "READ")
-trkPtReweight_histogram = trkPtReweight_file.Get("trkPtHistLowMuDatadividedtrkPtHistLowMuData")
-calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
+#trkPtReweight_file = ROOT.TFile("reweightHistograms/TrackPtReweighting_LoosePrimary_VertexAssociated.root", "READ")
+#trkPtReweight_histogram = trkPtReweight_file.Get("trkPtHistLowMuDatadividedtrkPtHistLowMuData")
+#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
 
 #get the histograms used for detemining the bin sizes:
 histogramList = [\
@@ -116,6 +139,8 @@ for histogramNameInFile in histogramList:
     histogramName = histogramNameInFile.replace("LowMuData/","").replace("LowMuData","")
     binningHistogramDictionary[histogramName] = hist
     hist.GetBinContent(1) #test that the histogram was retrieved 
+    hist.SetDirectory(0)
+f.Close()
 
 leading_script.write("Universe = vanilla\n")
 leading_script.write("Executable = condorSubmission/plot.sh\n")
@@ -137,7 +162,7 @@ leading_script.write("Error = " +jobName + "/Error/job.$(Process)\n")
 leading_script.write("Output = " +jobName + "/Output/job.$(Process)\n")
 leading_script.write("Log = "+jobName+"/Log/job.$(Process)\n")
 leading_script.write("+ProjectName='atlas-eopplotting'\n")
-leading_script.write('+JobFlavour = "workday"\n')
+leading_script.write('+JobFlavour = "tomorrow"\n')
 leading_script.write("should_transfer_files = YES\n")
 leading_script.write("when_to_transfer_output = ON_Exit\n")
 leading_script.write("transfer_output         = True\n")
@@ -148,6 +173,7 @@ leading_script.write("\n")
 for i in range(0, len(partitions)):
     partition = partitions[i]
     plots = Plotter(INPUT, treeName, calc_weight, base_selections = "", partition_dictionary = partition)
+    plots.tree_dict = tree_dict
 
     for histogramName in binningHistogramDictionary:
         plots.BookHistogramForBinning(binningHistogramDictionary[histogramName], histogramName)
