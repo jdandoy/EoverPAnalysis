@@ -465,7 +465,6 @@ class Plotter:
         '''This saves a histogram that can be used later to determine bin sizes. This could be a track multiplicity distribution, for example'''
         histogram.SetDirectory(0)
         self.binningHistograms[histogramName] = histogram
-        print self.binningHistograms
         toGlobalScope(histogram) #keep the histogram alive at the global scope
 
     def AddInputDictionary(self, dictionary):
@@ -487,8 +486,10 @@ class Plotter:
             partition = self.partition_dictionary[filename]
             print("Found a partition")
 
+        tree = self.tree_dict[filename]
+
         print("Getting data for partition " + str(partition))
-        result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
+        result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, tree = tree, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
 
         #Get the selections, variables and weights
         selection_dict = result["selection_dict"]
