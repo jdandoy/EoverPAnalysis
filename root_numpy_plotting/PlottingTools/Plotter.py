@@ -456,6 +456,9 @@ class Plotter:
         self.normalization_dictionary = {}
         self.test = False
         self.verbose = False
+        self.total_selections = []
+        self.total_variables =[]
+        self.HistogramCallDictionary = {}
         self.base_selections = base_selections
         self.NormalizationWeightsDictionary = {} # A dictionary of channel to variable to the weights needed for the reweighting of this variable
         self.object_counter = 0
@@ -496,27 +499,35 @@ class Plotter:
         variable_dict = result["variable_dict"]
         weights = result["weights"]
 
+        print "The following selections have been evaluated "
+        for selection in selection_dict:
+            print selection
+        print "The following variables have be evaluated " 
+        for variable in variable_dict:
+            print variable
+
         #prepare to loop through the selections and apply all of them
-        if self.verbose: print("\n\n\n\n\n===============\nPreselections are being applied")
-        if self.verbose: print("Pre-selection event count" + str(len(weights)))
-        total_selection = np.ones(len(weights)) > 0.0
-        for selection in list_selections:
-            if self.verbose: print("applying selection " + str(selection.name))
+        #if self.verbose: print("\n\n\n\n\n===============\nPreselections are being applied")
+        #if self.verbose: print("Pre-selection event count" + str(len(weights)))
+        #total_selection = np.ones(len(weights)) > 0.0
+        #for selection in list_selections:
+        #    if self.verbose: print("applying selection " + str(selection.name))
             #if self.verbose: print(selection_dict[selection.name])
-            total_selection &= selection_dict[selection.name]
+        #    total_selection &= selection_dict[selection.name]
             #cutflowsWeighted.Fill(selection_name, np.sum(weights[total_selection]))
             #cutflows.Fill(selection_name, np.sum(1*total_selection))
-        if self.verbose: print("post preselection event count" + str(np.sum(1*total_selection)))
+        #if self.verbose: print("post preselection event count" + str(np.sum(1*total_selection)))
 
         #Apply the selections to the variables and return them.
-        weights = weights[total_selection]
-        for variable in variable_dict:
-            print "applying selection to variable " + variable
-            variable_dict[variable] = variable_dict[variable][total_selection]
+        #weights = weights[total_selection]
+        #for variable in variable_dict:
+        #    print "applying selection to variable " + variable
+        #    variable_dict[variable] = variable_dict[variable][total_selection]
 
-        return variable_dict, weights
+        return variable_dict, selection_dict, weights
 
-    def GetHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
+
+    def GetHistograms(self, histogram_name, data_dictionary, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
         '''Get the histogram for variable after list_selections is applied.'''
 
         variableNameToFill = variable.name
@@ -535,11 +546,13 @@ class Plotter:
 
             for channel in self.channels:
                 normalization_weight = 0.0
-                print "Reading files for channel " + channel
                 for filename in self.channelFiles[channel]:
-                    variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
-                    to_fill = variable_dict[variableNameToFill]
-                    to_weight = weights
+                    variable_dict, selection_dict, weights = data_dictionary[channel][filename]
+                    total_selection = np.ones(len(weights)) > 0.0
+                    for selection in list_selections:
+                        total_selection &= selection_dict[selection.name]
+                    to_fill = variable_dict[variableNameToFill][total_selection]
+                    to_weight = weights[total_selection]
                     if self.verbose: print(len(to_fill))
                     if self.verbose: print(len(to_weight))
                     if self.verbose: print to_fill
@@ -552,7 +565,7 @@ class Plotter:
 
             return histogram_dictionary
 
-    def Get2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
+    def Get2DHistograms(self, histogram_name, data_dictionary, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
         '''the 2-d histgram with variable_x and variable_y drawn'''
         variableNameToFill_x = variable_x.name
         variableNameToFill_y = variable_y.name
@@ -577,24 +590,23 @@ class Plotter:
         for channel in self.channels:
             normalization_weight = 0.0
             for filename in self.channelFiles[channel]:
-                variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
-                print("Got the variable and weights")
-                n_sel = len(weights)
-                print("Set up the number of selected entries")
+                variable_dict, selection_dict, weights = data_dictionary[channel][filename]
+                total_selection = np.ones(len(weights)) > 0.0
+                for selection in list_selections:
+                    total_selection &= selection_dict[selection.name]
+                to_weight = weights[total_selection]
+                n_sel = len(to_weight)
                 to_fill = np.zeros((n_sel,2))
-                to_fill[:,0] = variable_dict[variableNameToFill_x]
-                to_fill[:,1] = variable_dict[variableNameToFill_y]
-                to_weight = weights
+                to_fill[:,0] = variable_dict[variableNameToFill_x][total_selection]
+                to_fill[:,1] = variable_dict[variableNameToFill_y][total_selection]
                 if self.verbose: print to_fill
                 if self.verbose: print to_weight
                 if self.verbose: print("Filling Variable " + variable.name)
-                print("Filling Histogram")
                 fill_hist(histogram_dictionary[channel], to_fill, to_weight)
-                print("Finished filling histogram")
         return histogram_dictionary
 
 
-    def GetTProfileHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="",):
+    def GetTProfileHistograms(self, histogram_name, data_dictionary, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="",):
         '''Get a TProfile histogram with variable_y profiled against variable_x, after selections list_selections have been applied'''
 
         variableNameToFill_x = variable_x.name
@@ -610,16 +622,16 @@ class Plotter:
             histogram_dictionary[channel].Sumw2()
 
         for channel in self.channels:
-            normalization_weight = 0.0
             for filename in self.channelFiles[channel]:
-                variable_dict, weights = self.GetVariablesAndWeights(channel, filename, variables, list_selections)
-                print("Got the variable and weights")
-                n_sel = len(weights)
-                print("Set up the number of selected entries")
+                variable_dict, selection_dict, weights = data_dictionary[channel][filename]
+                total_selection = np.ones(len(weights)) > 0.0
+                for selection in list_selections:
+                    total_selection &= selection_dict[selection.name]
+                to_weight = weights[total_selection]
+                n_sel = len(to_weight)
                 to_fill = np.zeros((n_sel,2))
-                to_fill[:,0] = variable_dict[variableNameToFill_x]
-                to_fill[:,1] = variable_dict[variableNameToFill_y]
-                to_weight = weights
+                to_fill[:,0] = variable_dict[variableNameToFill_x][total_selection]
+                to_fill[:,1] = variable_dict[variableNameToFill_y][total_selection]
                 if self.verbose: print to_fill
                 if self.verbose: print to_weight
                 if self.verbose: print("Filling Variable " + variable.name)
@@ -629,4 +641,61 @@ class Plotter:
 
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
+        return histogram_dictionary
+
+    def BookHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
+        if histogram_name not in self.HistogramCallDictionary:
+            self.HistogramCallDictionary[histogram_name] = lambda data_dictionary : self.GetHistograms(histogram_name, data_dictionary, variable, list_selections = list_selections, bins = bins, range_low = range_low, range_high=range_high,  xlabel = xlabel, ylabel = ylabel, HistogramPerFile=HistogramPerFile, useWeights = useWeights)
+        else:
+            raise ValueError("histogram name already exists")
+        for selection in list_selections:
+            if selection.name not in [sel.name for sel in self.total_selections]:
+                self.total_selections.append(selection)
+
+        if variable.name not in [var.name for var in self.total_variables]:
+            self.total_variables.append(variable)
+
+    def Book2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel=""):
+        if histogram_name not in self.HistogramCallDictionary:
+            self.HistogramCallDictionary[histogram_name] = lambda data_dictionary : self.Get2DHistograms(histogram_name, data_dictionary, variable_x, variable_y, list_selections = list_selections, bins_x = bins_x, range_low_x =range_low_x, range_high_x=range_high_x,  xlabel =xlabel, bins_y=bins_y, range_low_y=range_low_y, range_high_y=range_high_y, ylabel = ylabel, zlabel=zlabel)
+        else:
+            raise ValueError("histogram name already exists")
+
+        for selection in list_selections:
+            if selection.name not in [sel.name for sel in self.total_selections]:
+                self.total_selections.append(selection)
+
+        if variable_x.name not in [var.name for var in self.total_variables]:
+            self.total_variables.append(variable_x)
+
+        if variable_y.name not in [var.name for var in self.total_variables]:
+            self.total_variables.append(variable_y)
+
+    def BookTProfileHistograms(self, histogram_name,  variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = ""):
+        if histogram_name not in self.HistogramCallDictionary:
+            self.HistogramCallDictionary[histogram_name] = lambda data_dictionary : self.GetTProfileHistograms(histogram_name, data_dictionary, variable_x, variable_y, list_selections = list_selections, bins = bins, range_low = range_low, range_high=range_high,  xlabel =xlabel, ylabel=ylabel)
+        else:
+            raise ValueError("histogram name already exists")
+
+        for selection in list_selections:
+            if selection.name not in [sel.name for sel in self.total_selections]:
+                self.total_selections.append(selection)
+
+        if variable_x.name not in [var.name for var in self.total_variables]:
+            self.total_variables.append(variable_x)
+
+        if variable_y.name not in [var.name for var in self.total_variables]:
+            self.total_variables.append(variable_y)
+
+    def DumpHistograms(self):
+        data_dictionary = {}
+        for channel in self.channels:
+            data_dictionary[channel] = {}
+            for filename in self.channelFiles[channel]:
+                data_dictionary[channel][filename] = self.GetVariablesAndWeights(channel,filename, self.total_variables, self.total_selections)
+
+        histogram_dictionary = {}
+        for histogram_name in self.HistogramCallDictionary:
+            histogram_dictionary[histogram_name] = self.HistogramCallDictionary[histogram_name](data_dictionary)
+
         return histogram_dictionary
