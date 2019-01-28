@@ -246,7 +246,7 @@ def FillingScript(plotter, outputRootFileName):
 #   ################################################################################
     from calculation.calculation import calculation
     from selections.selections import EtaBin
-    Eta00_08 = lambda x : EtaBin(x, 0.0, 0.8)
+    Eta00_08 = lambda x, y=0.0,z=0.8 : EtaBin(x, y,z)
     sel_Eta00_08 = calculation(Eta00_08, ["trk_etaID"])
     histogramName = "EtaLess08_TwoDHistTrkPvsPhiInnerToExtrapolEM2"
     CentalTwoDtrkPvstrkDPhi = plotter.Get2DHistograms(histogramName,\
@@ -681,7 +681,7 @@ def FillingScript(plotter, outputRootFileName):
     #go and get the average E/P for MIP particles in each of the eta bins.
     for eta_range in eta_ranges:
         #get the function that selectts tracks in that bin
-        EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
+        EtaBinFunction = lambda x, y = eta_range[0], z=eta_range[1]: EtaBin(x, y,z)
         EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
         eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
 
@@ -878,7 +878,7 @@ def FillingScript(plotter, outputRootFileName):
         p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
         for p_range in p_ranges:
             print("The prange is " + str(p_range))
-            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y,z)
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
@@ -905,7 +905,7 @@ def FillingScript(plotter, outputRootFileName):
         p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1])  for i in range(0, len(FourThousandTracks_pbins)-1) ]
         for p_range in p_ranges:
             print("The prange is " + str(p_range))
-            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x, y,z)
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
@@ -1098,7 +1098,7 @@ def FillingScript(plotter, outputRootFileName):
         #go and get the E/p distribution in each of the E/p bins
         p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
         for p_range in p_ranges:
-            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
@@ -1123,7 +1123,7 @@ def FillingScript(plotter, outputRootFileName):
         #go and get the E/p distribution in each of the E/p bins
         p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1] ) for i in range(0, len(FourThousandTracks_pbins)-1) ]
         for p_range in p_ranges:
-            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
@@ -1158,7 +1158,7 @@ def FillingScript(plotter, outputRootFileName):
     #go and get the average E/P for MIP particles in each of the eta bins.
     for eta_range in eta_ranges:
         #get the function that selectts tracks in that bin
-        EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
+        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z)
         EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
         eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
 
@@ -1278,7 +1278,7 @@ def FillingScript(plotter, outputRootFileName):
         p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
         for p_range in p_ranges:
             print("The prange is " + str(p_range))
-            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x, y,z)
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [eta_binSelection, sel_PBin]
@@ -1313,7 +1313,7 @@ def FillingScript(plotter, outputRootFileName):
     #go and get the average E/P for MIP particles in each of the eta bins.
     for eta_range in eta_ranges:
         #get the function that selectts tracks in that bin
-        EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
+        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z/)
         EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
         eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
 
@@ -1504,7 +1504,7 @@ def FillingScript(plotter, outputRootFileName):
         p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
         for p_range in p_ranges:
             print("The prange is " + str(p_range))
-            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y, z)
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin]
@@ -1529,7 +1529,7 @@ def FillingScript(plotter, outputRootFileName):
         p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1])  for i in range(0, len(FourThousandTracks_pbins)-1) ]
         for p_range in p_ranges:
             print("The prange is " + str(p_range))
-            PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
+            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y, z)
             PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
             sel_PBin = calculation(PBinFunction, ["trk_p"])
             selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin]
