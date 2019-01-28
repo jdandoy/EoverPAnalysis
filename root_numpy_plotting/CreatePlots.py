@@ -14,7 +14,8 @@ filename = "FriDec15.root"
 HM = HistogramManager(filename)
 HM.listHistograms()
 
-base_description = ["P_{T} Reweighted"]
+#base_description = ["P_{T} Reweighted"]
+base_description = []
 channelLabels = {"PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Data, Low-<#mu> Run 341294"}
 plotter_directory = (filename.split("/")[-1]).replace(".root","") + "plots"
 

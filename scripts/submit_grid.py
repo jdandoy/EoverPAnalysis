@@ -44,7 +44,7 @@ for sample in samples:
   command += " prun "
   command += ' --optSubmitFlags="--excludeFile=src/EoverPAnalysis/root_numpy_plotting/"'
   if "data17" in sample:
-      command += ' --optGridNFilesPerJob=20 '
+      command += ' --optGridNFilesPerJob=30 '
   else:
       command += ' --optGridNFilesPerJob=3 '
   command += ' --optGridNGBPerJob=2 '

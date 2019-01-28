@@ -42,12 +42,12 @@ for key in INPUT:
             files =  glob.glob(search_for)
             files.sort()
             for f in files:
-                tfile = ROOT.TFile(f, "READ")
+                tfile = ROOT.TFile.Open("root://eosatlas/" + f, "READ")
                 print "Adding "+f
                 tree.Add(f)
                 tfile.Close()
         else:
-            tree.Add(filename)
+            tree.Add("root://eosatlas/" + filename)
 
         EntriesPerFile[filename] = tree.GetEntries()
         f = tree.GetCurrentFile()
@@ -106,9 +106,9 @@ calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogr
 #eventNPV2_histogram = eventNPV2_histogram_file.Get("eventNPV2HistLowMuDatadividedeventNPV2HistLowMuData")
 #calc_weight.addReweightHistogram("PythiaJetJet", calc_trkNPV2, eventNPV2_histogram)
 
-#trkPtReweight_file = ROOT.TFile("reweightHistograms/TrackPtReweighting_LoosePrimary_VertexAssociated.root", "READ")
-#trkPtReweight_histogram = trkPtReweight_file.Get("trkPtHistLowMuDatadividedtrkPtHistLowMuData")
-#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
+trkPtReweight_file = ROOT.TFile("reweightHistograms/PTReweight.root", "READ")
+trkPtReweight_histogram = trkPtReweight_file.Get("DataMCRatioPTSpectrium")
+calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
 
 #get the histograms used for detemining the bin sizes:
 histogramList = [\

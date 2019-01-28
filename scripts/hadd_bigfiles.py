@@ -21,10 +21,7 @@ for path, dirs, files in os.walk(path):
 
 print "Input file list:",file_list
 print "Output file:",file_output
-
-print "The maximum # of open files " + str(rm.GetMaxOpenedFiles)
-print "Changing to two"
-rm.SetMaxOpenedFiles(2)
+rm.SetMaxOpenedFiles(21)
 
 for F in file_list:
     print "Adding ->",F
