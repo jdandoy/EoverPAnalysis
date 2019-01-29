@@ -21,6 +21,9 @@ class HistogramManager:
        for histogram in sorted(self.histograms, key=str.lower):
            print histogram
 
+    def hasHistogram(self, histogramName):
+        return histogramName in self.histograms
+
     def getHistograms(self, histogramName):
        tFile = ROOT.TFile(self.filename, "READ")
        histogram_dict = {}
