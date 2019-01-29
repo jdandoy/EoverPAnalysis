@@ -67,9 +67,16 @@ class EoverPTreeAlgo : public xAH::Algorithm
     float trk_z0sintheta;
     float trk_etaEMB2;
     float trk_phiEMB2;
+    float trk_etaTileBar2;
+    float trk_phiTileBar2;
+    float trk_etaTileExt1;
+    float trk_phiTileExt1;
+    float trk_etaHEC1;
+    float trk_phiHEC1;
     float trk_etaEME2;
     float trk_phiEME2;
-    float trk_nearest_dR;
+    float trk_nearest_dR_EM;
+    float trk_nearest_dR_HAD;
     float trkWeight;
     uint8_t trk_NPV_2;
     uint8_t trk_NPV_4;

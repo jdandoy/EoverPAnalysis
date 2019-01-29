@@ -129,7 +129,14 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_phiEMB2", &trk_phiEMB2);
   m_tree->Branch("trk_etaEME2", &trk_etaEME2);
   m_tree->Branch("trk_phiEME2", &trk_phiEME2);
-  m_tree->Branch("trk_nearest_dR", &trk_nearest_dR);
+  m_tree->Branch("trk_etaTileBar2", &trk_etaTileBar2);
+  m_tree->Branch("trk_phiTileBar2", &trk_phiTileBar2);
+  m_tree->Branch("trk_etaTileExt1", &trk_etaTileExt1);
+  m_tree->Branch("trk_phiTileExt1", &trk_phiTileExt1);
+  m_tree->Branch("trk_etaHEC1", &trk_etaHEC1);
+  m_tree->Branch("trk_phiHEC1", &trk_phiHEC1);
+  m_tree->Branch("trk_nearest_dR_EM", &trk_nearest_dR_EM);
+  m_tree->Branch("trk_nearest_dR_HAD", &trk_nearest_dR_HAD);
   m_tree->Branch("trk_nclusters", &trk_nclusters);
   m_tree->Branch("trk_nclusters_EM", &trk_nclusters_EM);
   m_tree->Branch("trk_nclusters_hadlike", &trk_nclusters_hadlike);
@@ -148,14 +155,8 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_ClusterEnergy_Pos_HAD_100", &trk_ClusterEnergy_Pos_HAD_100);
   m_tree->Branch("trk_ClusterEnergy_HAD_200", &trk_ClusterEnergy_HAD_200);
   m_tree->Branch("trk_ClusterEnergy_HAD_100", &trk_ClusterEnergy_HAD_100);
-  //m_tree->Branch("trk_ClusterEnergy_Pos_Total_200", &trk_ClusterEnergy_Pos_Total_200);
-  //m_tree->Branch("trk_ClusterEnergy_Pos_Total_100", &trk_ClusterEnergy_Pos_Total_100);
-  //m_tree->Branch("trk_ClusterEnergy_Total_200", &trk_ClusterEnergy_Total_200);
-  //m_tree->Branch("trk_ClusterEnergy_Total_100", &trk_ClusterEnergy_Total_100);
   m_tree->Branch("trk_ClusterEnergy_EM_nopresampler_100", &trk_ClusterEnergy_EM_nopresampler_100);
   m_tree->Branch("trk_ClusterEnergy_EM_nopresampler_200", &trk_ClusterEnergy_EM_nopresampler_200);
-  //m_tree->Branch("trk_ClusterEnergy_Total_nopresampler_100", &trk_ClusterEnergy_Total_nopresampler_100);
-  //m_tree->Branch("trk_ClusterEnergy_Total_nopresampler_200", &trk_ClusterEnergy_Total_nopresampler_200);
   }
 
   if (m_energyCalibList.find(ClusterEnergyLCW) != std::string::npos){
@@ -169,14 +170,8 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_ClusterEnergyLCW_Pos_HAD_100", &trk_ClusterEnergyLCW_Pos_HAD_100);
   m_tree->Branch("trk_ClusterEnergyLCW_HAD_200", &trk_ClusterEnergyLCW_HAD_200);
   m_tree->Branch("trk_ClusterEnergyLCW_HAD_100", &trk_ClusterEnergyLCW_HAD_100);
-  //m_tree->Branch("trk_ClusterEnergyLCW_Pos_Total_200", &trk_ClusterEnergyLCW_Pos_Total_200);
-  //m_tree->Branch("trk_ClusterEnergyLCW_Pos_Total_100", &trk_ClusterEnergyLCW_Pos_Total_100);
-  //m_tree->Branch("trk_ClusterEnergyLCW_Total_200", &trk_ClusterEnergyLCW_Total_200);
-  //m_tree->Branch("trk_ClusterEnergyLCW_Total_100", &trk_ClusterEnergyLCW_Total_100);
   m_tree->Branch("trk_ClusterEnergyLCW_EM_nopresampler_100", &trk_ClusterEnergyLCW_EM_nopresampler_100);
   m_tree->Branch("trk_ClusterEnergyLCW_EM_nopresampler_200", &trk_ClusterEnergyLCW_EM_nopresampler_200);
-  //m_tree->Branch("trk_ClusterEnergyLCW_Total_nopresampler_100", &trk_ClusterEnergyLCW_Total_nopresampler_100);
-  //m_tree->Branch("trk_ClusterEnergyLCW_Total_nopresampler_200", &trk_ClusterEnergyLCW_Total_nopresampler_200);
   }
 
   if (m_energyCalibList.find(CellEnergy) != std::string::npos){
@@ -190,14 +185,8 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_CellEnergy_Pos_HAD_100", &trk_CellEnergy_Pos_HAD_100);
   m_tree->Branch("trk_CellEnergy_HAD_200", &trk_CellEnergy_HAD_200);
   m_tree->Branch("trk_CellEnergy_HAD_100", &trk_CellEnergy_HAD_100);
-  //m_tree->Branch("trk_CellEnergy_Pos_Total_200", &trk_CellEnergy_Pos_Total_200);
-  //m_tree->Branch("trk_CellEnergy_Pos_Total_100", &trk_CellEnergy_Pos_Total_100);
-  //m_tree->Branch("trk_CellEnergy_Total_200", &trk_CellEnergy_Total_200);
-  //m_tree->Branch("trk_CellEnergy_Total_100", &trk_CellEnergy_Total_100);
   m_tree->Branch("trk_CellEnergy_EM_nopresampler_100", &trk_CellEnergy_EM_nopresampler_100);
   m_tree->Branch("trk_CellEnergy_EM_nopresampler_200", &trk_CellEnergy_EM_nopresampler_200);
-  //m_tree->Branch("trk_CellEnergy_Total_nopresampler_100", &trk_CellEnergy_Total_nopresampler_100);
-  //m_tree->Branch("trk_CellEnergy_Total_nopresampler_200", &trk_CellEnergy_Total_nopresampler_200);
   }
 
   m_tree->Branch("trk_NPV_2", &trk_NPV_2);
@@ -253,7 +242,8 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
   const xAOD::TrackParticleContainer* trks(nullptr);
   ANA_CHECK( HelperFunctions::retrieve(trks, m_inTrackContainerName, m_event, m_store) );
 
-  SG::AuxElement::ConstAccessor< float > acc_dRToNearestTrack("dRToNearestTrack");
+  SG::AuxElement::ConstAccessor< float > acc_dRToNearestTrackInEM("dRToNearestTrackInEM");
+  SG::AuxElement::ConstAccessor< float > acc_dRToNearestTrackInHAD("dRToNearestTrackInHAD");
 
   // loop over all tracks only once
   for(auto trk: *trks){
@@ -263,8 +253,11 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     ANA_MSG_DEBUG("Track has CALO extrapolation");
     if (m_useCutFlow) m_trk_cutflowHist_1->Fill("Has calo extrapolation", 1.0);
 
-    if (acc_dRToNearestTrack.isAvailable(*trk)) trk_nearest_dR = acc_dRToNearestTrack(*trk);
-    else {ANA_MSG_WARNING("Coulnd't find the decorator for the dR to the nearest track"); trk_nearest_dR = -1.0;}
+    if (acc_dRToNearestTrackInEM.isAvailable(*trk)) trk_nearest_dR_EM = acc_dRToNearestTrackInEM(*trk);
+    else {ANA_MSG_WARNING("Coulnd't find the decorator for the dR to the nearest track"); trk_nearest_dR_EM = -1.0;}
+
+    if (acc_dRToNearestTrackInHAD.isAvailable(*trk)) trk_nearest_dR_HAD= acc_dRToNearestTrackInHAD(*trk);
+    else {ANA_MSG_WARNING("Coulnd't find the decorator for the dR to the nearest track"); trk_nearest_dR_HAD = -1.0;}
 
     //This is the track pT
     trk_pt = trk->pt()/1e3;
@@ -276,6 +269,18 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     // EME2
     trk_etaEME2 = trk->auxdata<float>("CALO_trkEta_EME2");
     trk_phiEME2 = trk->auxdata<float>("CALO_trkPhi_EME2");
+
+    //TileBar2
+    trk_etaTileBar2 = trk->auxdata<float>("CALO_trkEta_TileBar2");
+    trk_phiTileBar2 = trk->auxdata<float>("CALO_trkPhi_TileBar2");
+
+    //TileExt1
+    trk_etaTileExt1 = trk->auxdata<float>("CALO_trkEta_TileExt1");
+    trk_phiTileExt1 = trk->auxdata<float>("CALO_trkPhi_TileExt1");
+
+    //HEC1
+    trk_etaHEC1 = trk->auxdata<float>("CALO_trkEta_HEC1");
+    trk_phiHEC1 = trk->auxdata<float>("CALO_trkPhi_HEC1");
 
     trk_d0 = trk->d0(); //This is the correct d0
     trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct z0sin theta impact parameter. I need to fix this later. For now, just use the track vertex association tool
@@ -331,30 +336,9 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
       }
 
 
-      //sum all energy deposits, regardless of location in calorimeter
- //     trk_ClusterEnergy_Pos_Total_200 = 0.;
- //     trk_ClusterEnergy_Pos_Total_100 = 0.;
- //     trk_ClusterEnergy_Total_200 = 0.;
- //     trk_ClusterEnergy_Total_100 = 0.;
- //     for (unsigned int i=0; i<m_layer.size(); i++) { 
- //       float trk_ClusterEnergy_E_200_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_200"))/1e3; 
- //       float trk_ClusterEnergy_E_100_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_100"))/1e3; 
- //       trk_ClusterEnergy_Total_200 += trk_ClusterEnergy_E_200_tmp;
- //       trk_ClusterEnergy_Total_100 += trk_ClusterEnergy_E_100_tmp;
- //       if (trk_ClusterEnergy_E_200_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
- //         trk_ClusterEnergy_Pos_Total_200 += trk_ClusterEnergy_E_200_tmp; 
- //       if (trk_ClusterEnergy_E_100_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
- //         trk_ClusterEnergy_Pos_Total_100 += trk_ClusterEnergy_E_100_tmp; 
- //     }
-
       //These decorations are available at the derivation level. the "EM" energy does not include the endcap and barrel presamplers.
       trk_ClusterEnergy_EM_nopresampler_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3;
       trk_ClusterEnergy_EM_nopresampler_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3;
- //     trk_ClusterEnergy_HAD_100 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_100"))/1e3; 
- //     trk_ClusterEnergy_HAD_200 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_200"))/1e3; 
- //     trk_ClusterEnergy_Total_nopresampler_100 = trk_ClusterEnergy_EM_nopresampler_100 + trk_ClusterEnergy_HAD_100;
- //     trk_ClusterEnergy_Total_nopresampler_200 = trk_ClusterEnergy_EM_nopresampler_200 + trk_ClusterEnergy_HAD_200;
-      
     } //If Do EM Cluster Energy Scale
 
 
@@ -392,30 +376,9 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         if (trk_ClusterEnergyLCW_E_tmp_100 > 0.) // only include E > 0 (i.e. not calorimeter noise)
           trk_ClusterEnergyLCW_Pos_HAD_100 += trk_ClusterEnergyLCW_E_tmp_100;
       }
-
-      //sum all energy deposits, regardless of location in calorimeter
-//    trk_ClusterEnergyLCW_Pos_Total_200 = 0.;
-//    trk_ClusterEnergyLCW_Pos_Total_100 = 0.;
-//    trk_ClusterEnergyLCW_Total_200 = 0.;
-//    trk_ClusterEnergyLCW_Total_100 = 0.;
-//    for (unsigned int i=0; i<m_layer.size(); i++) { 
-//      float trk_ClusterEnergyLCW_E_200_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_200"))/1e3; 
-//      float trk_ClusterEnergyLCW_E_100_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_100"))/1e3; 
-//      trk_ClusterEnergyLCW_Total_200 += trk_ClusterEnergyLCW_E_200_tmp;
-//      trk_ClusterEnergyLCW_Total_100 += trk_ClusterEnergyLCW_E_100_tmp;
-//      if (trk_ClusterEnergyLCW_E_200_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
-//        trk_ClusterEnergyLCW_Pos_Total_200 += trk_ClusterEnergyLCW_E_200_tmp; 
-//      if (trk_ClusterEnergyLCW_E_100_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
-//        trk_ClusterEnergyLCW_Pos_Total_100 += trk_ClusterEnergyLCW_E_100_tmp; 
-//    }
-
       //These decorations are available at the derivation level. the "EM" energy does not include the endcap and barrel presamplers.
       trk_ClusterEnergyLCW_EM_nopresampler_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3;
       trk_ClusterEnergyLCW_EM_nopresampler_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3;
-//      trk_ClusterEnergyLCW_HAD_100 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_100"))/1e3; 
-//      trk_ClusterEnergyLCW_HAD_200 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_200"))/1e3; 
-//      trk_ClusterEnergyLCW_Total_nopresampler_100 = trk_ClusterEnergyLCW_EM_nopresampler_100 + trk_ClusterEnergyLCW_HAD_100;
-//      trk_ClusterEnergyLCW_Total_nopresampler_200 = trk_ClusterEnergyLCW_EM_nopresampler_200 + trk_ClusterEnergyLCW_HAD_200;
     } 
 
     ////////////////////////////////CELL ENERGY/////////////////////////////////////////////////////////////////////////////
@@ -453,29 +416,9 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
           trk_CellEnergy_Pos_HAD_100 += trk_CellEnergy_E_tmp_100;
       }
 
-      //sum all energy deposits, regardless of location in calorimeter
-//    trk_CellEnergy_Pos_Total_200 = 0.;
-//    trk_CellEnergy_Pos_Total_100 = 0.;
-//    trk_CellEnergy_Total_200 = 0.;
-//    trk_CellEnergy_Total_100 = 0.;
-//    for (unsigned int i=0; i<m_layer.size(); i++) { 
-//      float trk_CellEnergy_E_200_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_200"))/1e3; 
-//      float trk_CellEnergy_E_100_tmp = trk->auxdata<float>(std::string("CALO_"+m_energyCalib+"_"+m_layer[i]+"_100"))/1e3; 
-//      trk_CellEnergy_Total_200 += trk_CellEnergy_E_200_tmp;
-//      trk_CellEnergy_Total_100 += trk_CellEnergy_E_100_tmp;
-//      if (trk_CellEnergy_E_200_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
-//        trk_CellEnergy_Pos_Total_200 += trk_CellEnergy_E_200_tmp; 
-//      if (trk_CellEnergy_E_100_tmp > 0.) // only include E > 0 (i.e. not calorimeter noise)
-//        trk_CellEnergy_Pos_Total_100 += trk_CellEnergy_E_100_tmp; 
-//    }
-
       //These decorations are available at the derivation level. the "EM" energy does not include the endcap and barrel presamplers.
       trk_CellEnergy_EM_nopresampler_100 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_100"))/1e3;
       trk_CellEnergy_EM_nopresampler_200 = trk->auxdata<float>(std::string("CALO_EM_"+m_energyCalib+"_0_200"))/1e3;
-//      trk_CellEnergy_HAD_100 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_100"))/1e3; 
-//      trk_CellEnergy_HAD_200 = trk->auxdata<float>(std::string("CALO_HAD_"+m_energyCalib+"_0_200"))/1e3; 
-//      trk_CellEnergy_Total_nopresampler_100 = trk_CellEnergy_EM_nopresampler_100 + trk_CellEnergy_HAD_100;
-//      trk_CellEnergy_Total_nopresampler_200 = trk_CellEnergy_EM_nopresampler_200 + trk_CellEnergy_HAD_200;
     }
 
 
