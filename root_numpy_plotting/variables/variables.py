@@ -3,10 +3,50 @@ from selections.selections import NonZeroEnergy
 import numpy as np
 from math import pi
 
+def HadFrac(trk):
+    return (trk["trk_ClusterEnergy_HAD_200"]) / (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
+calc_HadFrac = calculation(HadFrac, branches)
+
+def MomentumHadFrac(trk):
+    return (trk["trk_ClusterEnergy_HAD_200"] + trk["trk_ClusterEnergy_EM_200"])/trk["trk_p"]
+branches = ["trk_ClusterEnergy_HAD_200", "trk_ClusterEnergy_EM_200", "trk_p"]
+calc_MomentumHadFrac = calculation(MomentumHadFrac, branches)
+
+def EnergyEMDR100(trk):
+    return (trk["trk_ClusterEnergy_EM_100"])
+branches = ["trk_ClusterEnergy_EM_100"]
+calc_EnergyEMDR100 = calculation(EnergyEMDR100, branches)
+
+def nTRT(trk):
+    return trk["trk_nTRT"]
+branches = ["trk_nTRT"]
+calc_nTRT = calculation(nTRT, branches)
+
 def trkCount(trk):
     return np.zeros(len(trk))
 branches = []
 calc_trkCount = calculation(trkCount, branches)
+
+def trkNClusters(trk):
+    return trk["trk_nclusters"]
+calc_trkNClusters = calculation(trkNClusters, ["trk_nclusters"])
+
+def trkNClusters_EM(trk):
+    return trk["trk_nclusters_EM"]
+calc_trkNClusters_EM = calculation(trkNClusters_EM, ["trk_nclusters_EM"])
+
+def trkNClusters_emlike(trk):
+    return trk["trk_nclusters_emlike"]
+calc_trkNClusters_emlike = calculation(trkNClusters_emlike, ["trk_nclusters_emlike"])
+
+def trkNClusters_HAD(trk):
+    return trk["trk_nclusters_HAD"]
+calc_trkNClusters_HAD = calculation(trkNClusters_HAD, ["trk_nclusters_HAD"])
+
+def trkNClusters_hadlike(trk):
+    return trk["trk_nclusters_hadlike"]
+calc_trkNClusters_hadlike = calculation(trkNClusters_hadlike, ["trk_nclusters_hadlike"])
 
 def trkHADFraction(trk):
     trk_total_nonzero = NonZeroEnergy(trk)

@@ -6,6 +6,11 @@ def NoSelection(trk):
 branches = []
 sel_NoSelection = calculation(NoSelection, branches)
 
+def hasHADExtrapolation(trk):
+    return (trk["trk_phiHEC1"] > -100) | (trk["trk_phiTileBar2"] > -100) | (trk["trk_phiTileExt1"] > -100)
+branches =["trk_phiHEC1", "trk_phiTileBar2", "trk_phiTileExt1"]
+sel_hasHADExtrapolation = calculation(hasHADExtrapolation, branches)
+
 #A selection for plotting event-based variables
 def Event(trk):
     '''get only the variables associated with the first track in the event.
