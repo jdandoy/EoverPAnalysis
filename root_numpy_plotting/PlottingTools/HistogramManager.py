@@ -24,7 +24,7 @@ class HistogramManager:
     def hasHistogram(self, histogramName):
         return histogramName in self.histograms
 
-    def getHistograms(self, histogramName):
+    def getHistograms(self, histogramName, rebin=None):
        tFile = ROOT.TFile(self.filename, "READ")
        histogram_dict = {}
        if not histogramName in self.histograms:
@@ -34,5 +34,7 @@ class HistogramManager:
            tFile.cd(channel)
            histogram_dict[channel] = tFile.Get(channel + "/" + histogramName + channel)
            histogram_dict[channel].SetDirectory(0)
+           if rebin:
+               histogram_dict[channel].Rebin(rebin)
        tFile.Close()
        return histogram_dict

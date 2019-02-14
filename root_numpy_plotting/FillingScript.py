@@ -238,6 +238,51 @@ def FillingScript(plotter, outputRootFileName):
                                                   xlabel ="Track P_{T} [GeV]",\
                                                   ylabel = "Number of Tracks",\
                                                   )
+    for extra_string = ["", "HasExtrapolation"]:
+        #prepare the momentum bins
+        binMax = 30.0
+        binMin = 0.5
+        nBins = 100
+        p_bins = getLogBins(binMin, binMax, nBins)
+        histogram_name = "trkPtHist"
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = [],\
+                                           bins = p_bins,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+    #           ################################################################################
+    #           ## Look in different bins of pseudorapidity
+        base_description = []
+        etaSelections = [sel_IDEta00_06,\
+                        sel_IDEta06_11,\
+                        sel_IDEta11_14,\
+                        sel_IDEta14_15,\
+                        sel_IDEta15_18,\
+                        sel_IDEta18_23]
+
+        eta_selectionDescriptions = [\
+                                  "|#eta_{ID}|<0.6",\
+                                  "0.6<|#eta_{ID}|<1.1",\
+                                  "1.1<|#eta_{ID}|<1.4",\
+                                  "1.4<|#eta_{ID}|<1.5",\
+                                  "1.5<|#eta_{ID}|<1.8",\
+                                  "1.8<|#eta_{ID}|<2.3"\
+                                  ]
+
+        file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
+
+        for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
+            #do the eta selection and count the inclusive number of tracks in the bin
+            selections = [etaSelection]
+            trkMultiplicity_Eta = plotter.BookHistograms("TrkPtHist"+file_description,\
+                                                      calc_trkPt,\
+                                                      list_selections = selections,\
+                                                      bins = p_bins,\
+                                                      xlabel ="Track P_{T} [GeV]",\
+                                                      ylabel = "Number of Tracks",\
+                                                      )
 
         trkMultiplicity_Eta = plotter.BookHistograms("TrkPtHist"+file_description + "HasExtrapolation",\
                                                   calc_trkPt,\

@@ -59,7 +59,7 @@ def toGlobalScope(obj):
     '''Keep TObjects alive at global scope'''
     global_scope.append(obj)
 
-def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
+def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False, x_range = None, rebin=None, zlabel = None):
      '''Take a 2-D histogram and plot it on a canvas. Options for a logarithmic x and y axis are available.'''
      global CANVAS_COUNTER
      ROOT.gStyle.SetPalette(ROOT.kInvertedDarkBodyRadiator)
@@ -73,10 +73,17 @@ def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False):
      TwoDHist.GetXaxis().SetTitleOffset(1.0)
      TwoDHist.GetZaxis().SetTitleOffset(0.8)
      TwoDHist.GetYaxis().SetTitleOffset(1.0)
+     if x_range:
+         TwoDHist.GetXaxis().SetRangeUser(x_range[0], x_range[1])
+
      if doLogx:
          canvas.SetLogx()
      if doLogy:
          canvas.SetLogy()
+     if rebin:
+         TwoDHist.Rebin2D(rebin, rebin)
+     if zlabel:
+         TwoDHist.GetZaxis().SetTitle(zlabel)
      canvas.Draw()
      #TwoDHist.GetXaxis().SetRange(15, 300)
      canvas.Modified()
@@ -177,7 +184,7 @@ def ProjectProfiles(hist_dict):
         hist_dict[channel] = hist_dict[channel].ProjectionX()
     return hist_dict
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -204,6 +211,10 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     MCHist = cleanUpHistograms(MCHist)
     MCHist.SetLineColor(MCColor)
     DataHist.SetLineColor(DataColor)
+
+    if rebin != None:
+        MCHist.Rebin(rebin)
+        DataHist.Rebin(rebin)
 
     legend = ROOT.TLegend(0.60, 0.65, 0.92, 0.89)
     legend.SetBorderSize(0)
@@ -260,6 +271,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
         DataHist.SetMinimum(minimum_bin * 0.5)
 
     MCHist.GetYaxis().SetTitleOffset(title_offset)
+    if ylabel:
+        MCHist.GetYaxis().SetTitle(ylabel)
     MCHist.Draw("HIST")
     DataHist.Draw("SAME")
 
@@ -387,7 +400,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     canvas.Modified()
     canvas.Update()
 
-    return canvas
+    return canvas, top_pad, bottom_pad
 
 def GetListOfNeededBranches(variables, selections):
     '''given a list of variables and selections, get all of the branches that should be read from the tree'''
@@ -423,6 +436,28 @@ def DivideHistograms(hist_dict1, hist_dict2):
         Hist_clone1.GetXaxis().SetTitle(hist_dict1[channel].GetXaxis().GetTitle())
         Hist_clone1.GetYaxis().SetTitle(hist_dict1[channel].GetYaxis().GetTitle())
         Hist_clone1.Divide(hist_dict2[channel])
+        return_dict[channel] = Hist_clone1
+
+    return return_dict
+
+def SubtractHistograms(hist_dict1, hist_dict2):
+    '''take the histograms from two dictionaries hist_dict1 and hist_dict2, and divide them by matching keys. Return a dictionary with each key corresponding to the divided histogram.'''
+    dict1_keys = hist_dict1.keys()
+    dict2_keys = hist_dict2.keys()
+
+    for key in dict1_keys:
+        if key not in dict2_keys:
+            raise ValueError("The two dictionaries do not have the same keys")
+    for key in dict2_keys:
+        if key not in dict1_keys:
+            raise ValueError("The two dictionaries do not have the same keys")
+
+    return_dict = {}
+    for channel in dict1_keys:
+        Hist_clone1 = hist_dict1[channel].Clone(hist_dict1[channel].GetName() + "subtracted" + hist_dict2[channel].GetName())
+        Hist_clone1.GetXaxis().SetTitle(hist_dict1[channel].GetXaxis().GetTitle())
+        Hist_clone1.GetYaxis().SetTitle(hist_dict1[channel].GetYaxis().GetTitle())
+        Hist_clone1.Add(hist_dict2[channel], -1.0)
         return_dict[channel] = Hist_clone1
 
     return return_dict
