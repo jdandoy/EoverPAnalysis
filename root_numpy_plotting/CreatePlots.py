@@ -5,6 +5,8 @@ from array import array
 import os
 import time
 
+ROOT.gROOT.SetBatch(ROOT.kTRUE);
+
 def CloseCanvas(canv):
     canv.Close()
     ROOT.gSystem.ProcessEvents()

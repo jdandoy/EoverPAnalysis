@@ -9,8 +9,8 @@ branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 calc_HadFrac = calculation(HadFrac, branches)
 
 def MomentumHadFrac(trk):
-    return (trk["trk_ClusterEnergy_HAD_200"] + trk["trk_ClusterEnergy_EM_200"])/trk["trk_p"]
-branches = ["trk_ClusterEnergy_HAD_200", "trk_ClusterEnergy_EM_200", "trk_p"]
+    return (trk["trk_ClusterEnergy_HAD_200"])/trk["trk_p"]
+branches = ["trk_ClusterEnergy_HAD_200", "trk_p"]
 calc_MomentumHadFrac = calculation(MomentumHadFrac, branches)
 
 def EnergyEMDR100(trk):
@@ -79,17 +79,18 @@ def trkEtaID_ABS(trk):
 branches = ["trk_etaID"]
 calc_trkEta_ABS = calculation(trkEtaID_ABS, branches)
 
-def trkEtaECAL(trk):
+def hasExtrapolationEMCal(trk):
     trk_etaEMB = np.abs(trk["trk_etaEMB2"])
     trk_etaEME = np.abs(trk["trk_etaEME2"])
-
-    trkEtaECAL = np.ones(len(trk)) * 1000.0
-
     hasEMB = trk_etaEMB < 100.0
-    hasEME = np.logical_not(hasEMB) & (trk_etaEME < 100.0)
+    hasEME = trk_etaEME < 100.0
+    return hasEMB, hasEME
 
+def trkEtaECAL(trk):
+    hasEMB, hasEME = hasExtrapolationEMCal(trk)
+    hasEME = np.logical_not(hasEMB) & (hasEME)
     print "This many tracks had extensions to both the barrel and the emec " + str(np.sum(1*(hasEMB & hasEME)))
-
+    trkEtaECAL = np.ones(len(hasEMB)) * 100000.0
     trkEtaECAL[hasEMB] = trk["trk_etaEMB2"][hasEMB]
     trkEtaECAL[hasEME] = trk["trk_etaEME2"][hasEME]
 
@@ -99,10 +100,31 @@ def trkEtaECAL(trk):
         print(trk_etaEMB[np.logical_not(hasEMB | hasEME)])
         print(np.sum( 1 * np.logical_not(hasEMB | hasEME)))
         raise ValueError("one of the trakc did not have an extrapolation to the electromagnetic calorimeter")
+
     return trkEtaECAL
 
 branches = ["trk_etaEMB2","trk_etaEME2"]
 calc_trkEtaECAL = calculation(trkEtaECAL, branches)
+
+def trkPhiECAL(trk):
+    hasEMB, hasEME = hasExtrapolationEMCal(trk)
+    hasEME = np.logical_not(hasEMB) & (hasEME)
+    print "This many tracks had extensions to both the barrel and the emec " + str(np.sum(1*(hasEMB & hasEME)))
+
+    trkPhiECAL = np.ones(len(hasEMB)) * 100000.0
+    trkPhiECAL[hasEMB] = trk["trk_phiEMB2"][hasEMB]
+    trkPhiECAL[hasEME] = trk["trk_phiEME2"][hasEME]
+
+    print(np.logical_not(hasEMB | hasEME))
+
+    if (np.sum(1.0*np.logical_not(hasEMB | hasEME) > 1.5)):
+        print(trk_phiEMB[np.logical_not(hasEMB | hasEME)])
+        print(np.sum( 1 * np.logical_not(hasEMB | hasEME)))
+        raise ValueError("one of the trakc did not have an extrapolation to the electromagnetic calorimeter")
+
+    return trkPhiECAL
+branches = ["trk_phiEMB2","trk_phiEME2", "trk_etaEMB2","trk_etaEME2"]
+calc_trkPhiECAL = calculation(trkPhiECAL, branches)
 
 def trkNearestNeighbourEM2(trk):
     return trk["trk_nearest_dR_EM"]

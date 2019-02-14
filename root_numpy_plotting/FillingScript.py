@@ -83,7 +83,7 @@ def FillingScript(plotter, outputRootFileName):
                            calc_HadFrac,\
                            list_selections = selections,\
                            range_low = -1.0,\
-                           range_high = + 5.0,\
+                           range_high = + 2.0,\
                            bins = 48,\
                            xlabel = "E^{HAD}/E^{Total}",\
                            ylabel = "Number of Tracks")
@@ -190,6 +190,43 @@ def FillingScript(plotter, outputRootFileName):
                               ]
 
     file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
+  
+    from variables.variables import calc_trkEtaECAL, calc_trkPhiECAL
+    from selections.selections import PBin, sel_NonZeroEnergy
+    from calculation.calculation import calculation
+    PBinFunction = lambda x, y=3, z=4: PBin(x, y,z)
+    PBinFunction.__name__ = "SelMomentumRange3_4"
+    PBinSelection = calculation(PBinFunction, ["trk_p"])
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween3And4GeV_Denomenator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
+
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween3And4GeV_Numerator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection, sel_NonZeroEnergy],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
+
 
     for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
         #do the eta selection and count the inclusive number of tracks in the bin
@@ -760,7 +797,16 @@ def FillingScript(plotter, outputRootFileName):
         MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
         selections = MIP_selection + [eta_binSelection]
 
-    #    ################################################################################
+        histogram_name = "trkPtHist"
+        histogram_name = histogram_name + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = [eta_binSelection],\
+                                           bins = p_bins_reference,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+   #    ################################################################################
         #prepare the momentum bins
         histogram_name = "trkPtHist"
         histogram_name = histogram_name + "_MIPSelection_HADBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
@@ -785,6 +831,15 @@ def FillingScript(plotter, outputRootFileName):
                                    range_high = 9.5,\
                                    xlabel=xlabel,\
                                    ylabel="Number of Tracks")
+
+        histogramName = "TrkMultiplicityVsP_Inclusive_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = [eta_binSelection],\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
 
         histogramName = "UnweightedTrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
         trkMultiplicity =  plotter.BookHistograms(histogramName,
@@ -1233,7 +1288,7 @@ def FillingScript(plotter, outputRootFileName):
                                    calc_HadFrac,\
                                    list_selections = selections,\
                                    range_low = -1.0,\
-                                   range_high = + 5.0,\
+                                   range_high = + 2.0,\
                                    bins = 48,\
                                    xlabel = "E^{HAD}/E^{Total}",\
                                    ylabel = "Number of Tracks")
@@ -1526,7 +1581,7 @@ def FillingScript(plotter, outputRootFileName):
                                calc_HadFrac,\
                                list_selections = selections,\
                                range_low = -1.0,\
-                               range_high = + 5.0,\
+                               range_high = + 2.0,\
                                bins = 48,\
                                xlabel = "E^{HAD}/E^{Total}",\
                                ylabel = "Number of Tracks")
@@ -1747,7 +1802,7 @@ def FillingScript(plotter, outputRootFileName):
                                    calc_HadFrac,\
                                    list_selections = selections,\
                                    range_low = -1.0,\
-                                   range_high = + 5.0,\
+                                   range_high = + 2.0,\
                                    bins = 48,\
                                    xlabel = "E^{HAD}/E^{Total}",\
                                    ylabel = "Number of Tracks")
@@ -1863,7 +1918,7 @@ def FillingScript(plotter, outputRootFileName):
                                calc_HadFrac,\
                                list_selections = selections,\
                                range_low = -1.0,\
-                               range_high = + 5.0,\
+                               range_high = +2.0,\
                                bins = 48,\
                                xlabel = "E^{HAD}/E^{Total}",\
                                ylabel = "Number of Tracks")
@@ -2021,7 +2076,7 @@ def FillingScript(plotter, outputRootFileName):
                                    calc_HadFrac,\
                                    list_selections = selections,\
                                    range_low = -1.0,\
-                                   range_high = + 5.0,\
+                                   range_high = + 2.0,\
                                    bins = 48,\
                                    xlabel = "E^{HAD}/E^{Total}",\
                                    ylabel = "Number of Tracks")
