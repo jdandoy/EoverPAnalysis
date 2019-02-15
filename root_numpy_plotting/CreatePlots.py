@@ -877,6 +877,8 @@ for eta_range in eta_ranges:
     p_bins_min = getP(0.5, eta_range[1])
     nBins = 20
     p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
+    if eta_range[0] < 0.2:
+        p_bins = p_bins[1:]
 
     #loop through the different eta and p bins and perform the fits:
     #p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1])  for i in range(0, len(FourThousandTracks_pbins)-1) ]
@@ -962,7 +964,6 @@ for eta_range in eta_ranges:
                 mpv_value_MC = MC.GetBinContent(binx)
                 mpv_MC = MC.GetBinCenter(binx)
 
-
         #this is the landau distribution that will be fit to the histograms
         landau_data = ROOT.TF1("landau_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
         landau_data.SetParName(0, "mpv")
@@ -1000,13 +1001,63 @@ for eta_range in eta_ranges:
         gaus_MC.SetParameter(0, mpv_MC)
         gaus_MC.SetParLimits(0, 0.45, 0.95)
         gaus_MC.SetParName(1, "sigma")
-        gaus_MC.SetParameter(1, MC.GetRMS() * 0.8)
-        gaus_MC.SetParLimits(1, MC.GetRMS()/3.0, MC.GetRMS()*1.2)
+        gaus_MC.SetParameter(1, data.GetRMS() * 0.8)
+        gaus_MC.SetParLimits(1, data.GetRMS()/3.0, data.GetRMS()*1.2)
         gaus_MC.SetParName(2, "Norm")
         gaus_MC.SetParameter(2, MC.Integral())
 
+        #Create a gaussian convoluted with a landau histogram
+        gaus_forconvolution_MC = ROOT.TF1("gaus_forconvolution_MC" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
+
+        landau_forconvolution_MC = ROOT.TF1("landau_forconvolution_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+
+        convolution_MC = ROOT.TF1Convolution(gaus_forconvolution_MC, landau_forconvolution_MC,-1,6,True)
+        convolution_MC.SetRange(-1.,5.)
+        convolution_MC.SetNofPointsFFT(10000)
+        convolution_tofit_MC = ROOT.TF1("f",convolution_MC, -1.0, 5., convolution_MC.GetNpar())
+        convolution_tofit_MC.SetName("convolution_MC" + histogramName)
+
+        convolution_tofit_MC.SetParName(0, "SigmaSmear")
+        convolution_tofit_MC.SetParLimits(0, -100.0, 100.0)
+        convolution_tofit_MC.SetParameter(0, 1.0)
+
+        convolution_tofit_MC.SetParName(1, "mpv")
+        convolution_tofit_MC.SetParameter(1, mpv_MC)
+        convolution_tofit_MC.SetParLimits(1, 0.3, 1.1)
+        convolution_tofit_MC.SetParName(2, "sigma")
+        convolution_tofit_MC.SetParameter(2, MC.GetRMS()/4.0)
+        convolution_tofit_MC.SetParLimits(2, MC.GetRMS()/100.0, MC.GetRMS()*2.0)
+        convolution_tofit_MC.SetParName(3, "Norm")
+        convolution_tofit_MC.SetParameter(3, MC.Integral())
+        print "Created convolution function"
+        convolution_tofit_MC.Print()
+
+        #Create a gaussian convoluted with a landau histogram
+        gaus_forconvolution_data = ROOT.TF1("gaus_forconvolution_data" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
+        landau_forconvolution_data = ROOT.TF1("landau_forconvolution_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+
+        convolution_data = ROOT.TF1Convolution(gaus_forconvolution_data, landau_forconvolution_data,-1,6,True)
+        convolution_data.SetRange(-1.,5.)
+        convolution_data.SetNofPointsFFT(10000)
+        convolution_tofit_data = ROOT.TF1("f",convolution_data, -1.0, 5., convolution_data.GetNpar())
+        convolution_tofit_data.SetName("convolution_data" + histogramName)
+        convolution_tofit_data.SetParName(0, "SigmaSmear")
+        convolution_tofit_data.SetParLimits(0, -100.0, 100.0)
+        convolution_tofit_data.SetParameter(0, 1.0)
+
+        convolution_tofit_data.SetParName(1, "mpv")
+        convolution_tofit_data.SetParameter(1, mpv_data)
+        convolution_tofit_data.SetParLimits(1, 0.3, 1.1)
+        convolution_tofit_data.SetParName(2, "sigma")
+        convolution_tofit_data.SetParameter(2, data.GetRMS()/4.0)
+        convolution_tofit_data.SetParLimits(2, data.GetRMS()/100.0, data.GetRMS()*2.0)
+        convolution_tofit_data.SetParName(3, "Norm")
+        convolution_tofit_data.SetParameter(3, data.Integral())
+        print "Created convolution function"
+        convolution_tofit_data.Print()
+
         #choose the fit funciton that you want to use
-        fit_function = "landau"
+        fit_function = "convolution"
         fit_function_data_string = fit_function + "_data"
         fit_function_MC_string = fit_function + "_MC"
 
@@ -1054,29 +1105,41 @@ for eta_range in eta_ranges:
         #draw a little text thing describing the fit result
         chisq_MC_str = "{:.3f}".format(fit_function_MC.GetChisquare()/fit_function_MC.GetNDF())
         prob_MC_str = "{:.3f}".format(fit_function_MC.GetProb())
-        mpv_MC_str = "{:.3f}".format(fit_function_MC.GetParameter(0))
-        mpvErr_MC_str = "{:.3f}".format(fit_function_MC.GetParError(0))
+        mpv_MC_str = "{:.3f}".format(fit_function_MC.GetParameter(1))
+        mpvErr_MC_str = "{:.3f}".format(fit_function_MC.GetParError(1))
         sigma_MC_str = "{:.3f}".format(fit_function_MC.GetParameter(1))
         sigmaErr_MC_str = "{:.3f}".format(fit_function_MC.GetParError(1))
 
         chisq_data_str = "{:.3f}".format(fit_function_data.GetChisquare()/fit_function_data.GetNDF())
         prob_data_str = "{:.3f}".format(fit_function_data.GetProb())
-        mpv_data_str = "{:.3f}".format(fit_function_data.GetParameter(0))
-        mpvErr_data_str = "{:.3f}".format(fit_function_data.GetParError(0))
+        mpv_data_str = "{:.3f}".format(fit_function_data.GetParameter(1))
+        mpvErr_data_str = "{:.3f}".format(fit_function_data.GetParError(1))
         sigma_data_str = "{:.3f}".format(fit_function_data.GetParameter(1))
         sigmaErr_data_str = "{:.3f}".format(fit_function_data.GetParError(1))
 
         chisq_MC = fit_function_MC.GetChisquare()/fit_function_MC.GetNDF()
         prob_MC = fit_function_MC.GetProb()
-        mpv_MC = fit_function_MC.GetParameter(0)
-        mpvErr_MC = fit_function_MC.GetParError(0)
+
+        if fit_function == "convolution":
+            mpv_MC = fit_function_MC.GetParameter(1)
+            mpvErr_MC = fit_function_MC.GetParError(1)
+
+        else:
+            mpv_MC = fit_function_MC.GetParameter(0)
+            mpvErr_MC = fit_function_MC.GetParError(0)
+
         sigma_MC = fit_function_MC.GetParameter(1)
         sigmaErr_MC = fit_function_MC.GetParError(1)
 
         chisq_data = fit_function_data.GetChisquare()/fit_function_data.GetNDF()
         prob_data = fit_function_data.GetProb()
-        mpv_data = fit_function_data.GetParameter(0)
-        mpvErr_data = fit_function_data.GetParError(0)
+        if fit_function == "convolution":
+            mpv_data = fit_function_data.GetParameter(1)
+            mpvErr_data = fit_function_data.GetParError(1)
+        else:
+            mpv_data = fit_function_data.GetParameter(0)
+            mpvErr_data = fit_function_data.GetParError(0)
+
         sigma_data = fit_function_data.GetParameter(1)
         sigmaErr_data = fit_function_data.GetParError(1)
 
@@ -1085,8 +1148,12 @@ for eta_range in eta_ranges:
         bin_mpv_MC.append(mpv_MC)
         bin_mpv_error_MC.append(mpvErr_MC)
 
-        dataResult = "Data: #mu=" + mpv_data_str + "#pm" + mpvErr_data_str + " #sigma=" + sigma_data_str + "#pm" + sigmaErr_data_str + " #Chi^2/NDOF=" + chisq_data_str + " Prob=" + prob_data_str
-        MCResult = "MC: #mu=" + mpv_MC_str + "#pm" + mpvErr_MC_str + " #sigma=" + sigma_MC_str + "#pm" + sigmaErr_MC_str + " #Chi^2/NDOF=" + chisq_MC_str + " Prob=" + prob_MC_str
+        if fit_function != "convolution":
+            dataResult = "Data: #mu=" + mpv_data_str + "#pm" + mpvErr_data_str + " #sigma=" + sigma_data_str + "#pm" + sigmaErr_data_str + " #Chi^2/NDOF=" + chisq_data_str + " Prob=" + prob_data_str
+            MCResult = "MC: #mu=" + mpv_MC_str + "#pm" + mpvErr_MC_str + " #sigma=" + sigma_MC_str + "#pm" + sigmaErr_MC_str + " #Chi^2/NDOF=" + chisq_MC_str + " Prob=" + prob_MC_str
+        else:
+            dataResult = "Data: #mu=" + mpv_data_str + "#pm" + mpvErr_data_str + " #Chi^2/NDOF=" + chisq_data_str + " Prob=" + prob_data_str
+            MCResult = "MC: #mu=" + mpv_MC_str + "#pm" + mpvErr_MC_str + " #Chi^2/NDOF=" + chisq_MC_str + " Prob=" + prob_MC_str
 
         DrawText(0.5, 0.55, dataResult, size=0.03)
         DrawText(0.5, 0.5, MCResult, size=0.03)
@@ -1099,8 +1166,8 @@ for eta_range in eta_ranges:
         DataVsMC[0].Print(plotter_directory + "/" + histogramName + ".png")
     #create an MC and data histogram with each bin set to the result from the fit
 
-    data_hist = ROOT.TH1D("DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]),"DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]), len(FourThousandTracks_pbins)-1, array('d', FourThousandTracks_pbins))
-    MC_hist = ROOT.TH1D("MCFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]),"DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]), len(FourThousandTracks_pbins)-1, array('d', FourThousandTracks_pbins))
+    data_hist = ROOT.TH1D("DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]),"DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]), len(p_bins[1:])-1, array('d', p_bins[1:]))
+    MC_hist = ROOT.TH1D("MCFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]),"DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]), len(p_bins[1:])-1, array('d', p_bins[1:]))
 
     for i in range(1, data_hist.GetNbinsX() + 1):
         data_hist.SetBinContent(i, bin_mpv_data[i-1])
