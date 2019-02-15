@@ -296,7 +296,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
         top_pad.SetLogx()
 
     ROOT.gROOT.SetStyle("ATLAS")
-    astyle.ATLASLabel(0.2, 0.87, "Internal")
+    #astyle.ATLASLabel(0.2, 0.87, "Internal")
     top_pad.Modified()
     top_pad.Update()
     toGlobalScope(top_pad)
