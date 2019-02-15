@@ -184,7 +184,7 @@ def ProjectProfiles(hist_dict):
         hist_dict[channel] = hist_dict[channel].ProjectionX()
     return hist_dict
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -206,6 +206,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     yTicksNumber: set the number of ticks on the y-axis
     -----------------------------------------------------------------------------------------------------
     '''
+    title_offset = 1.2
     MCHist = histogram_dict[MCKey]
     DataHist = histogram_dict[DataKey]
     MCHist = cleanUpHistograms(MCHist)
@@ -215,6 +216,19 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     if rebin != None:
         MCHist.Rebin(rebin)
         DataHist.Rebin(rebin)
+
+    if xAxis_range != None:
+        #find the bin to use to set the range
+        x_low = None
+        x_high = None
+        for bin in range(0, MCHist.GetNbinsX() + 1):
+            cent = MCHist.GetBinCenter(bin)
+            if cent >= xAxis_range[0] and x_low == None:
+                x_low = bin
+            elif cent > xAxis_range[1] and x_high == None:
+                x_high = bin -1
+        MCHist.GetXaxis().SetRange(x_low, x_high)
+        DataHist.GetXaxis().SetRange(x_low, x_high)
 
     legend = ROOT.TLegend(0.60, 0.65, 0.92, 0.89)
     legend.SetBorderSize(0)
@@ -251,8 +265,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
         if content < minimum_bin and content > 0.0:
             minimum_bin = content
 
-    title_offset = 0.7
-
     if doLogy:
         filename += "logy"
 
@@ -270,7 +282,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
         DataHist.SetMaximum(maximum_bin * 1.5)
         DataHist.SetMinimum(minimum_bin * 0.5)
 
-    MCHist.GetYaxis().SetTitleOffset(title_offset)
+    MCHist.GetYaxis().SetTitleOffset(1.3)
     if ylabel:
         MCHist.GetYaxis().SetTitle(ylabel)
     MCHist.Draw("HIST")
@@ -326,7 +338,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     data_ratio.GetXaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
     data_ratio.GetYaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
     data_ratio.GetXaxis().SetTitle(variableLabel)
-    data_ratio.GetXaxis().SetTitleOffset(1.1)
+    data_ratio.GetXaxis().SetTitleOffset(1.2)
     data_ratio.SetMaximum(ratio_max - 0.0001)
     data_ratio.SetMinimum(ratio_min + 0.0001)
     data_ratio.GetXaxis().SetTitleSize(MCHist_label_size*scale_ratio)
