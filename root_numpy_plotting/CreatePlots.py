@@ -5,7 +5,7 @@ from array import array
 import os
 import time
 
-ROOT.gROOT.SetBatch(ROOT.kTRUE)
+#ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 def CloseCanvas(canv):
     canv.Close()
@@ -30,7 +30,7 @@ if not os.path.exists("Plots/" + plotter_directory):
 
 plotter_directory = "Plots/" + plotter_directory
 
-if True:
+if False:
         eta_ranges = [(0.0, 0.4), (0.4, 0.8), (0.8, 1.2), (1.2, 1.6), (1.6, 2.0), (2.0, 2.4)]
         for histogramName in ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]:
             hist = HM.getHistograms(histogramName)
@@ -46,7 +46,7 @@ if True:
                 histogram_name = histogramName
                 histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
                 hist = HM.getHistograms(histogram_name)
-                description = base_description + ["Inclusive Selection"]
+                description = base_description + ["E_{TOTAL} != 0"]
                 DataVsMC1 = DrawDataVsMC(hist,\
                                         channelLabels,\
                                         MCKey='PythiaJetJet',\
@@ -710,8 +710,8 @@ if True:
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
-                                      ratio_min = 0.6,\
-                                      ratio_max = 1.4,\
+                                      ratio_min = 0.5,\
+                                      ratio_max = 1.5,\
                                       extra_description = description)
                 DataVSMC10[0].Draw()
                 DataVSMC10[0].Print(plotter_directory + "/" + histogramName + ".png")
@@ -727,8 +727,8 @@ if True:
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
-                                      ratio_min = 0.6,\
-                                      ratio_max = 1.4,\
+                                      ratio_min = 0.5,\
+                                      ratio_max = 1.5,\
                                       extra_description = description)
                 DataVSMC10[0].Draw()
                 DataVSMC10[0].Print(plotter_directory + "/" + histogramName + ".png")
@@ -741,9 +741,10 @@ if True:
                                       MCKey = "PythiaJetJet",\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
-                                      doLogy = False,
-                                      ratio_min = 0.9,\
-                                      ratio_max = 1.1,\
+                                      doLogy = False,\
+                                      ylabel = "<E/p>_{Corr}",\
+                                      ratio_min = 0.95,\
+                                      ratio_max = 1.05,\
                                       extra_description = description)
                 DataVSMC10[0].Draw()
                 DataVSMC10[0].Print(plotter_directory + "/" + histogramName + ".png")
@@ -816,11 +817,11 @@ if True:
                     p_low_str= "{:.2f}".format(p_range[0])
                     for selection_type in ["_NonZeroE_20TRT_InEtaBin_", "_NonZeroE_InEtaBin_", "_MIPSelection_HadFracAbove70_InEtaBin_"]:
                         if "_NonZeroE_20TRT_InEtaBin_" == selection_type:
-                            extra_stuff = ["N_{TRT Hits} >= 20"]
+                            extra_stuff = ["E_{TOTAL} != 0", "N_{TRT Hits} >= 20"]
                         elif "_MIPSelection_HadFracAbove70_InEtaBin_" == selection_type:
                             extra_stuff = ["MIP Seleciton"]
                         else:
-                            extra_stuff = []
+                            extra_stuff = ["E_{TOTAL} !=0"]
                         for histogramName in histogramNames:
                             if selection_type == "_MIPSelection_HadFracAbove70_":
                                 break
@@ -1095,12 +1096,17 @@ for eta_range in eta_ranges:
                               doLogy = False,
                               ratio_min = 0.4,\
                               ratio_max = 1.6,\
+                              xAxis_range = (0.0, 3.0),\
                               extra_description = description)
         DataVsMC[0].Draw()
         DataVsMC[0].cd()
+        raw_input()
         top_pad = DataVsMC[1]
         top_pad.cd()
         fit_function_MC.Draw("Same")
+
+        if fit_function_MC.GetNDF() <= 1:
+            continue
 
         #draw a little text thing describing the fit result
         chisq_MC_str = "{:.3f}".format(fit_function_MC.GetChisquare()/fit_function_MC.GetNDF())
