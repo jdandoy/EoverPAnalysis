@@ -228,6 +228,41 @@ def FillingScript(plotter, outputRootFileName):
                             zlabel = "Number of Tracks")
 
 
+    #try between 2 and 3 GeV
+
+    PBinFunction = lambda x, y=2, z=3: PBin(x, y,z)
+    PBinFunction.__name__ = "SelMomentumRange2_3"
+    PBinSelection = calculation(PBinFunction, ["trk_p"])
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween2And3GeV_Denomenator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
+
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween2And3GeV_Numerator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection, sel_NonZeroEnergy],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
+
     for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
         #do the eta selection and count the inclusive number of tracks in the bin
         selections = [etaSelection]
@@ -238,59 +273,8 @@ def FillingScript(plotter, outputRootFileName):
                                                   xlabel ="Track P_{T} [GeV]",\
                                                   ylabel = "Number of Tracks",\
                                                   )
-    for extra_string = ["", "HasExtrapolation"]:
-        #prepare the momentum bins
-        binMax = 30.0
-        binMin = 0.5
-        nBins = 100
-        p_bins = getLogBins(binMin, binMax, nBins)
-        histogram_name = "trkPtHist"
-        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
-                                           calc_trkPt,\
-                                           list_selections = [],\
-                                           bins = p_bins,\
-                                           xlabel ="Track P_{T} [GeV]",\
-                                           ylabel = "Number of Tracks")
 
-    #           ################################################################################
-    #           ## Look in different bins of pseudorapidity
-        base_description = []
-        etaSelections = [sel_IDEta00_06,\
-                        sel_IDEta06_11,\
-                        sel_IDEta11_14,\
-                        sel_IDEta14_15,\
-                        sel_IDEta15_18,\
-                        sel_IDEta18_23]
 
-        eta_selectionDescriptions = [\
-                                  "|#eta_{ID}|<0.6",\
-                                  "0.6<|#eta_{ID}|<1.1",\
-                                  "1.1<|#eta_{ID}|<1.4",\
-                                  "1.4<|#eta_{ID}|<1.5",\
-                                  "1.5<|#eta_{ID}|<1.8",\
-                                  "1.8<|#eta_{ID}|<2.3"\
-                                  ]
-
-        file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-        for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-            #do the eta selection and count the inclusive number of tracks in the bin
-            selections = [etaSelection]
-            trkMultiplicity_Eta = plotter.BookHistograms("TrkPtHist"+file_description,\
-                                                      calc_trkPt,\
-                                                      list_selections = selections,\
-                                                      bins = p_bins,\
-                                                      xlabel ="Track P_{T} [GeV]",\
-                                                      ylabel = "Number of Tracks",\
-                                                      )
-
-        trkMultiplicity_Eta = plotter.BookHistograms("TrkPtHist"+file_description + "HasExtrapolation",\
-                                                  calc_trkPt,\
-                                                  list_selections = selections + [sel_hasHADExtrapolation],\
-                                                  bins = p_bins,\
-                                                  xlabel ="Track P_{T} [GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
 
     ################################################################################
     histogramName = "TrackEtaID"
@@ -829,9 +813,9 @@ def FillingScript(plotter, outputRootFileName):
         p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
         p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
 
-        eop_bins_min = -1
+        eop_bins_min = 0.0
         eop_bins_max = 5
-        nBins = 120
+        nBins = 240
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
@@ -1354,6 +1338,91 @@ def FillingScript(plotter, outputRootFileName):
                                        ylabel="Number of Tracks")
 
         #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            histogram_name = "trkTRTHits"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_nTRT
+            plotter.BookHistograms(histogram_name,\
+                                   calc_nTRT,\
+                                   list_selections = selections,\
+                                   range_low = -0.5,\
+                                   range_high = 59.5,\
+                                   bins = 60,\
+                                   xlabel = "Number of TRT Hits",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "trkEMDR100"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_EnergyEMDR100
+            plotter.BookHistograms(histogram_name,\
+                                   calc_EnergyEMDR100,\
+                                   list_selections = selections,\
+                                   range_low = -2.0,\
+                                   range_high = + 10.0,\
+                                   bins = 48,\
+                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "MomentumHadFrac"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_MomentumHadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_MomentumHadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 5.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/P",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "HadFrac"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_HadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_HadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 2.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/E^{Total}",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+                histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+                plotter.BookHistograms(histogram_name,\
+                                       variable,\
+                                       list_selections = selections,\
+                                       bins = 10,\
+                                       range_low = -0.5,\
+                                       range_high = 9.5,\
+                                       xlabel=xlabel,\
+                                       ylabel="Number of Tracks")
+
+        #go and get the E/p distribution in each of the E/p bins
         p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1] ) for i in range(0, len(FourThousandTracks_pbins)-1) ]
         for p_range in p_ranges:
             PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
@@ -1404,7 +1473,7 @@ def FillingScript(plotter, outputRootFileName):
 
         eop_bins_min = -1
         eop_bins_max = 5
-        nBins = 120
+        nBins = 240
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
@@ -1549,7 +1618,7 @@ def FillingScript(plotter, outputRootFileName):
 
         eop_bins_min = -1
         eop_bins_max = 5
-        nBins = 120
+        nBins = 240
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
@@ -1886,7 +1955,7 @@ def FillingScript(plotter, outputRootFileName):
 
         eop_bins_min = -1
         eop_bins_max = 5
-        nBins = 120
+        nBins = 240
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
