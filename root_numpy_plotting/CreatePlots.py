@@ -5,7 +5,7 @@ from array import array
 import os
 import time
 
-ROOT.gROOT.SetBatch(ROOT.kTRUE)
+#ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 def CloseCanvas(canv):
     canv.Close()
@@ -30,7 +30,7 @@ if not os.path.exists("Plots/" + plotter_directory):
 
 plotter_directory = "Plots/" + plotter_directory
 
-if True:
+if False:
         eta_ranges = [(0.0, 0.4), (0.4, 0.8), (0.8, 1.2), (1.2, 1.6), (1.6, 2.0), (2.0, 2.4)]
         for histogramName in ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]:
             hist = HM.getHistograms(histogramName)
@@ -921,7 +921,7 @@ for eta_range in eta_ranges:
                        break
         print "Getting histogram " + histogramName
 
-        histograms = HM.getHistograms(histogramName)
+        histograms = HM.getHistograms(histogramName, rebin = 2)
         data = histograms["LowMuData"]
         MC = histograms["PythiaJetJet"]
         #loop through the bins with low edges above 0.0 and find the first one with more than 10 entries. Start fitting above that bin
@@ -1095,6 +1095,7 @@ for eta_range in eta_ranges:
                               doLogy = False,
                               ratio_min = 0.4,\
                               ratio_max = 1.6,\
+                              xAxis_range = (0.0, 2.0),\
                               extra_description = description)
         DataVsMC[0].Draw()
         DataVsMC[0].cd()
@@ -1164,6 +1165,7 @@ for eta_range in eta_ranges:
         DataVsMC[0].Modified()
         DataVsMC[0].Update()
         DataVsMC[0].Print(plotter_directory + "/" + histogramName + ".png")
+        raw_input()
     #create an MC and data histogram with each bin set to the result from the fit
 
     data_hist = ROOT.TH1D("DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]),"DataFitResults" + str(eta_range[0]) + "_" + str(eta_range[1]), len(p_bins[1:])-1, array('d', p_bins[1:]))

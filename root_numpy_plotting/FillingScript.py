@@ -815,7 +815,7 @@ def FillingScript(plotter, outputRootFileName):
 
         eop_bins_min = 0.0
         eop_bins_max = 5
-        nBins = 240
+        nBins = 500
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
@@ -1471,9 +1471,9 @@ def FillingScript(plotter, outputRootFileName):
         p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
         p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
 
-        eop_bins_min = -1
+        eop_bins_min = 0.0
         eop_bins_max = 5
-        nBins = 240
+        nBins = 500
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
@@ -1618,7 +1618,7 @@ def FillingScript(plotter, outputRootFileName):
 
         eop_bins_min = -1
         eop_bins_max = 5
-        nBins = 240
+        nBins = 500
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
@@ -1955,7 +1955,7 @@ def FillingScript(plotter, outputRootFileName):
 
         eop_bins_min = -1
         eop_bins_max = 5
-        nBins = 240
+        nBins = 500
         eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
 
         print("+" * 50)
