@@ -1062,8 +1062,13 @@ for eta_range in eta_ranges:
         fit_function_data_string = fit_function + "_data"
         fit_function_MC_string = fit_function + "_MC"
 
-        data.GetXaxis().SetRange(data.FindBin(0.1), data.FindBin(1.4))
-        MC.GetXaxis().SetRange(MC.FindBin(0.1), MC.FindBin(1.4))
+        #Good settings for a landau x gaus
+        data.GetXaxis().SetRange(data.FindBin(0.15), data.FindBin(1.3))
+        MC.GetXaxis().SetRange(MC.FindBin(0.15), MC.FindBin(1.3))
+
+        #good settings for a gaus
+        #data.GetXaxis().SetRange(data.FindBin(0.3), data.FindBin(1.0))
+        #MC.GetXaxis().SetRange(MC.FindBin(0.3), MC.FindBin(1.0))
 
         mean_data = data.GetMean()
         sigma_data = data.GetRMS()
@@ -1073,8 +1078,13 @@ for eta_range in eta_ranges:
         data.GetXaxis().SetRange()
         MC.GetXaxis().SetRange()
 
-        low = min(mean_data - 1.5*sigma_data, mean_MC - 1.5*sigma_MC)
-        high = max(mean_data + 1.5*sigma_data, mean_MC + 1.5*sigma_MC)
+        #good setting for a landau x gaus
+        low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
+        high = max(mean_data + 1.0*sigma_data, mean_MC + 1.0*sigma_MC)
+
+        #good settings for a gaus
+        #low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
+        #high = max(mean_data + 0.5*sigma_data, mean_MC + 0.5*sigma_MC)
 
         #re-do the fit in the +- 1 sigma window
         data.Fit(fit_function_data_string + histogramName, "", "", low, high)
@@ -1161,8 +1171,8 @@ for eta_range in eta_ranges:
             dataResult = "Data: #mu=" + mpv_data_str + "#pm" + mpvErr_data_str + " #Chi^2/NDOF=" + chisq_data_str + " Prob=" + prob_data_str
             MCResult = "MC: #mu=" + mpv_MC_str + "#pm" + mpvErr_MC_str + " #Chi^2/NDOF=" + chisq_MC_str + " Prob=" + prob_MC_str
 
-        DrawText(0.5, 0.55, dataResult, size=0.03)
-        DrawText(0.5, 0.5, MCResult, size=0.03)
+        DrawText(0.5, 0.55, dataResult, size=0.035)
+        DrawText(0.5, 0.5, MCResult, size=0.035)
 
         print "Creating the histogram for"
         print plotter_directory + "/" + histogramName + ".png"
