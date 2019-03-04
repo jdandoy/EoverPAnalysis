@@ -10,14 +10,21 @@ source setup.sh
 
 ## When logging back in
 ```
-asetup AnalysisBase,21.2.23
-export PYTHONPATH=$HOME/CondorPythonLocal/lib/python2.7/site-packages:$PYTHONPATH
-export EOPPlottingDir=$(pwd)
+source login.sh
 ```
 
-## Submit batch plotting macros
+## Prepare batch plotting jobs for submission
 ```
-python condorSubmission/PrepareSubmission.py --treeName NAME --NPartitions 100 --jobName testPlotting
+python condorSubmission/PrepareSubmission.py -tn EoverP_InDetTrackParticlesLooseIsolatedVertexAssociated_tree --NPartitions 100 --jobName test1
+```
+
+## Test one of the jobs locally
+```
+python condorSubmission/submit.py --num 0 --picklefile test1/Submission/test1.pickle --jobName test1
+```
+
+## Submit all of the batch jobs
+```
 condor_submit condor_testPlotting.sub
 ```
 

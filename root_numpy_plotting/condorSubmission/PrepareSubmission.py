@@ -132,7 +132,7 @@ histogramList = [\
 "LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_0_4LowMuData",\
 ]
 
-f = ROOT.TFile("FriDec7/Output/FriDec7.root", "READ")
+f = ROOT.TFile("binningHistograms/binning.root", "READ")
 binningHistogramDictionary = {}
 for histogramNameInFile in histogramList:
     hist = f.Get(histogramNameInFile)
