@@ -5,6 +5,7 @@
 #define TrackExtrapolationIsolationTool_TrackExtrapolationIsolationTool_H
 
 #include "TTree.h"
+#include "TH1.h"
 #include "xAODTracking/VertexContainer.h"
 #include "xAODTracking/TrackParticleContainer.h"
 #include "xAODTruth/TruthParticle.h"
