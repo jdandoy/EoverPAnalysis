@@ -1,13 +1,13 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas
+from PlottingTools.Plotter import Plotter, DrawDataVsMC, DivideHistograms,Draw2DHistogramOnCanvas, getP, getBins, getLogBins, GetBinsFromHistogram
 import ROOT
 #from variables.variables import calc_weight
 #from inputs.samples import INPUT
 import os
 from math import pi
 import pickle
+import numpy as np
 
 def WriteToFile(histogram_dictionary, outFile):
     outFile.cd()
@@ -15,24 +15,84 @@ def WriteToFile(histogram_dictionary, outFile):
         if not outFile.cd(key):
             outFile.mkdir(key)
         outFile.cd(key)
-        print("Writing histogram " + key)
+        print("Writing histogram " + histogram_dictionary[key].GetName())
         histogram_dictionary[key].Write()
 
 #This is a script that fills the histograms for
 def FillingScript(plotter, outputRootFileName):
     #import thje variables that we want to plot
-    from variables.variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount
+    from variables.variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount, calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike
     #import the selections that we want to plot
-    from selections.selections import sel_NTRT20, sel_NTRT25, sel_NTRT30, sel_ECALEta0_6, sel_PGreater1 ,sel_PGreater1_5, sel_PGreater2, sel_PGreater2_5, sel_Z0SinThetaLess1_5, sel_d0Less1_5, sel_Event
+    from selections.selections import sel_NTRT20, sel_NTRT25, sel_NTRT30, sel_ECALEta0_6, sel_PGreater1 ,sel_PGreater1_5, sel_PGreater2, sel_PGreater2_5, sel_Z0SinThetaLess1_5, sel_d0Less1_5, sel_Event, sel_hasHADExtrapolation
     #impot the ID selections that we want to plot
-    from selections.selections import sel_IDEta0_6,sel_IDEta06_11,sel_IDEta11_14,sel_IDEta14_15, sel_IDEta15_18, sel_IDEta18_23
+    from selections.selections import sel_IDEta00_06,sel_IDEta06_11,sel_IDEta11_14,sel_IDEta14_15, sel_IDEta15_18, sel_IDEta18_23
 
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
+
+    histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+    xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+    variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+    selections = []
+
+    for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+        plotter.BookHistograms(histogram_name,\
+                               variable,\
+                               list_selections = selections,\
+                               bins = 10,\
+                               range_low = -0.5,\
+                               range_high = 9.5,\
+                               xlabel=xlabel,\
+                               ylabel="Number of Tracks")
+
+    histogram_name = "trkTRTHits"
+    from variables.variables import calc_nTRT
+    plotter.BookHistograms(histogram_name,\
+                           calc_nTRT,\
+                           list_selections = selections,\
+                           range_low = -0.5,\
+                           range_high = 59.5,\
+                           bins = 60,\
+                           xlabel = "Number of TRT Hits",\
+                           ylabel = "Number of Tracks")
+
+    histogram_name = "trkEMDR100"
+    from variables.variables import calc_EnergyEMDR100
+    plotter.BookHistograms(histogram_name,\
+                           calc_EnergyEMDR100,\
+                           list_selections = selections,\
+                           range_low = -2.0,\
+                           range_high = + 10.0,\
+                           bins = 48,\
+                           xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                           ylabel = "Number of Tracks")
+
+    histogram_name = "MomentumHadFrac"
+    from variables.variables import calc_MomentumHadFrac
+    plotter.BookHistograms(histogram_name,\
+                           calc_MomentumHadFrac,\
+                           list_selections = selections,\
+                           range_low = -1.0,\
+                           range_high = + 5.0,\
+                           bins = 48,\
+                           xlabel = "E^{HAD}/P",\
+                           ylabel = "Number of Tracks")
+
+    histogram_name = "HadFrac"
+    from variables.variables import calc_HadFrac
+    plotter.BookHistograms(histogram_name,\
+                           calc_HadFrac,\
+                           list_selections = selections,\
+                           range_low = -1.0,\
+                           range_high = + 2.0,\
+                           bins = 48,\
+                           xlabel = "E^{HAD}/E^{Total}",\
+                           ylabel = "Number of Tracks")
+
 
     ##just count the number of tracks in each histogram
     histogram_name = "trkCount"
     selections = []
-    trkCountHist = plotter.GetHistograms(histogram_name,\
+    trkCountHist = plotter.BookHistograms(histogram_name,\
                                                          calc_trkCount,\
                                                          list_selections = selections,\
                                                          bins = 1,\
@@ -40,14 +100,13 @@ def FillingScript(plotter, outputRootFileName):
                                                          range_high = +0.5,\
                                                          xlabel ='Always 0',\
                                                          ylabel = 'Number of Tracks')
-    WriteToFile(trkCountHist, outFile)
 
     ################################################################################
     #plot the first set of variables that we're interested in
     #plot the trk avaerage mu histogram
     histogram_name = "trkAverageMu"
     selections = []
-    trkAverageMuHist = plotter.GetHistograms(histogram_name,\
+    trkAverageMuHist = plotter.BookHistograms(histogram_name,\
                                                         calc_trkAverageMu,\
                                                         list_selections = selections,\
                                                         bins = 10,\
@@ -55,22 +114,10 @@ def FillingScript(plotter, outputRootFileName):
                                                         range_high = 10.0,\
                                                         xlabel ='Average #mu of Event',\
                                                         ylabel = 'Number of Tracks')
-    WriteToFile(trkAverageMuHist, outFile)
-##    description = "Inclusive Selection"
-##    DataVsMC = DrawDataVsMC(trkAverageMuHist,\
-##                            plotter.channelLabels,\
-##                            MCKey='PythiaJetJet',\
-##                            DataKey='LowMuData',\
-##                            extra_description = description)
-##    DataVsMC.Draw()
-##    DataVsMC.Print(plotter_directory+"/TrkAverageMu_unweighted.png")
-##    CloseCanvas(DataVsMC)
-
-
    ################################################################################
    #plot a histogram of the average event NPV
     histogram_name = "trkNPV2"
-    trkNPV2Hist = plotter.GetHistograms(histogram_name,\
+    trkNPV2Hist = plotter.BookHistograms(histogram_name,\
                                        calc_trkNPV2,\
                                        list_selections = [],\
                                        bins = 13,\
@@ -78,32 +125,12 @@ def FillingScript(plotter, outputRootFileName):
                                        range_high = 12.5,\
                                        xlabel ="NPV with 2 Tracks",\
                                        ylabel = "Number of Tracks")
-    WriteToFile(trkNPV2Hist, outFile)
-#    description = "Inclusive Selection"
-#    eventNPV2HistCanvas   = DrawDataVsMC(eventNPV2Hist,\
-#                                       plotter.channelLabels,\
-#                                       MCKey='PythiaJetJet',\
-#                                       DataKey='LowMuData',\
-#                                       extra_description = description)
-#    eventNPV2HistCanvas.Draw()
-#    eventNPV2HistCanvas.Print(plotter_directory+"/EventNPV2Tracks_beforeNPVReweight.png")
-#    CloseCanvas(DataVsMC)
 
 
-#    plotter.UseVariableAndHistogramToNormalize(calc_trkNPV2,
-#                                             eventNPV2Hist,
-#                                             "PythiaJetJet",
-#                                             "LowMuData",
-#                                            )
-
-#    plotter_directory = base_plotter_directory + "/NPVReweighted"
-#    if not os.path.exists(plotter_directory):
-#        os.mkdir(plotter_directory)
-
-#   ################################################################################yy
+#   ################################################################################
    #plot a histogram of the average event NPV
     histogram_name = "eventNPV2Hist"
-    eventNPV2Hist = plotter.GetHistograms(histogram_name,\
+    eventNPV2Hist = plotter.BookHistograms(histogram_name,\
                                        calc_trkNPV2,\
                                        list_selections = [sel_Event],\
                                        bins = 13,\
@@ -111,21 +138,10 @@ def FillingScript(plotter, outputRootFileName):
                                        range_high = 12.5,\
                                        xlabel ="NPV with 2 Tracks",\
                                        ylabel = "Number Events")
-    WriteToFile(eventNPV2Hist, outFile)
-##   description = "Inclusive Selection"
-##   eventNPV2HistCanvas = DrawDataVsMC(eventNPV2Hist,\
-##                                      plotter.channelLabels,\
-##                                      MCKey='PythiaJetJet',\
-##                                      DataKey='LowMuData',\
-##                                      extra_description = description)
-##   eventNPV2HistCanvas.Draw()
-##   eventNPV2HistCanvas.Print(plotter_directory+"/EventNPV2Tracks_afterNPVReweight.png")
-
-
-#   ################################################################################yy
+#   ################################################################################
     histogram_name = "eventAverageMu"
     selections = [sel_Event]
-    eventAverageMuHist = plotter.GetHistograms(histogram_name,
+    eventAverageMuHist = plotter.BookHistograms(histogram_name,
                                           calc_trkAverageMu,\
                                           list_selections = selections,\
                                           bins = 10,\
@@ -133,79 +149,31 @@ def FillingScript(plotter, outputRootFileName):
                                           range_high = 10.0,\
                                           xlabel ='<#mu>',\
                                           ylabel = 'Number of Events')
-    WriteToFile(eventAverageMuHist, outFile)
-#    description = "Inclusive Selection"
-#    DataVsMC = DrawDataVsMC(trkAverageMuHist,\
-#                            plotter.channelLabels,\
-#                            MCKey='PythiaJetJet',\
-#                            DataKey='LowMuData',\
-#                            extra_description = description)
-#    DataVsMC.Draw()
-#    DataVsMC.Print(plotter_directory+"/TrkAverageMu_NPVReweighted.png")
-#    CloseCanvas(DataVsMC)
-
-
-#    ################################################################################yy
-#    #plot a histogram of the average trk NPV
-#    trkNPV2Hist = plotter.GetHistograms(calc_trkNPV2,\
-#                                        list_selections = [],\
-#                                        bins = 13,\
-#                                        range_low = -0.5,\
-#                                       range_high = 12.5,\
-#                                       xlabel ="NPV with 2 Tracks",\
-#                                       ylabel = "Number of tracks")
-   
-#   description = "Inclusive Selection"
-#   trkNPV2HistCanvas = DrawDataVsMC(trkNPV2Hist,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.8,\
-#                                      ratio_max = 1.2,\
-#                                      extra_description = description)
-#   trkNPV2HistCanvas.Draw()
-#   trkNPV2HistCanvas.Print(plotter_directory+"/TrkNPV2Tracks_afterNPVReweight.png")
-
-
+#    ################################################################################
     #prepare the momentum bins
     binMax = 30.0
-    binLow = 0.5
+    binMin = 0.5
     nBins = 100
-    base = (binMax/binLow) ** (1./float(nBins))
-    p_bins = []
-    min_p = []
-    for i in range(0, nBins + 1):
-        p_bins.append(0.5 * (base) ** i )
-
-   ################################################################################yy
-   #plot a histogram of the average track pt
+    p_bins = getLogBins(binMin, binMax, nBins)
+    p_bins_reference = p_bins # a set of bins to use later to measure the efficiency of certain selections
     histogram_name = "trkPtHist"
-    trkPtHistZoom = plotter.GetHistograms(histogram_name,\
+    trkPtHistZoom = plotter.BookHistograms(histogram_name,\
                                        calc_trkPt,\
                                        list_selections = [],\
                                        bins = p_bins,\
                                        xlabel ="Track P_{T} [GeV]",\
                                        ylabel = "Number of Tracks")
 
-    WriteToFile(trkPtHistZoom, outFile)
-#   description = "Inclusive Selection"
-#   trkPtHistZoomCanvas = DrawDataVsMC(trkPtHistZoom,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.8,\
-#                                      ratio_max = 1.2,\
-#                                      doLogy = True,
-#                                      doLogx = True,
-#                                      extra_description = description)
-#   trkPtHistZoomCanvas.Draw()
-#   trkPtHistZoomCanvas.Print(plotter_directory+"/TrkPtZoomHistogram_unweighted.png")
-
-
-#           ################################################################################yy
+    trkPtHistZoom = plotter.BookHistograms(histogram_name + "HasExtrapolation",\
+                                       calc_trkPt,\
+                                       list_selections = [sel_hasHADExtrapolation],\
+                                       bins = p_bins,\
+                                       xlabel ="Track P_{T} [GeV]",\
+                                       ylabel = "Number of Tracks")
+#           ################################################################################
 #           ## Look in different bins of pseudorapidity
     base_description = []
-    etaSelections = [sel_IDEta0_6,\
+    etaSelections = [sel_IDEta00_06,\
                     sel_IDEta06_11,\
                     sel_IDEta11_14,\
                     sel_IDEta14_15,\
@@ -222,37 +190,95 @@ def FillingScript(plotter, outputRootFileName):
                               ]
 
     file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
+  
+    from variables.variables import calc_trkEtaECAL, calc_trkPhiECAL
+    from selections.selections import PBin, sel_NonZeroEnergy
+    from calculation.calculation import calculation
+    PBinFunction = lambda x, y=3, z=4: PBin(x, y,z)
+    PBinFunction.__name__ = "SelMomentumRange3_4"
+    PBinSelection = calculation(PBinFunction, ["trk_p"])
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween3And4GeV_Denomenator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
+
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween3And4GeV_Numerator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection, sel_NonZeroEnergy],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
+
+
+    #try between 2 and 3 GeV
+
+    PBinFunction = lambda x, y=2, z=3: PBin(x, y,z)
+    PBinFunction.__name__ = "SelMomentumRange2_3"
+    PBinSelection = calculation(PBinFunction, ["trk_p"])
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween2And3GeV_Denomenator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
+
+    histogram_name = "TrkEtaPhiEMCal_MomentumBetween2And3GeV_Numerator"
+    plotter.Book2DHistograms(histogram_name,\
+                            calc_trkEtaECAL,\
+                            calc_trkPhiECAL,\
+                            list_selections=[PBinSelection, sel_NonZeroEnergy],\
+                            bins_x = 200,\
+                            bins_y = 200,\
+                            range_low_y = -3.14,\
+                            range_high_y = +3.14,\
+                            range_low_x = -2.5,\
+                            range_high_x = +2.5,\
+                            xlabel = "#eta_{EMCal}",\
+                            ylabel = "#phi_{EMCal}",\
+                            zlabel = "Number of Tracks")
 
     for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
         #do the eta selection and count the inclusive number of tracks in the bin
         selections = [etaSelection]
-        trkMultiplicity_Eta = plotter.GetHistograms("TrkPtHist"+file_description,\
+        trkMultiplicity_Eta = plotter.BookHistograms("TrkPtHist"+file_description,\
                                                   calc_trkPt,\
                                                   list_selections = selections,\
                                                   bins = p_bins,\
                                                   xlabel ="Track P_{T} [GeV]",\
                                                   ylabel = "Number of Tracks",\
                                                   )
-        WriteToFile(trkMultiplicity_Eta, outFile)
 
 
-#               description = [eta_selectionDescription]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.6,\
-#                                                 ratio_max = 1.4,\
-#                                                 doLogx = True,\
-#                                                 doLogy = True\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkPtUnweighted"+file_description+".png")
 
     ################################################################################
     histogramName = "TrackEtaID"
-    trkEtaIDHist = plotter.GetHistograms(histogramName,\
+    trkEtaIDHist = plotter.BookHistograms(histogramName,\
                                        calc_trkEtaID,\
                                        list_selections = [],\
                                        bins = 100,\
@@ -260,30 +286,14 @@ def FillingScript(plotter, outputRootFileName):
                                        range_high = +5,\
                                        xlabel ="Track #eta ID",\
                                        ylabel = "Number of Tracks")
-    WriteToFile(trkEtaIDHist, outFile)
-    #description = "Inclusive Selection"
-    #DataVsMCHistCanvas = DrawDataVsMC(trkEtaIDHist,\
-    #                                  plotter.channelLabels,\
-    #                                  MCKey='PythiaJetJet',\
-    #                                  DataKey='LowMuData',\
-    #                                  ratio_min = 0.9,\
-    #                                  ratio_max = 1.1,\
-    #                                  extra_description = description)
-    #DataVsMCHistCanvas.Draw()
-#    DataVsMCHistCanvas.Print(plotter_directory+"/TrkEtaInInnerDetector_unweighted.png")
-#    CloseCanvas(DataVsMCHistCanvas)
 
-
-#   ################################################################################yy
+#   ################################################################################
     histogramName = "TwoDTrackPvsTrkEtaID"
-    bin_size = 0.1
     max_bin = 2.4
     min_bin = -2.4
-    eta_bins = []
-    eta_bins.append(min_bin)
-    while abs(eta_bins[-1] - max_bin) > 0.0001:
-        eta_bins.append(eta_bins[-1] + bin_size)
-    TwoDtrkPvstrkEta = plotter.Get2DHistograms(histogramName,\
+    nBins = 48
+    eta_bins = getBins(min_bin, max_bin, nBins)
+    TwoDtrkPvstrkEta = plotter.Book2DHistograms(histogramName,\
                                              calc_trkEtaID,\
                                              calc_trkP,\
                                              list_selections=[],\
@@ -292,19 +302,11 @@ def FillingScript(plotter, outputRootFileName):
                                              bins_y=p_bins,\
                                              ylabel="Track P [GeV]",\
                                              zlabel="Number of Tracks",\
-                                             normalize=False)
-    WriteToFile(TwoDtrkPvstrkEta, outFile)
- #   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkEta["PythiaJetJet"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/PythiaJetJetTwoDHistogramEtaTrackP.png")
+                                             )
 
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkEta["LowMuData"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/LowMuDataTwoDHistogramEtaTrackP.png")
-
-#   ################################################################################yy
+#   ################################################################################
     histogramName = "TwoDTrackPtVsEtaHistogram"
-    TwoDtrkPtvstrkEta = plotter.Get2DHistograms(histogramName,\
+    TwoDtrkPtvstrkEta = plotter.Book2DHistograms(histogramName,\
                                              calc_trkEtaID,\
                                              calc_trkPt,\
                                              list_selections=[],\
@@ -313,21 +315,26 @@ def FillingScript(plotter, outputRootFileName):
                                              bins_y=p_bins,\
                                              ylabel="Track P_{T} [GeV]",\
                                              zlabel="Number of Tracks",\
-                                             normalize=False)
+                                             )
 
-    WriteToFile(TwoDtrkPtvstrkEta, outFile)
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkEta["PythiaJetJet"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/PythiaJetJetTwoDHistogramEtaTrackPt.png")
+#   ################################################################################
+    histogramName = "TwoDTrackPtVsEtaHistogram_HasExtrapolation"
+    TwoDtrkPtvstrkEta = plotter.Book2DHistograms(histogramName,\
+                                             calc_trkEtaID,\
+                                             calc_trkPt,\
+                                             list_selections=[sel_hasHADExtrapolation],\
+                                             bins_x=eta_bins,\
+                                             xlabel="Track #eta ID",\
+                                             bins_y=p_bins,\
+                                             ylabel="Track P_{T} [GeV]",\
+                                             zlabel="Number of Tracks",\
+                                             )
 
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkEta["LowMuData"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/LowMuDataTwoDHistogramEtaTrackPt.png")
 
 
 #   ################################################################################
     histogramName = "trkEtaECALHist"
-    trkEtaECALHist = plotter.GetHistograms(histogramName,\
+    trkEtaECALHist = plotter.BookHistograms(histogramName,\
                                           calc_trkEtaECAL,
                                           list_selections = [],
                                           bins = 100,
@@ -336,34 +343,17 @@ def FillingScript(plotter, outputRootFileName):
                                           xlabel ="Track #eta EM Layer 2",
                                           ylabel = "Number of Tracks",
                                        )
-    WriteToFile(trkEtaECALHist, outFile)
-#   description = "Inclusive Selection"
-#   DataVsMCHistECALCanvas = DrawDataVsMC(trkEtaECALHist,
-#                                          plotter.channelLabels,
-#                                          MCKey='PythiaJetJet',
-#                                         DataKey='LowMuData',
-#                                         ratio_min = 0.5,
-#                                         ratio_max = 1.5,
-#                                         extra_description = description)
-#   DataVsMCHistECALCanvas.Draw()
-#   DataVsMCHistECALCanvas.Print(plotter_directory+"/TrackEtaInTheEndcaCalorimeter_unweighted.png")
-#   CloseCanvas(DataVsMCHistECALCanvas)
-
 
 #   ################################################################################
-    histogramName = "TwoDHistTrkDPhiInnerToExtrapolEM2"
+    histogramName = "TwoDHistTrkPvsPhiInnerToExtrapolEM2"
     dPhi_bins = []
     min_bin = 0.0
     max_bin = pi
-    NBins = 100.0
-    bin_size = (max_bin-min_bin)/NBins
-    dPhi_bins = []
-    dPhi_bins.append(min_bin)
-    while abs(dPhi_bins[-1] - max_bin) > 0.0001:
-        dPhi_bins.append(dPhi_bins[-1] + bin_size)
+    NBins = 100
+    dPhi_bins = getBins(min_bin, max_bin, NBins)
 
     from variables.variables import calc_trkDPhi
-    TwoDtrkPvstrkDPhi = plotter.Get2DHistograms(histogramName,\
+    TwoDtrkPvstrkDPhi = plotter.Book2DHistograms(histogramName,\
                                              calc_trkDPhi,\
                                              calc_trkPt,\
                                              list_selections=[],\
@@ -372,1306 +362,1867 @@ def FillingScript(plotter, outputRootFileName):
                                              bins_y=p_bins,\
                                              ylabel="Track P_{T} [GeV]",\
                                              zlabel="Number of Tracks",\
-                                             normalize=False)
-    WriteToFile(TwoDtrkPvstrkDPhi, outFile)
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkDPhi["PythiaJetJet"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/PythiaJetJetTwoDHistogramDPhiTrackPt.png")
-
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkDPhi["LowMuData"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/LowMuDataTwoDHistogramDPhiTrackPt.png")
+                                             )
 
 #   ################################################################################
-
-#   from calculation.calculation import calculation
-#   from selections.selections import EtaBin
-#   Eta00_08 = lambda x : EtaBin(x, 0.0, 0.8)
-#   sel_Eta00_08 = calculation(Eta00_08, ["trk_etaID"])
-
-#   from variables.variables import calc_trkDPhi
-#   TwoDtrkPvstrkDPhi = plotter.Get2DHistograms(calc_trkDPhi,\
-#                                            calc_trkPt,\
-#                                            list_selections=[sel_Eta00_08],\
-#                                            bins_x=dPhi_bins,\
-#                                            xlabel="|#phi_{ID} - #phi_{EM2}|",\
-#                                            bins_y=p_bins,\
-#                                            ylabel="Track P_{T} [GeV]",\
-#                                            zlabel="Number of Tracks",\
-#                                            normalize=False)
-
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkDPhi["PythiaJetJet"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/Central00To08PythiaJetJetTwoDHistogramDPhiTrackPt.png")
-
-#   can = Draw2DHistogramOnCanvas(TwoDtrkPvstrkDPhi["LowMuData"], doLogx = False, doLogy = True)
-#   can.Draw()
-#   can.Print(plotter_directory+"/Cental00To08LowMuDataTwoDHistogramDPhiTrackPt.png")
+    histogramName = "lowPTLess07_TwoDHistTrkEtavsDEtaInnerToExtrapolEM2"
+    from variables.variables import calc_trkDEta
+    from calculation.calculation import calculation
+    def lowPT(trk):
+        return trk["trk_pt"] < 0.7
+    branches =["trk_pt"]
+    sel_lowPT = calculation(lowPT, branches)
+    TwoDtrkEtavstrkDEta = plotter.Book2DHistograms(histogramName,\
+                                             calc_trkEtaID,\
+                                             calc_trkDEta,\
+                                             list_selections=[sel_lowPT],\
+                                             bins_x=50,\
+                                             range_low_x=-2.5,\
+                                             range_high_x=+2.5,\
+                                             xlabel="Track #eta_{ID}",\
+                                             bins_y=50,\
+                                             range_low_y=0.0,\
+                                             range_high_y=1.0,\
+                                             ylabel="|#eta_{ID} - #eta_{EM2}|",\
+                                             zlabel="Number of Tracks",\
+                                             )
 
 #   ################################################################################
-#   plotter.UseVariableAndHistogramToNormalize(calc_trkPt,
-#                                            trkPtHist,
-#                                             "PythiaJetJet",
-#                                             "LowMuData",
-#                                           )
-
-#   plotter_directory = base_plotter_directory + "/NPVandPTReweighted"
-#   if not os.path.exists(plotter_directory):
-#       os.mkdir(plotter_directory)
-
-#   trkNearestDRHist = plotter.GetHistograms(calc_trkNearestNeighbourEM2,
-#                                   list_selections = [],
-#                                   bins = 25,
-#                                    range_low = 0.0,
-#                                    range_high = 5,
-#                                    xlabel ="dR to Nearest Track",
-#                                   ylabel = "Number of Tracks",
-#                                   )
-
-#   description = ["Inclusive Selection" ,"P_{T} Reweighted"]
-#   DataVsMC = DrawDataVsMC(trkNearestDRHist,
-#                           plotter.channelLabels,
-#                           MCKey='PythiaJetJet',
-#                           DataKey='LowMuData',
-#                           ratio_min = 0.2,
-#                           ratio_max = 1.8,
-#                           extra_description = description)
-#   DataVsMC.Draw()
-#   DataVsMC.Print(plotter_directory+"/dRToNearestNeighbour_reweighted.png")
-#   CloseCanvas(DataVsMC)
-
-#   from selections.selections import sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_PGreater2, sel_PGreater2_5, sel_PGreater3
-#   MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
-
-#   if True:
-#           ################################################################################yy
-#           #count the prevalence of certain hadrons in the measurement
-#           from selections.selections import sel_Pion, sel_AntiPion, sel_Proton, sel_AntiProton, sel_Kaon, sel_AntiKaon, sel_Fake, sel_Pileup, sel_HardScatter, sel_Muon, sel_AntiMuon, sel_Electron, sel_AntiElectron
-
-#           #The total number of tracks
-#           selections = []
-#           total_tracks = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_Fake]
-#           total_fakes = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_Pileup]
-#           total_pileup = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_HardScatter]
-#           total_hardScatter = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           #What different species of hadrons are present??
-#           selections = [sel_Pion]
-#           total_Pion = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_AntiPion]
-#           total_AntiPion = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_Proton]
-#           total_Proton = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_AntiProton]
-#           total_AntiProton = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_Kaon]
-#           total_Kaon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_AntiKaon]
-#           total_AntiKaon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_Electron]
-#           total_Electron = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_AntiElectron]
-#           total_AntiElectron = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_Muon]
-#           total_Muon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           selections = [sel_AntiMuon]
-#           total_AntiMuon = plotter.GetNumberOfTracks("PythiaJetJet", list_selections = selections)
-
-#           print(10 * "\n")
-#           print(50 * "=")
-#           print("The total number of tracks was " + str(total_tracks))
-#           print("The total number of fakes was " + str(total_fakes))
-#           print("The total number of pileup tracks was " + str(total_pileup))
-#           print("The total number of truth-matched tracks was " + str(total_hardScatter))
-#           print("The fraction of truth-matched tracks was " + str(total_hardScatter/total_tracks))
-#           print("The fraction of pileup tracks was " + str(total_pileup/total_tracks))
-#           print("The fraction of fake tracks was " + str(total_fakes/total_tracks))
-#           print("\n")
-#           print("The following fractions are w.r.t the total number of truth matched tracks")
-#           print("The fraction of pi + tracks was " + str(total_Pion/total_hardScatter))
-#           print("The fraction of pi - tracks was " + str(total_AntiPion/total_hardScatter))
-#           print("The fraction of k + tracks was " + str(total_Kaon/total_hardScatter))
-#           print("The fraction of k - tracks was " + str(total_AntiKaon/total_hardScatter))
-#           print("The fraction of p + tracks was " + str(total_Proton/total_hardScatter))
-#           print("The fraction of p - tracks was " + str(total_AntiProton/total_hardScatter))
-#           print("The fraction of e - tracks was " + str(total_Electron/total_hardScatter))
-#           print("The fraction of e + tracks was " + str(total_AntiElectron/total_hardScatter))
-#           print("The fraction of mu - tracks was " + str(total_Muon/total_hardScatter))
-#           print("The fraction of mu + tracks was " + str(total_AntiMuon/total_hardScatter))
-#           print(5 * "\n")
-#           print(50 * "=")
-
-#           ################################################################################yy
-#           trkPtReweightedHist = plotter.GetHistograms(calc_trkPt,
-#                                           list_selections = [],
-#                                           bins = p_bins,
-#                                            xlabel ="Track P_{T} [GeV]",
-#                                           ylabel = "Number of Tracks",
-#                                           )
-#           description = ["Inclusive Selection" , "P_{T} Reweighted"]
-#           DataVsMC = DrawDataVsMC(trkPtReweightedHist,
-#                                    plotter.channelLabels,
-#                                   MCKey='PythiaJetJet',
-#                                    DataKey='LowMuData',
-#                                    doLogx=True,
-#                                    doLogy=True,
-#                                   extra_description = description)
-#           DataVsMC.Draw()
-#           DataVsMC.Print(plotter_directory+"/trkMultiplicityVsPt_reweighted.png")
-#           CloseCanvas(DataVsMC)
-
-#           ################################################################################yy
-#           ## Look in different bins of pseudorapidity
-#           from variables.variables import calc_trkEta_ABS
-#           base_description = []
-#           etaSelections = [sel_IDEta0_6,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection]
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkPt,\
-#                                                         list_selections = selections,\
-#                                                         bins = p_bins,\
-#                                                         xlabel ="Track P_{T} [GeV]",\
-#                                                         ylabel = "Number of Tracks",\
-#                                                         normalize = False,\
-#                                                         )
-
-#               description = [eta_selectionDescription] + ["P_{T} Reweighted"]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.8,\
-#                                                 ratio_max = 1.2,\
-#                                                 doLogx = True,\
-#                                                 doLogy = True\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkPtReweighted"+file_description+".png")
-
-#           ################################################################################yy
-#           selections = []
-#           trkEOPHist = plotter.GetHistograms(calc_EOP,
-#                                            list_selections = selections,
-#                                            bins = 50,
-#                                            range_low = -1,
-#                                            range_high = 5,
-#                                            xlabel ="E/p",
-#                                            ylabel = "Number of Tracks",
-#                                            )
-#           description  = ["Inclusive Selection",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHist,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                       DataKey='LowMuData',
-#                                       ratio_min = 0.6,
-#                                      ratio_max = 1.4,
-#                                      extra_description = description,
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/InclusiveEOPDisitrbution.png")
-#           CloseCanvas(DataVsMCEOP)
-
-
-#           ################################################################################yy
-#           from selections.selections import sel_NonZeroEnergy
-#           selections = [sel_NonZeroEnergy]
-#           trkEOPHist = plotter.GetHistograms(calc_EOP,
-#                                            list_selections = selections,
-#                                            bins = 50,
-#                                            range_low = -1,
-#                                            range_high = 5,
-#                                            xlabel ="E/p",
-#                                            ylabel = "Normalized Distribution",
-#                                            normalize = True,
-#                                            )
-#           description  = ["E_{Total} != 0",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHist,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                       DataKey='LowMuData',
-#                                       ratio_min = 0.5,
-#                                       ratio_max = 1.5,
-#                                       extra_description = description,
-#                                       )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/InclusiveEOPDisitrbution_NonZeroEnergy.png")
-#           CloseCanvas(DataVsMCEOP)
-
-#           ################################################################################yy
-#           selections = [sel_PGreater1, sel_ECALEta0_6]
-#           trkEOPHistPGreater1 = plotter.GetHistograms(calc_EOP,
-#                                                      list_selections = selections,
-#                                                      bins = 50,
-#                                                      range_low = -1,
-#                                                      range_high = 5,
-#                                                      xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks")
-#           description = ["P[GeV]>1",                "|#eta_{EM2}|<0.6",                "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater1,
-#                                      plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                      DataKey='LowMuData',
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/Eta06EOPDistribution.png")
-#           CloseCanvas(DataVsMCEOP)
-
-#           ################################################################################yy
-#           selections = [sel_PGreater1_5, sel_IDEta0_6]
-#           trkEOPHistPGreater1_5 = plotter.GetHistograms(calc_EOP,
-#                                                       list_selections = selections,
-#                                                        bins = 50,
-#                                                        range_low = -1,
-#                                                        range_high = 5,
-#                                                        xlabel ="E/p",
-#                                                        ylabel = "Number of Tracks")
-#           description = ["P[GeV]>1.5",               "|#eta_{ID}|<0.6",               "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater1_5,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                      DataKey='LowMuData',
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP1_5Eta0_6_reweighted.png")
-#           CloseCanvas(DataVsMCEOP)
-
-#           ################################################################################yy
-#           selections = [sel_PGreater2, sel_IDEta0_6]
-#           trkEOPHistPGreater2 = plotter.GetHistograms(calc_EOP,
-#                                                     list_selections = selections,
-#                                                     bins = 50,
-#                                                      range_low = -1,
-#                                                     range_high = 5,
-#                                                     xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks",
-#                                                     )
-#           description = ["P[GeV]>2",                "|#eta_{ID}|<0.6",               "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater2,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                       DataKey='LowMuData',
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP2Eta0_6_reweighted.png")
-#           CloseCanvas(DataVsMCEOP)
-
-
-#           ################################################################################yy
-#           from selections.selections import sel_IDEta19_23, sel_IDEta0_6, sel_PBetween12_18, sel_PBetween22_28, sel_PBetween28_36
-#           # This is figure 2a and 2d in the paper:
-#           selections = [sel_PBetween12_18, sel_IDEta0_6]
-#           trkEOPHistFig2a = plotter.GetHistograms(calc_EOP,
-#                                                     list_selections = selections,
-#                                                     bins = 50,
-#                                                      range_low = -1,
-#                                                     range_high = 5,
-#                                                     xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks",
-#                                                     )
-#           description = ["1.2<P[GeV]<1.8",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2a,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP12_18_Eta0_6_reweighted.png")
-
-#           ################################################################################yy
-#           from selections.selections import sel_PBetween22_28
-#           selections = [sel_PBetween22_28, sel_IDEta0_6]
-#           trkEOPHistFig2b = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.75,\
-#                                                 range_high = 4,\
-#                                                 xlabel ="E/p",\
-#                                                 ylabel = "Number of Tracks",\
-#                                                )
-#           description = ["2.2<P[GeV]<2.8",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2b,\
-#                                       plotter.channelLabels,\
-#                                       MCKey='PythiaJetJet',\
-#                                       DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                       extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP22_28_Eta0_6_reweighted.png")
-
-#           ################################################################################yy
-#           # This is figure 2c in the paper:
-#           selections = [sel_PBetween28_36, sel_IDEta19_23]
-#           trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.75,\
-#                                                 range_high = 4,\
-#                                                 xlabel ="E/p",\
-#                                                 ylabel = "Number of Tracks",\
-#                                                 )
-#           description = ["2.8<P[GeV]<3.6",\
-#                          "1.9<|#eta_{ID}|<2.3",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description\
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta19_23_reweighted.png")
-
-#           ################################################################################yy
-#           # This is figure 2c in the paper:
-#           selections = [sel_PBetween28_36, sel_IDEta0_6]
-#           trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.5,\
-#                                                 range_high = 3,\
-#                                                 xlabel ="E/p",\
-#                                                 ylabel = "Number of Tracks",\
-#                                                 )
-#           description = ["2.8<P[GeV]<3.6",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description\
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta0_6_reweighted.png")
-
-#           ################################################################################
-#           from selections.selections import sel_NonZeroEnergy
-#           # This is figure 2a and 2d in the paper:
-#           selections = [sel_PBetween12_18, sel_IDEta0_6, sel_NonZeroEnergy]
-#           trkEOPHistFig2a = plotter.GetHistograms(calc_EOP,
-#                                                     list_selections = selections,
-#                                                     bins = 50,
-#                                                      range_low = -1,
-#                                                     range_high = 5,
-#                                                     xlabel ="E/p",
-#                                                     normalize = True,
-#                                                      ylabel = "Normalized Distribution",
-#                                                     )
-#           description = ["E_{Total} != 0",\
-#                          "1.2<P[GeV]<1.8",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2a,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP12_18_Eta0_6_reweighted_nonzeroE.png")
-
-#           ################################################################################yy
-#           from selections.selections import sel_PBetween22_28
-#           selections = [sel_PBetween22_28, sel_IDEta0_6, sel_NonZeroEnergy]
-#           trkEOPHistFig2b = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.75,\
-#                                                 range_high = 4,\
-#                                                 xlabel ="E/p",\
-#                                                 normalize = True,\
-#                                                 ylabel = "Normalized Distribution",\
-#                                                )
-#           description = ["E_{Total} != 0",\
-#                          "2.2<P[GeV]<2.8",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2b,\
-#                                       plotter.channelLabels,\
-#                                       MCKey='PythiaJetJet',\
-#                                       DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                       extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP22_28_Eta0_6_reweighted_nonzeroE.png")
-
-#           ################################################################################yy
-#           # This is figure 2c in the paper:
-#           selections = [sel_PBetween28_36, sel_IDEta19_23, sel_NonZeroEnergy]
-#           trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.75,\
-#                                                 range_high = 4,\
-#                                                 xlabel ="E/p",\
-#                                                 normalize = True,\
-#                                                 ylabel = "Normalized Distribution",\
-#                                                 )
-#           description = ["E_{Total} != 0",\
-#                          "2.8<P[GeV]<3.6",\
-#                          "1.9<|#eta_{ID}|<2.3",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description\
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta19_23_reweighted_nonzeroE.png")
-
-#           ################################################################################yy
-#           # This is figure 2c in the paper:
-#           selections = [sel_PBetween28_36, sel_IDEta0_6, sel_NonZeroEnergy]
-#           trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.5,\
-#                                                 range_high = 3,\
-#                                                 xlabel ="E/p",\
-#                                                 normalize = True,\
-#                                                 ylabel = "Normalized Distribution",\
-#                                                 )
-#           description = ["E_{Total} != 0",\
-#                          "2.8<P[GeV]<3.6",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description\
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta0_6_reweighted_nonzeroE.png")
-
-#           ################################################################################
-#           # This is figure 3a in the paper:
-
-#           selections = []
-#           binMax = 10.05
-#           binLow = 0.5
-#           nBins = 15
-#           base = (binMax/binLow) ** (1./float(nBins))
-#           bins = []
-#           min_p = []
-#           for i in range(0, nBins + 1):
-#               bins.append(0.5 * (base) ** i )
-#           trkMultiplicity = plotter.GetHistograms(calc_trkP,\
-#                                                 list_selections = selections,\
-#                                                 bins = bins,\
-#                                                 xlabel ="Track P [GeV]",\
-#                                                 ylabel = "Number of Tracks",\
-#                                                 )
-#           from selections.selections import sel_ELessEqual0
-#           selections = [sel_ELessEqual0]
-#           trkMultiplicity_ELessZero = plotter.GetHistograms(calc_trkP,\
-#                                                           list_selections = selections,\
-#                                                           bins = bins,\
-#                                                           xlabel ="Track P [GeV]",\
-#                                                           ylabel = "N(E<=0)/N",\
-#                                                           )
-#           ratio_histogram = DivideHistograms(trkMultiplicity_ELessZero, trkMultiplicity)
-#           description = ["Inclusive Selection",\
-#                          "Track P_{T} Reweighted"]
-#           scale_factor = 5.0
-#           DataVsMCTrackLess0 = DrawDataVsMC(ratio_histogram,\
-#                                             plotter.channelLabels,\
-#                                             MCKey='PythiaJetJet',\
-#                                             DataKey='LowMuData',\
-#                                             extra_description = description,\
-#                                             scale_factor = scale_factor,\
-#                                             ratio_min = 0.8,\
-#                                             ratio_max = 1.2,\
-#                                             doLogx = True,\
-#                                             doLogy = False,\
-#                                             xTicksNumber = 510\
-#                                             )
-#           DataVsMCTrackLess0.Draw()
-#           DataVsMCTrackLess0.Print(plotter_directory+"/EOPAcceptanceVsPInclusive_reweighted.png")
-
-#           ################################################################################yy
-#           #This is figure 3b of the paper
-#           bins = [-2.3, -1.8, -1.5, -1.4, -1.1, -0.6, 0.0, 0.6, 1.1, 1.4, 1.5, 1.8, 2.3]
-#           selections = []
-#           trkMultiplicity_Eta = plotter.GetHistograms(calc_trkEtaID,\
-#                                                     list_selections = selections,\
-#                                                     bins = bins,\
-#                                                     xlabel ="Track |#eta|",\
-#                                                     ylabel = "Number of Tracks",\
-#                                                     )
-#           from selections.selections import sel_ELessEqual0
-#           selections = [sel_ELessEqual0]
-#           trkMultiplicity_Eta_Zero = plotter.GetHistograms(calc_trkEtaID,\
-#                                                          list_selections = selections,\
-#                                                          bins = bins,\
-#                                                          xlabel ="Track |#eta|",\
-#                                                          ylabel = "N(E<=0)/N",\
-#                                                          )
-#           ratio_histogram = DivideHistograms(trkMultiplicity_Eta_Zero, trkMultiplicity_Eta)
-#           description = ["Inclusive Selection",\
-#                          "Track P_{T} Reweighted"]
-#           scale_factor = 5.0
-#           DataVsMCTrackLess0 = DrawDataVsMC(ratio_histogram,\
-#                                             plotter.channelLabels,\
-#                                             MCKey='PythiaJetJet',\
-#                                             DataKey='LowMuData',\
-#                                             extra_description = description,\
-#                                             scale_factor = scale_factor,\
-#                                             ratio_min = 0.9,\
-#                                             ratio_max = 1.1,\
-#                                             doLogx = False,\
-#                                             doLogy = False\
-#                                             )
-#           DataVsMCTrackLess0.Draw()
-#           DataVsMCTrackLess0.Print(plotter_directory+"/EOPAcceptanceVsEtaInclusive_reweighted.png")
-
-
-#           ################################################################################yy
-#           bins = [0.0, 0.6, 1.1, 1.4, 1.5, 1.8, 2.3]
-#           selections = []
-#           from variables.variables import calc_trkEta_ABS
-#           trkMultiplicity_Eta = plotter.GetHistograms(calc_trkEta_ABS,\
-#                                                     list_selections = selections,\
-#                                                     bins = bins,\
-#                                                     xlabel ="Track |#eta|",\
-#                                                     ylabel = "Number of Tracks",\
-#                                                     )
-#           from selections.selections import sel_ELessEqual0
-#           selections = [sel_ELessEqual0]
-#           trkMultiplicity_Eta_Zero = plotter.GetHistograms(calc_trkEta_ABS,\
-#                                                          list_selections = selections,\
-#                                                          bins = bins,\
-#                                                          xlabel ="Track |#eta|",\
-#                                                          ylabel = "N(E<=0)/N",\
-#                                                          )
-#           ratio_histogram = DivideHistograms(trkMultiplicity_Eta_Zero, trkMultiplicity_Eta)
-#           description = ["Inclusive Selection",\
-#                          "Track P_{T} Reweighted"]
-#           scale_factor = 5.0
-#           DataVsMCTrackLess0 = DrawDataVsMC(ratio_histogram,\
-#                                             plotter.channelLabels,\
-#                                             MCKey='PythiaJetJet',\
-#                                             DataKey='LowMuData',\
-#                                             extra_description = description,\
-#                                             scale_factor = scale_factor,\
-#                                             ratio_min = 0.9,\
-#                                             ratio_max = 1.1,\
-#                                             doLogx = False,\
-#                                             doLogy = False\
-#                                             )
-#           DataVsMCTrackLess0.Draw()
-#           DataVsMCTrackLess0.Print(plotter_directory+"/EOPAcceptanceVsEtaAbs_reweighted.png")
-
-
-#           ################################################################################
-#           from variables.variables import calc_trkEta_ABS
-#           base_description = ["Track P_{T} Reweighted"]
-
-#           etaSelections = [sel_IDEta0_6,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           binMax = 10.05
-#           binLow = 0.5
-#           nBins = 15
-#           base = (binMax/binLow) ** (1./float(nBins))
-#           bins = []
-#           for i in range(0, nBins + 1):
-#               bins.append(0.5 * (base) ** i )
-
-#           canvases = []
-#           keep_histograms_alive = []
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-#           file
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection]
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkP,\
-#                                                         list_selections = selections,\
-#                                                         bins = bins,\
-#                                                         xlabel ="Track P [GeV]",\
-#                                                         ylabel = "Number of tracks",\
-#                                                         normalize = False,\
-#                                                         )
-
-#               #do the eta selections and count the number of tracks with an energy deposity less than or equal to 0.0.
-#               from selections.selections import sel_ELessEqual0
-#               selections = [sel_ELessEqual0] + [etaSelection]
-#               trkMultiplicity_Eta_Zero = plotter.GetHistograms(calc_trkP,\
-#                                                              list_selections = selections,\
-#                                                              bins = bins,\
-#                                                              xlabel ="Track P [GeV]",\
-#                                                              ylabel = "N(E<=0)/N",\
-#                                                              normalize = False,\
-#                                                              )
-#               ratio_histogram = DivideHistograms(trkMultiplicity_Eta_Zero, trkMultiplicity_Eta)
-#               keep_histograms_alive.append(ratio_histogram)
-#               description = [eta_selectionDescription] + base_description
-#               scale_factor = 5.0
-#               DataVsMCTrackLess0 = DrawDataVsMC(ratio_histogram,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.6,\
-#                                                 ratio_max = 1.4,\
-#                                                 doLogx = True,\
-#                                                 doLogy = False\
-#                                                 )
-#               canvases.append(DataVsMCTrackLess0)
-#               DataVsMCTrackLess0.Print(plotter_directory+"/EOPAcceptanceVsPtEtaBin"+file_description+".png")
-
-#           ################################################################################
-
-#           ################################################################################
-#           from variables.variables import calc_trkEta_ABS
-#           from selections.selections import sel_NTRT20
-#           base_description = ["N_{TRT hits} >= 20"]
-
-#           etaSelections = [sel_IDEta0_6,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           binMax = 10.05
-#           binLow = 0.5
-#           nBins = 15
-#           base = (binMax/binLow) ** (1./float(nBins))
-#           bins = []
-#           for i in range(0, nBins + 1):
-#               bins.append(0.5 * (base) ** i )
-
-#           canvases = []
-#           keep_histograms_alive = []
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection] + [sel_NTRT20]
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkP,\
-#                                                         list_selections = selections,\
-#                                                         bins = bins,\
-#                                                         xlabel ="Track P [GeV]",\
-#                                                         ylabel = "Number of tracks",\
-#                                                         normalize = False,\
-#                                                         )
-
-#               #do the eta selections and count the number of tracks with an energy deposity less than or equal to 0.0.
-#               from selections.selections import sel_ELessEqual0
-#               selections = [sel_ELessEqual0] + [etaSelection] + [sel_NTRT20]
-#               trkMultiplicity_Eta_Zero = plotter.GetHistograms(calc_trkP,\
-#                                                              list_selections = selections,\
-#                                                              bins = bins,\
-#                                                              xlabel ="Track P [GeV]",\
-#                                                              ylabel = "N(E<=0)/N",\
-#                                                              normalize = False,\
-#                                                              )
-#               ratio_histogram = DivideHistograms(trkMultiplicity_Eta_Zero, trkMultiplicity_Eta)
-#               keep_histograms_alive.append(ratio_histogram)
-#               description = [eta_selectionDescription] + base_description + ["Track P_{T} Reweighted"]
-#               scale_factor = 5.0
-#               DataVsMCTrackLess0 = DrawDataVsMC(ratio_histogram,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.6,\
-#                                                 ratio_max = 1.4,\
-#                                                 doLogx = True,\
-#                                                 doLogy = False\
-#                                                 )
-#               canvases.append(DataVsMCTrackLess0)
-#               DataVsMCTrackLess0.Print(plotter_directory+"/EOPAcceptanceVsPtEtaBinTRTHits20"+file_description+".png")
-
-#           ################################################################################
-#           from selections.selections import sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_PGreater2, sel_PGreater2_5, sel_PGreater3
-#           MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
-#           selections = [] + MIP_selection
-#           trkEOPHist = plotter.GetHistograms(calc_EOP,
-#                                            list_selections = selections,
-#                                            bins = 50,
-#                                            range_low = -1,
-#                                            range_high = 5,
-#                                            xlabel ="E/p",
-#                                            ylabel = "Number of Tracks",
-#                                            )
-#           description  = ["MIP Selection",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHist,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                       DataKey='LowMuData',
-#                                       ratio_min = 0.6,
-#                                      ratio_max = 1.4,
-#                                      extra_description = description,
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/InclusiveEOPDisitrbution_MIP.png")
-#           CloseCanvas(DataVsMCEOP)
-
-
-#           ################################################################################yy
-#           selections = [sel_PGreater1, sel_ECALEta0_6] + MIP_selection
-#           trkEOPHistPGreater1 = plotter.GetHistograms(calc_EOP,
-#                                                      list_selections = selections,
-#                                                      bins = 50,
-#                                                      range_low = -1,
-#                                                      range_high = 5,
-#                                                      xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks")
-#           description = ["MIP Selection",\
-#                          "P[GeV]>1",\
-#                          "|#eta_{EM2}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater1,
-#                                      plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                      DataKey='LowMuData',
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/Eta06EOPDistribution_MIP.png")
-#           CloseCanvas(DataVsMCEOP)
-
-#           ################################################################################yy
-#           selections = [sel_PGreater1_5, sel_IDEta0_6] + MIP_selection
-#           trkEOPHistPGreater1_5 = plotter.GetHistograms(calc_EOP,
-#                                                       list_selections = selections,
-#                                                        bins = 50,
-#                                                        range_low = -1,
-#                                                        range_high = 5,
-#                                                        xlabel ="E/p",
-#                                                        ylabel = "Number of Tracks")
-#           description = ["MIP Selection",\
-#                          "P[GeV]>1.5",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater1_5,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                      DataKey='LowMuData',
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP1_5Eta0_6_reweighted_MIP.png")
-#           CloseCanvas(DataVsMCEOP)
-
-#           ################################################################################yy
-#           from calculation.calculation import calculation
-#           from selections.selections import EtaBin, PBin
-#           PBinFunction = lambda x: PBin(x, 0.5, 1.0)
-#           sel_Pbin = calculation(PBinFunction, ["trk_p"])
-#           selections = [sel_Pbin, sel_IDEta0_6] + MIP_selection
-#           trkEOP                 = plotter.GetHistograms(calc_EOP,
-#                                                       list_selections = selections,
-#                                                        bins = 50,
-#                                                        range_low = -1,
-#                                                        range_high = 3,
-#                                                        xlabel ="E/p",
-#                                                        ylabel = "Number of Tracks")
-#           description = ["MIP Selection",\
-#                          "0.5<p[GeV]<1.0",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHist,\
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                      DataKey='LowMuData',
-#                                      ratio_min = 0.6,\
-#                                      ratio_max = 1.4,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP05_08Eta06_reweighted_MIP.png")
-#           CloseCanvas(DataVsMCEOP)
-
-
-
-#           ################################################################################yy
-#           selections = [sel_PGreater2, sel_IDEta0_6] + MIP_selection
-#           trkEOPHistPGreater2 = plotter.GetHistograms(calc_EOP,
-#                                                     list_selections = selections,
-#                                                     bins = 50,
-#                                                      range_low = -1,
-#                                                     range_high = 5,
-#                                                     xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks",
-#                                                     )
-#           description = ["MIP Selection",\
-#                          "P[GeV]>2",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater2,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                       DataKey='LowMuData',
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP2Eta0_6_reweighted_MIP.png")
-#           CloseCanvas(DataVsMCEOP)
-
-
-#           ################################################################################yy
-#           selections = [sel_PGreater2_5, sel_IDEta0_6] + MIP_selection
-#           trkEOPHistPGreater2 = plotter.GetHistograms(calc_EOP,
-#                                                     list_selections = selections,
-#                                                     bins = 50,
-#                                                      range_low = -1,
-#                                                     range_high = 5,
-#                                                     xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks",
-#                                                     )
-#           description = ["MIP Selection",\
-#                          "P[GeV]>2.5",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater2,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                       DataKey='LowMuData',
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP2_5Eta0_6_reweighted_MIP.png")
-#           CloseCanvas(DataVsMCEOP)
-
-#           ################################################################################yy
-#           selections = [sel_PGreater3, sel_IDEta0_6] + MIP_selection
-#           trkEOPHistPGreater2 = plotter.GetHistograms(calc_EOP,
-#                                                     list_selections = selections,
-#                                                     bins = 50,
-#                                                      range_low = -1,
-#                                                     range_high = 5,
-#                                                     xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks",
-#                                                     )
-#           description = ["MIP Selection",\
-#                          "P[GeV]>3",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistPGreater2,
-#                                       plotter.channelLabels,
-#                                       MCKey='PythiaJetJet',
-#                                       DataKey='LowMuData',
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP3Eta0_6_reweighted_MIP.png")
-#           CloseCanvas(DataVsMCEOP)
-
-
-#           ################################################################################yy
-#           from selections.selections import sel_IDEta19_23, sel_IDEta0_6, sel_PBetween12_18, sel_PBetween22_28, sel_PBetween28_36
-#           selections = [sel_PBetween12_18, sel_IDEta0_6] + MIP_selection
-#           trkEOPHistFig2a = plotter.GetHistograms(calc_EOP,
-#                                                     list_selections = selections,
-#                                                     bins = 50,
-#                                                      range_low = -1,
-#                                                     range_high = 5,
-#                                                     xlabel ="E/p",
-#                                                      ylabel = "Number of Tracks",
-#                                                     )
-#           description = ["MIP Selection",\
-#                          "1.2<P[GeV]<1.8",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2a,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP12_18_Eta0_6_reweighted_MIP.png")
-
-#           ################################################################################yy
-#           from selections.selections import sel_PBetween22_28
-#           selections = [sel_PBetween22_28, sel_IDEta0_6] + MIP_selection
-#           trkEOPHistFig2b = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.75,\
-#                                                 range_high = 4,\
-#                                                 xlabel ="E/p",\
-#                                                 ylabel = "Number of Tracks",\
-#                                                )
-#           description = ["MIP Selection",\
-#                          "2.2<P[GeV]<2.8",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2b,\
-#                                       plotter.channelLabels,\
-#                                       MCKey='PythiaJetJet',\
-#                                       DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                       extra_description = description)
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP22_28_Eta0_6_reweighted_MIP.png")
-
-#           ################################################################################yy
-#           selections = [sel_PBetween28_36, sel_IDEta19_23] + MIP_selection
-#           trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.75,\
-#                                                 range_high = 4,\
-#                                                 xlabel ="E/p",\
-#                                                 ylabel = "Number of Tracks",\
-#                                                 )
-#           description = ["MIP Selection",\
-#                          "2.8<P[GeV]<3.6",\
-#                          "1.9<|#eta_{ID}|<2.3",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description\
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta19_23_reweighted_MIP.png")
-
-#           ################################################################################yy
-#           selections = [sel_PBetween28_36, sel_IDEta0_6] + MIP_selection
-#           trkEOPHistFig2c = plotter.GetHistograms(calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = 50,\
-#                                                 range_low = -0.5,\
-#                                                 range_high = 3,\
-#                                                 xlabel ="E/p",\
-#                                                 ylabel = "Number of Tracks",\
-#                                                 )
-#           description = ["MIP Selection",\
-#                          "2.8<P[GeV]<3.6",\
-#                          "|#eta_{ID}|<0.6",\
-#                          "P_{T} Reweighted"]
-#           DataVsMCEOP = DrawDataVsMC(trkEOPHistFig2c,\
-#                                      plotter.channelLabels,\
-#                                      MCKey='PythiaJetJet',\
-#                                      DataKey='LowMuData',\
-#                                      ratio_min = 0.5,\
-#                                      ratio_max = 1.5,\
-#                                      extra_description = description\
-#                                      )
-#           DataVsMCEOP.Draw()
-#           DataVsMCEOP.Print(plotter_directory+"/EOPP28_36_Eta0_6_reweighted_MIP.png")
-
-#   if True:
-
-#           ################################################################################yy
-#           ## Look in different bins of pseudorapidity
-#           from variables.variables import calc_trkEta_ABS
-#           base_description = []
-#           etaSelections = [sel_IDEta0_6,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection] + MIP_selection
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkPt,\
-#                                                         list_selections = selections,\
-#                                                         bins = 80,\
-#                                                         range_low = 0.5,\
-#                                                         range_high = 5,\
-#                                                         xlabel ="Track P_{T} [GeV]",\
-#                                                         ylabel = "Number of Tracks",\
-#                                                         normalize = False,\
-#                                                         )
-
-#               description = ["MIP Selection", eta_selectionDescription] + ["P_{T} Reweighted"]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.8,\
-#                                                 ratio_max = 1.2,\
-#                                                 doLogx = False,\
-#                                                 doLogy = False\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkPtReweighted"+file_description+"MIP.png")
-
-#           ################################################################################
-#           from variables.variables import calc_trkEMFraction, calc_trkHADFraction
-#           from variables.variables import calc_trkEta_ABS
-#           from selections.selections import sel_NonZeroEnergy
-
-#           base_description = []
-#           etaSelections = [sel_IDEta0_6,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23\
-#                            ]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection] + [sel_NonZeroEnergy]
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkEMFraction,\
-#                                                         list_selections = selections,\
-#                                                         bins = 22,\
-#                                                         range_low = -1.0,\
-#                                                         range_high = 1.2,\
-#                                                         xlabel ="E_{EM}/E_{Total}",\
-#                                                         ylabel = "Number of Tracks",\
-#                                                         normalize = False,\
-#                                                         )
-
-#               description = ["E_{Total} != 0", eta_selectionDescription] + ["P_{T} Reweighted"]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.6,\
-#                                                 ratio_max = 1.4,\
-#                                                 doLogx = False,\
-#                                                 doLogy = False\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkEMFractionReweighted"+file_description+".png")
-
-#           ################################################################################
-#           from variables.variables import calc_trkEMFraction, calc_trkHADFraction
-#           from variables.variables import calc_trkEta_ABS
-#           from selections.selections import sel_NonZeroEnergy
-
-#           base_description = []
-#           etaSelections = [sel_IDEta0_6,\
-#                            sel_IDEta06_11,\
-#                            sel_IDEta11_14,\
-#                            sel_IDEta14_15,\
-#                            sel_IDEta15_18,\
-#                            sel_IDEta18_23\
-#                            ]
-
-#           eta_selectionDescriptions = [\
-#                                      "|#eta_{ID}|<0.6",\
-#                                      "0.6<|#eta_{ID}|<1.1",\
-#                                      "1.1<|#eta_{ID}|<1.4",\
-#                                      "1.4<|#eta_{ID}|<1.5",\
-#                                      "1.5<|#eta_{ID}|<1.8",\
-#                                      "1.8<|#eta_{ID}|<2.3"\
-#                                      ]
-
-#           file_descriptions = ["eta06", "eta06_11", "eta11_14", "eta14_15", "eta15_18", "eta18_23"]
-
-#           for (etaSelection, eta_selectionDescription, file_description) in zip(etaSelections, eta_selectionDescriptions, file_descriptions):
-#               #do the eta selection and count the inclusive number of tracks in the bin
-#               selections = [etaSelection] + [sel_NonZeroEnergy]
-#               trkMultiplicity_Eta = plotter.GetHistograms(calc_trkHADFraction,\
-#                                                         list_selections = selections,\
-#                                                         bins = 22,\
-#                                                         range_low = -1.0,\
-#                                                         range_high = 1.2,\
-#                                                         xlabel ="E_{HAD}/E_{Total}",\
-#                                                         ylabel = "Number of Tracks",\
-#                                                         normalize = False,\
-#                                                         )
-
-#               description = ["E_{Total} != 0", eta_selectionDescription] + ["P_{T} Reweighted"]
-#               trkMultiplicity_canvas = DrawDataVsMC(trkMultiplicity_Eta,\
-#                                                 plotter.channelLabels,\
-#                                                 MCKey='PythiaJetJet',\
-#                                                 DataKey='LowMuData',\
-#                                                 extra_description = description,\
-#                                                 scale_factor = scale_factor,\
-#                                                 ratio_min = 0.6,\
-#                                                 ratio_max = 1.4,\
-#                                                 doLogx = False,\
-#                                                 doLogy = False\
-#                                                 )
-#               trkMultiplicity_canvas.Print(plotter_directory+"/TrkHADFractionReweighted"+file_description+".png")
-
-#   ################################################################################
-#   ##Create a set of p and eta bins for the measurement ##########################
-#   from calculation.calculation import calculation
-#   from selections.selections import EtaBin, PBin
-
-#   #prepare the momentum bins
-#   binMax = 10.05
-#   binLow = 0.5
-#   nBins = 10
-#   base = (binMax/binLow) ** (1./float(nBins))
-#   p_bins = []
-#   min_p = []
-#   for i in range(0, nBins + 1):
-#       p_bins.append(0.5 * (base) ** i )
-
-#   #These are the pbins that we will use for the measurement
-#   p_ranges = [(x, y) for x, y in zip(p_bins[0:-2], p_bins[1:-1])]
-#   p_descriptors = []
-#   p_binSelection = []
-#   for p_range in p_ranges:
-#       PBinFunction = lambda x: PBin(x, p_range[0], p_range[1])
-#       sel_PBin = calculation(PBinFunction, ["trk_p"])
-#       p_binSelection.append(sel_PBin)
-#       p_descriptors.append('{0:.2f}'.format(p_range[0]) + '<P[GeV]<' + '{0:.2f}'.format(p_range[1]))
-
-#   #create a set of strings that could describe the eta or momentum selections
-#   eta_bins = [0.0, 0.6, 1.1, 1.7, 2.3]
-#   eta_ranges = [(0.0, 0.6),(0.6,1.1),(1.1, 1.7),(1.7,2.3)]
-#   eta_descriptors = []
-#   eta_binSelections = []
-#   for eta_range in eta_ranges:
-#       EtaBinFunction = lambda x: EtaBin(x, eta_range[0], eta_range[1])
-#       sel_EtaBin = calculation(EtaBinFunction, ["trk_etaID"])
-#       eta_binSelections.append(sel_EtaBin)
-#       eta_descriptors.append('{0:.1f}'.format(eta_range[0]) + "<|#eta_{ID}|<" + '{0:.1f}'.format(eta_range[1]))
-
-#   #go and get the average E/P for MIP particles in each of the eta bins.
-#   for eta_range, eta_descriptor, eta_binSelection in zip(eta_ranges, eta_descriptors, eta_binSelections):
-#       selections = MIP_selection + [eta_binSelection]
-#       AverageEOP  =  plotter.GetTProfileHistograms(calc_trkP,\
-#                                                  calc_EOP,\
-#                                                 list_selections = selections,\
-#                                                 bins = p_bins,\
-#                                                 xlabel ="P[GeV]",\
-#                                                 ylabel = "<E/p>",\
-#                                                 normalize = False,\
-#                                                 )
-#       description = ["MIP Selection"] + [eta_descriptor] + ["P_{T} Reweighted"]
-#       trkEOP_canvas = DrawDataVsMC(     AverageEOP,\
-#                                         plotter.channelLabels,\
-#                                         MCKey='PythiaJetJet',\
-#                                         DataKey='LowMuData',\
-#                                         extra_description = description,\
-#                                         scale_factor = scale_factor,\
-#                                         ratio_min = 0.6,\
-#                                         ratio_max = 1.4,\
-#                                         doLogx = True,\
-#                                         doLogy = False\
-#                                         )
-#       trkEOP_canvas.Print(plotter_directory+"/EOPProfileVsMomentumInEtaBin" + str(eta_range[0]) + "_" + str(eta_range[1]) + ".png")
+    from calculation.calculation import calculation
+    from selections.selections import EtaBin
+    Eta00_08 = lambda x, y=0.0,z=0.8 : EtaBin(x, y,z)
+    sel_Eta00_08 = calculation(Eta00_08, ["trk_etaID"])
+    histogramName = "EtaLess08_TwoDHistTrkPvsPhiInnerToExtrapolEM2"
+    CentalTwoDtrkPvstrkDPhi = plotter.Book2DHistograms(histogramName,\
+                                             calc_trkDPhi,\
+                                             calc_trkPt,\
+                                             list_selections=[sel_Eta00_08],\
+                                             bins_x=dPhi_bins,\
+                                             xlabel="|#phi_{ID} - #phi_{EM2}|",\
+                                             bins_y=p_bins,\
+                                             ylabel="Track P_{T} [GeV]",\
+                                             zlabel="Number of Tracks",\
+                                             )
+
+#    ################################################################################
+    histogramName = "NearestDRHist"
+    trkNearestDRHist = plotter.BookHistograms(histogramName,
+                                    calc_trkNearestNeighbourEM2,
+                                    list_selections = [],
+                                    bins = 25,
+                                     range_low = 0.0,
+                                     range_high = 5,
+                                     xlabel ="dR to Nearest Track",
+                                    ylabel = "Number of Tracks",
+                                    )
+
+    from selections.selections import sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_PGreater2, sel_PGreater2_5, sel_PGreater3
+    MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
+
+    ################################################################################
+    selections = []
+    histogramName = "InclusiveEOP"
+    trkEOPHist = plotter.BookHistograms(histogramName,\
+                                     calc_EOP,
+                                     list_selections = selections,
+                                     bins = 50,
+                                     range_low = -1,
+                                     range_high = 5,
+                                     xlabel ="E/p",
+                                     ylabel = "Number of Tracks",
+                                     )
+
+
+    ################################################################################
+    from selections.selections import sel_NonZeroEnergy
+    selections = [sel_NonZeroEnergy]
+    histogramName = "NonZeroEnergy_InclusiveEOP"
+    trkEOPHist = plotter.BookHistograms(histogramName,\
+                                     calc_EOP,
+                                     list_selections = selections,
+                                     bins = 50,
+                                     range_low = -1,
+                                     range_high = 5,
+                                     xlabel ="E/p",
+                                     ylabel = "Number of Tracks",
+                                     )
+
+    ################################################################################
+    selections = [sel_PGreater1, sel_ECALEta0_6]
+    histogramName = "EtaID0_6_PGreater1_0_EOPHist"
+    trkEOPHistPGreater1 = plotter.BookHistograms(histogramName,\
+                                               calc_EOP,
+                                               list_selections = selections,
+                                               bins = 50,
+                                               range_low = -1,
+                                               range_high = 5,
+                                               xlabel ="E/p",
+                                               ylabel = "Number of Tracks")
+
+    ################################################################################
+    selections = [sel_PGreater1_5, sel_IDEta00_06]
+    histogramName = "EtaID0_6_PGreater1_5_EOPHist"
+    trkEOPHistPGreater1_5 = plotter.BookHistograms(histogramName,
+                                                calc_EOP,
+                                                list_selections = selections,
+                                                 bins = 50,
+                                                 range_low = -1,
+                                                 range_high = 5,
+                                                 xlabel ="E/p",
+                                                 ylabel = "Number of Tracks")
+
+    ################################################################################
+    selections = [sel_PGreater2, sel_IDEta00_06]
+    histogramName = "EtaID0_6_PGreater2_0_EOPHist"
+    trkEOPHistPGreater2 = plotter.BookHistograms(histogramName,
+                                              calc_EOP,
+                                              list_selections = selections,
+                                              bins = 50,
+                                               range_low = -1,
+                                              range_high = 5,
+                                              xlabel ="E/p",
+                                               ylabel = "Number of Tracks",
+                                              )
+
+
+    ################################################################################
+    from selections.selections import sel_IDEta19_23, sel_IDEta00_06, sel_PBetween12_18, sel_PBetween22_28, sel_PBetween28_36
+    # This is figure 2a and 2d in the paper:
+    selections = [sel_PBetween12_18, sel_IDEta00_06]
+    histogramName = "EtaID0_6_PBetween12_18_EOPHist"
+    trkEOPHistFig2a = plotter.BookHistograms(histogramName,
+                                              calc_EOP,
+                                              list_selections = selections,
+                                              bins = 50,
+                                               range_low = -1,
+                                              range_high = 5,
+                                              xlabel ="E/p",
+                                               ylabel = "Number of Tracks",
+                                              )
+
+    ################################################################################
+    from selections.selections import sel_PBetween22_28
+    histogramName = "EtaID0_6_PBetween22_28_EOPHist"
+    selections = [sel_PBetween22_28, sel_IDEta00_06]
+    trkEOPHistFig2b = plotter.BookHistograms(histogramName,\
+                                          calc_EOP,\
+                                          list_selections = selections,\
+                                          bins = 50,\
+                                          range_low = -0.75,\
+                                          range_high = 4,\
+                                          xlabel ="E/p",\
+                                          ylabel = "Number of Tracks",\
+                                         )
+
+    ################################################################################
+    # This is figure 2c in the paper:
+    selections = [sel_PBetween28_36, sel_IDEta19_23]
+    histogramName = "EtaIDBetween19_23_PBetween28_36_EOPHist"
+    trkEOPHistFig2c = plotter.BookHistograms(histogramName,\
+                                          calc_EOP,\
+                                          list_selections = selections,\
+                                          bins = 50,\
+                                          range_low = -0.75,\
+                                          range_high = 4,\
+                                          xlabel ="E/p",\
+                                          ylabel = "Number of Tracks",\
+                                          )
+
+    ################################################################################
+    # This is figure 2c in the paper:
+    selections = [sel_PBetween28_36, sel_IDEta00_06]
+    histogramName = "EtaID0_6_PBetween28_36_EOPHist"
+    trkEOPHistFig2c = plotter.BookHistograms(histogramName,
+                                          calc_EOP,\
+                                          list_selections = selections,\
+                                          bins = 50,\
+                                          range_low = -0.5,\
+                                          range_high = 3,\
+                                          xlabel ="E/p",\
+                                          ylabel = "Number of Tracks",\
+                                          )
+
+    ################################################################################
+    from selections.selections import sel_NonZeroEnergy
+    # This is figure 2a and 2d in the paper:
+    histogramName = "NonZero_EtaID0_6_PBetween12_18_EOPHist"
+    selections = [sel_PBetween12_18, sel_IDEta00_06, sel_NonZeroEnergy]
+    trkEOPHistFig2a = plotter.BookHistograms(histogramName,\
+                                              calc_EOP,
+                                              list_selections = selections,
+                                              bins = 50,
+                                               range_low = -1,
+                                              range_high = 5,
+                                              xlabel ="E/p",
+                                               ylabel = "Number of Tracks",
+                                              )
+
+    ################################################################################
+    from selections.selections import sel_PBetween22_28
+    selections = [sel_PBetween22_28, sel_IDEta00_06, sel_NonZeroEnergy]
+    histogramName = "NonZero_EtaID0_6_PBetween22_28_EOPHist"
+    trkEOPHistFig2b = plotter.BookHistograms(histogramName,\
+                                          calc_EOP,\
+                                          list_selections = selections,\
+                                          bins = 50,\
+                                          range_low = -0.75,\
+                                          range_high = 4,\
+                                          xlabel ="E/p",\
+                                          ylabel = "Number of Tracks",\
+                                         )
+
+    ################################################################################
+    # This is figure 2c in the paper:
+    selections = [sel_PBetween28_36, sel_IDEta19_23, sel_NonZeroEnergy]
+    histogramName = "NonZero_EtaIDBetween19_23_PBetween22_28_EOPHist"
+    trkEOPHistFig2c = plotter.BookHistograms(histogramName,
+                                          calc_EOP,\
+                                          list_selections = selections,\
+                                          bins = 50,\
+                                          range_low = -0.75,\
+                                          range_high = 4,\
+                                          xlabel ="E/p",\
+                                          ylabel = "Number of Tracks",\
+                                          )
+
+    ################################################################################
+    # This is figure 2c in the paper:
+    selections = [sel_PBetween28_36, sel_IDEta00_06, sel_NonZeroEnergy]
+    histogramName = "NonZero_EtaID0_6_PBetween28_36_EOPHist"
+    trkEOPHistFig2c = plotter.BookHistograms(histogramName,
+                                          calc_EOP,\
+                                          list_selections = selections,\
+                                          bins = 50,\
+                                          range_low = -0.5,\
+                                          range_high = 3,\
+                                          xlabel ="E/p",\
+                                          ylabel = "Number of Tracks",\
+                                          )
+
+
+    ################################################################################
+    # This is figure 3a in the paper:
+
+    selections = []
+    binMax = 10.05
+    binLow = 0.5
+    nBins = 15
+    bins = getLogBins(binLow, binMax, nBins)
+
+    histogramName = "InclusiveZeroFractionVsPDenomenator"
+    trkMultiplicity = plotter.BookHistograms(histogramName,\
+                                          calc_trkP,\
+                                          list_selections = selections,\
+                                          bins = bins,\
+                                          xlabel ="Track P [GeV]",\
+                                          ylabel = "Number of Tracks",\
+                                          )
+
+    from selections.selections import sel_ELessEqual0
+    histogramName = "InclusiveZeroFractionVsPNumerator"
+    selections = [sel_ELessEqual0]
+    trkMultiplicity_ELessZero = plotter.BookHistograms(histogramName,\
+                                                    calc_trkP,\
+                                                    list_selections = selections,\
+                                                    bins = bins,\
+                                                    xlabel ="Track P [GeV]",\
+                                                    ylabel = "N(E<=0)/N",\
+                                                    )
+
+    ################################################################################
+    #This is figure 3b of the paper
+    bins = [-2.3, -1.8, -1.5, -1.4, -1.1, -0.6, 0.0, 0.6, 1.1, 1.4, 1.5, 1.8, 2.3]
+    selections = []
+    histogramName = "InclusiveZeroFractionVsEtaDenomenator"
+    trkMultiplicity_Eta = plotter.BookHistograms(histogramName,\
+                                              calc_trkEtaID,\
+                                              list_selections = selections,\
+                                              bins = bins,\
+                                              xlabel ="Track |#eta|",\
+                                              ylabel = "Number of Tracks",\
+                                              )
+    from selections.selections import sel_ELessEqual0
+    histogramName = "InclusiveZeroFractionVsEtaNumerator"
+    selections = [sel_ELessEqual0]
+    trkMultiplicity_Eta_Zero = plotter.BookHistograms(histogramName,\
+                                                   calc_trkEtaID,\
+                                                   list_selections = selections,\
+                                                   bins = bins,\
+                                                   xlabel ="Track |#eta|",\
+                                                   ylabel = "N(E<=0)/N",\
+                                                   )
+
+    ################################################################################
+    bins = [0.0, 0.6, 1.1, 1.4, 1.5, 1.8, 2.3]
+    from variables.variables import calc_trkEta_ABS
+    selections = []
+    histogramName = "InclusiveZeroFractionVsAbsEtaDenomenator"
+    trkMultiplicity_AbsEta = plotter.BookHistograms(histogramName,\
+                                              calc_trkEta_ABS,\
+                                              list_selections = selections,\
+                                              bins = bins,\
+                                              xlabel ="Track |#eta|",\
+                                              ylabel = "Number of Tracks",\
+                                              )
+    from selections.selections import sel_ELessEqual0
+    histogramName = "InclusiveZeroFractionVsAbsEtaNumerator"
+    selections = [sel_ELessEqual0]
+    trkMultiplicity_AbsEta_Zero = plotter.BookHistograms(histogramName,\
+                                                   calc_trkEta_ABS,\
+                                                   list_selections = selections,\
+                                                   bins = bins,\
+                                                   xlabel ="Track |#eta|",\
+                                                   ylabel = "N(E<=0)/N",\
+                                                   )
+
+    ################################################################################
+    from variables.variables import calc_trkEta_ABS
+    from selections.selections import sel_IDEta00_02, sel_IDEta02_04, sel_IDEta04_06, sel_IDEta00_06
+
+    etaSelections = [sel_IDEta00_02,\
+                     sel_IDEta02_04,\
+                     sel_IDEta04_06,\
+                     sel_IDEta00_06,\
+                     sel_IDEta06_11,\
+                     sel_IDEta11_14,\
+                     sel_IDEta14_15,\
+                     sel_IDEta15_18,\
+                     sel_IDEta18_23]
+
+
+    canvases = []
+    keep_histograms_alive = []
+
+    file_descriptions = ["etaID00_02", "etaID02_04", "etaID04_06", "etaID00_06", "etaID06_11", "etaID11_14", "etaID14_15", "etaID15_18", "etaID18_23"]
+    centers = [0.2, 0.4, 0.6, 0.6, 1.1, 1.4, 1.5, 1.8, 2.3]
+
+    for (etaSelection, eta_selectionDescription, file_description, center) in zip(etaSelections, eta_selectionDescriptions, file_descriptions, centers):
+        binMax = 15.05
+        binLow = getP(0.5, center)
+        nBins = 20
+        bins = getLogBins(binLow, binMax, nBins)
+
+        #do the eta selection and count the inclusive number of tracks in the bin
+        selections = [etaSelection]
+        histogramName = "ZeroFractionVsP" + file_description + "Denomenator"
+        trkMultiplicity_Eta = plotter.BookHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = bins,\
+                                                  xlabel ="Track P [GeV]",\
+                                                  ylabel = "Number of tracks",\
+                                                  )
+
+        #do the eta selections and count the number of tracks with an energy deposity less than or equal to 0.0.
+        from selections.selections import sel_ELessEqual0
+        selections = [sel_ELessEqual0] + [etaSelection]
+        histogramName = "ZeroFractionVsP" + file_description + "Numerator"
+        trkMultiplicity_Eta_Zero = plotter.BookHistograms(histogramName,\
+                                                       calc_trkP,\
+                                                       list_selections = selections,\
+                                                       bins = bins,\
+                                                       xlabel ="Track P [GeV]",\
+                                                       ylabel = "N(E<=0)/N",\
+                                                       )
+
+    ################################################################################
+    from variables.variables import calc_trkEta_ABS
+    from selections.selections import sel_NTRT20
+    base_description = ["N_{TRT hits} >= 20"]
+
+    for (etaSelection, eta_selectionDescription, file_description, center) in zip(etaSelections, eta_selectionDescriptions, file_descriptions, centers):
+        binMax = 15.05
+        binLow = getP(0.5, center)
+        nBins = 20
+        bins = getLogBins(binLow, binMax, nBins)
+
+        #do the eta selection and count the inclusive number of tracks in the bin
+        selections = [etaSelection] + [sel_NTRT20]
+        histogramName = "NTRT20ZeroFractionVsP" + file_description + "Denomenator"
+        trkMultiplicity_Eta = plotter.BookHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = bins,\
+                                                  xlabel ="Track P [GeV]",\
+                                                  ylabel = "Number of tracks",\
+                                                  )
+
+        #do the eta selections and count the number of tracks with an energy deposity less than or equal to 0.0.
+        from selections.selections import sel_ELessEqual0
+        selections = [sel_ELessEqual0] + [etaSelection] + [sel_NTRT20]
+        histogramName = "NTRT20ZeroFractionVsP" + file_description + "Numerator"
+        trkMultiplicity_Eta_Zero = plotter.BookHistograms(histogramName,\
+                                                       calc_trkP,\
+                                                       list_selections = selections,\
+                                                       bins = bins,\
+                                                       xlabel ="Track P [GeV]",\
+                                                       ylabel = "N(E<=0)/N",\
+                                                       )
+
+    ################################################################################
+    from selections.selections import sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_PGreater2, sel_PGreater2_5, sel_PGreater3
+    MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
+    selections = [] + MIP_selection
+    histogramName = "MIPSelection_HadBetween30And90OfMomentum_EOP"
+    trkEOPHist = plotter.BookHistograms(histogramName,
+                                     calc_EOP,
+                                     list_selections = selections,
+                                     bins = 50,
+                                     range_low = -1,
+                                     range_high = 5,
+                                     xlabel ="E/p",
+                                     ylabel = "Number of Tracks",
+                                     )
+
+
+    ################################################################################
+    selections = [sel_ECALEta0_6] + MIP_selection
+    histogramName = "MIPSelection_HadBetween30And90OfMomentum_ECALEta00_06_EOP"
+    trkEOPHistPGreater1 = plotter.BookHistograms(histogramName,\
+                                               calc_EOP,
+                                               list_selections = selections,
+                                               bins = 50,
+                                               range_low = -1,
+                                               range_high = 5,
+                                               xlabel ="E/p",
+                                               ylabel = "Number of Tracks")
+
+
+    ################################################################################
+    ##Create a set of p and eta bins for the measurement ##########################
+    from calculation.calculation import calculation
+    from selections.selections import EtaBin, PBin
+    from variables.variables import calc_EOPBkg, calc_EnergyAnulus
+
+    #create a set of strings that could describe the eta or momentum selections
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+
+    #go and get the average E/P for MIP particles in each of the eta bins.
+    for eta_range in eta_ranges:
+        #get the function that selectts tracks in that bin
+        EtaBinFunction = lambda x, y = eta_range[0], z=eta_range[1]: EtaBin(x, y,z)
+        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
+        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+
+        #calculate the lowest momentum track that can end up in that bin
+        #create nbins where there are at least 10,000 entries per bin
+        eta = eta_range[1]
+        p_bins_max = 15.05
+        p_bins_min = getP(0.5, eta)
+        nBins = 20
+        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
+
+        eop_bins_min = 0.0
+        eop_bins_max = 5
+        nBins = 500
+        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
+
+        print("+" * 50)
+        print("for Eta " + str(eta))
+        print(eop_bins)
+        print(p_bins)
+
+        MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
+        selections = MIP_selection + [eta_binSelection]
+
+        histogram_name = "trkPtHist"
+        histogram_name = histogram_name + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = [eta_binSelection],\
+                                           bins = p_bins_reference,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+   #    ################################################################################
+        #prepare the momentum bins
+        histogram_name = "trkPtHist"
+        histogram_name = histogram_name + "_MIPSelection_HADBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = selections,\
+                                           bins = p_bins_reference,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+            histogram_name = histogram_name + "_MIPSelection_HADBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+            plotter.BookHistograms(histogram_name,\
+                                   variable,\
+                                   list_selections = selections,\
+                                   bins = 10,\
+                                   range_low = -0.5,\
+                                   range_high = 9.5,\
+                                   xlabel=xlabel,\
+                                   ylabel="Number of Tracks")
+
+        histogramName = "TrkMultiplicityVsP_Inclusive_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = [eta_binSelection],\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+
+        histogramName = "UnweightedTrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False
+                                                  )
+
+
+        histogramName = "TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+
+        #get the binning histograms for the histograms to be used for fitting
+        binningHistogram = plotter.binningHistograms[histogramName]
+        FourThousandTracks_pbins = GetBinsFromHistogram(binningHistogram, 4000.0)[0]
+
+        print FourThousandTracks_pbins
+
+        histogramName = "EOPProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "EOPProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "EnergyBkgProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+
+        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1])  for i in range(0, len(FourThousandTracks_pbins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x, y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+
+        from selections.selections import sel_EHadFracAbove70
+        MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70]
+        selections = MIP_selection + [eta_binSelection]
+
+    #    ################################################################################
+        #prepare the momentum bins
+        histogram_name = "trkPtHist"
+        histogram_name = histogram_name + "_MIPSelection_HADFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = selections,\
+                                           bins = p_bins_reference,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+            plotter.BookHistograms(histogram_name,\
+                                   variable,\
+                                   list_selections = selections,\
+                                   bins = 10,\
+                                   range_low = -0.5,\
+                                   range_high = 9.5,\
+                                   xlabel=xlabel,\
+                                   ylabel="Number of Tracks")
+
+        histogramName = "UnweightedTrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False
+                                                  )
+
+        histogramName = "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P [GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+
+        #get the binning histograms for the histograms to be used for fitting
+        binningHistogram = plotter.binningHistograms[histogramName]
+        FourThousandTracks_pbins = GetBinsFromHistogram(binningHistogram, 4000.0)[0]
+
+        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "EOPProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P [GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P [GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "EnergyBkgProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            histogram_name = "trkTRTHits"
+            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_nTRT
+            plotter.BookHistograms(histogram_name,\
+                                   calc_nTRT,\
+                                   list_selections = selections,\
+                                   range_low = -0.5,\
+                                   range_high = 59.5,\
+                                   bins = 60,\
+                                   xlabel = "Number of TRT Hits",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "trkEMDR100"
+            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_EnergyEMDR100
+            plotter.BookHistograms(histogram_name,\
+                                   calc_EnergyEMDR100,\
+                                   list_selections = selections,\
+                                   range_low = -2.0,\
+                                   range_high = + 10.0,\
+                                   bins = 48,\
+                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "MomentumHadFrac"
+            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_MomentumHadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_MomentumHadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 5.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/P",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "HadFrac"
+            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_HadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_HadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 2.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/E^{Total}",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+                histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+                plotter.BookHistograms(histogram_name,\
+                                       variable,\
+                                       list_selections = selections,\
+                                       bins = 10,\
+                                       range_low = -0.5,\
+                                       range_high = 9.5,\
+                                       xlabel=xlabel,\
+                                       ylabel="Number of Tracks")
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            histogram_name = "trkTRTHits"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_nTRT
+            plotter.BookHistograms(histogram_name,\
+                                   calc_nTRT,\
+                                   list_selections = selections,\
+                                   range_low = -0.5,\
+                                   range_high = 59.5,\
+                                   bins = 60,\
+                                   xlabel = "Number of TRT Hits",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "trkEMDR100"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_EnergyEMDR100
+            plotter.BookHistograms(histogram_name,\
+                                   calc_EnergyEMDR100,\
+                                   list_selections = selections,\
+                                   range_low = -2.0,\
+                                   range_high = + 10.0,\
+                                   bins = 48,\
+                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "MomentumHadFrac"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_MomentumHadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_MomentumHadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 5.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/P",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "HadFrac"
+            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_HadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_HadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 2.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/E^{Total}",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+                histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+                plotter.BookHistograms(histogram_name,\
+                                       variable,\
+                                       list_selections = selections,\
+                                       bins = 10,\
+                                       range_low = -0.5,\
+                                       range_high = 9.5,\
+                                       xlabel=xlabel,\
+                                       ylabel="Number of Tracks")
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1] ) for i in range(0, len(FourThousandTracks_pbins)-1) ]
+        for p_range in p_ranges:
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_FourThousandTracks_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution_FourThousandTracks_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+
+
+    ################################################################################
+    ##Create a set of p and eta bins for the measurement ##########################
+    from calculation.calculation import calculation
+    from selections.selections import EtaBin, PBin
+    from variables.variables import calc_EOPBkg, calc_EnergyAnulus
+
+    #create a set of strings that could describe the eta or momentum selections
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+
+    #go and get the average E/P for MIP particles in each of the eta bins.
+    for eta_range in eta_ranges:
+        #get the function that selectts tracks in that bin
+        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z)
+        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
+        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+
+        #calculate the lowest momentum track that can end up in that bin
+        #create nbins where there are at least 10,000 entries per bin
+        eta = eta_range[1]
+        p_bins_max = 15.05
+        p_bins_min = getP(0.5, eta)
+        nBins = 20
+        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
+
+        eop_bins_min = 0.0
+        eop_bins_max = 5
+        nBins = 500
+        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
+
+        print("+" * 50)
+        print("for Eta " + str(eta))
+        print(eop_bins)
+        print(p_bins)
+
+        selections = [eta_binSelection]
+
+        histogramName = "UnweightedTrkMultiplicityVsP_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False
+                                                  )
+
+        histogramName = "TrkMultiplicityVsP_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+
+
+        histogramName = "EOPProfileVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "EnergyBkgProfileVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x, y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+
+    #Select only those tracks with a cluster
+    ################################################################################
+    ##Create a set of p and eta bins for the measurement ##########################
+    from calculation.calculation import calculation
+    from selections.selections import EtaBin, PBin, sel_NonZeroEnergy
+    from variables.variables import calc_EOPBkg, calc_EnergyAnulus
+
+    #create a set of strings that could describe the eta or momentum selections
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+
+    #go and get the average E/P for MIP particles in each of the eta bins.
+    for eta_range in eta_ranges:
+        #get the function that selectts tracks in that bin
+        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z)
+        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
+        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+
+        #calculate the lowest momentum track that can end up in that bin
+        #create nbins where there are at least 10,000 entries per bin
+        eta = eta_range[1]
+        p_bins_max = 15.05
+        p_bins_min = getP(0.5, eta)
+        nBins = 20
+        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
+
+        eop_bins_min = -1
+        eop_bins_max = 5
+        nBins = 500
+        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
+
+        print("+" * 50)
+        print("for Eta " + str(eta))
+        print(eop_bins)
+        selections = [sel_NonZeroEnergy, eta_binSelection]
+
+    #    ################################################################################
+        #prepare the momentum bins
+        histogram_name = "trkPtHist"
+        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = selections,\
+                                           bins = p_bins_reference,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+            histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+            plotter.BookHistograms(histogram_name,\
+                                   variable,\
+                                   list_selections = selections,\
+                                   bins = 10,\
+                                   range_low = -0.5,\
+                                   range_high = 9.5,\
+                                   xlabel=xlabel,\
+                                   ylabel="Number of Tracks")
+
+        histogram_name = "trkTRTHits"
+        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_nTRT
+        plotter.BookHistograms(histogram_name,\
+                               calc_nTRT,\
+                               list_selections = selections,\
+                               range_low = -0.5,\
+                               range_high = 59.5,\
+                               bins = 60,\
+                               xlabel = "Number of TRT Hits",\
+                               ylabel = "Number of Tracks")
+
+        histogram_name = "trkEMDR100"
+        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_EnergyEMDR100
+        plotter.BookHistograms(histogram_name,\
+                               calc_EnergyEMDR100,\
+                               list_selections = selections,\
+                               range_low = -2.0,\
+                               range_high = + 10.0,\
+                               bins = 48,\
+                               xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                               ylabel = "Number of Tracks")
+
+        histogram_name = "MomentumHadFrac"
+        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_MomentumHadFrac
+        plotter.BookHistograms(histogram_name,\
+                               calc_MomentumHadFrac,\
+                               list_selections = selections,\
+                               range_low = -1.0,\
+                               range_high = + 5.0,\
+                               bins = 48,\
+                               xlabel = "E^{HAD}/P",\
+                               ylabel = "Number of Tracks")
+
+        histogram_name = "HadFrac"
+        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_HadFrac
+        plotter.BookHistograms(histogram_name,\
+                               calc_HadFrac,\
+                               list_selections = selections,\
+                               range_low = -1.0,\
+                               range_high = + 2.0,\
+                               bins = 48,\
+                               xlabel = "E^{HAD}/E^{Total}",\
+                               ylabel = "Number of Tracks")
+
+        histogramName = "UnweightedTrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False\
+                                                  )
+
+        histogramName = "TrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+
+        #get the custom bins for the EOP Measurement
+        hist = plotter.binningHistograms[histogramName]
+        FourThousandTracks_pbins = GetBinsFromHistogram(hist, 4000.0)[0]
+
+        histogramName = "EOPProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "EOPProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "2DHist_FourThousandTracks_EOPVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "EnergyBkgProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = FourThousandTracks_pbins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = FourThousandTracks_pbins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y, z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin]
+            histogramName = "EOPDistribution_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution"
+            histogramName = histogramName + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            histogram_name = "trkTRTHits"
+            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_nTRT
+            plotter.BookHistograms(histogram_name,\
+                                   calc_nTRT,\
+                                   list_selections = selections,\
+                                   range_low = -0.5,\
+                                   range_high = 59.5,\
+                                   bins = 60,\
+                                   xlabel = "Number of TRT Hits",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "trkEMDR100"
+            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_EnergyEMDR100
+            plotter.BookHistograms(histogram_name,\
+                                   calc_EnergyEMDR100,\
+                                   list_selections = selections,\
+                                   range_low = -2.0,\
+                                   range_high = + 10.0,\
+                                   bins = 48,\
+                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "MomentumHadFrac"
+            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_MomentumHadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_MomentumHadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 5.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/P",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "HadFrac"
+            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_HadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_HadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 2.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/E^{Total}",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+                histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+                plotter.BookHistograms(histogram_name,\
+                                       variable,\
+                                       list_selections = selections,\
+                                       bins = 10,\
+                                       range_low = -0.5,\
+                                       range_high = 9.5,\
+                                       xlabel=xlabel,\
+                                       ylabel="Number of Tracks")
+
+
+    from selections.selections import sel_NTRT20
+    for eta_range in eta_ranges:
+        #get the function that selectts tracks in that bin
+        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z)
+        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
+        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+
+        #calculate the lowest momentum track that can end up in that bin
+        #create nbins where there are at least 10,000 entries per bin
+        eta = eta_range[1]
+        p_bins_max = 15.05
+        p_bins_min = getP(0.5, eta)
+        nBins = 20
+        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
+        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
+
+        eop_bins_min = -1
+        eop_bins_max = 5
+        nBins = 500
+        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
+
+        print("+" * 50)
+        print("for Eta " + str(eta))
+        print(eop_bins)
+        selections = [sel_NonZeroEnergy, eta_binSelection, sel_NTRT20]
+
+    #    ################################################################################
+        #prepare the momentum bins
+        histogram_name = "trkPtHist"
+        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = selections,\
+                                           bins = p_bins_reference,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+            histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+            plotter.BookHistograms(histogram_name,\
+                                   variable,\
+                                   list_selections = selections,\
+                                   bins = 10,\
+                                   range_low = -0.5,\
+                                   range_high = 9.5,\
+                                   xlabel=xlabel,\
+                                   ylabel="Number of Tracks")
+
+        histogram_name = "trkTRTHits"
+        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_nTRT
+        plotter.BookHistograms(histogram_name,\
+                               calc_nTRT,\
+                               list_selections = selections,\
+                               range_low = -0.5,\
+                               range_high = 59.5,\
+                               bins = 60,\
+                               xlabel = "Number of TRT Hits",\
+                               ylabel = "Number of Tracks")
+
+        histogram_name = "trkEMDR100"
+        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_EnergyEMDR100
+        plotter.BookHistograms(histogram_name,\
+                               calc_EnergyEMDR100,\
+                               list_selections = selections,\
+                               range_low = -2.0,\
+                               range_high = + 10.0,\
+                               bins = 48,\
+                               xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                               ylabel = "Number of Tracks")
+
+        histogram_name = "MomentumHadFrac"
+        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_MomentumHadFrac
+        plotter.BookHistograms(histogram_name,\
+                               calc_MomentumHadFrac,\
+                               list_selections = selections,\
+                               range_low = -1.0,\
+                               range_high = + 5.0,\
+                               bins = 48,\
+                               xlabel = "E^{HAD}/P",\
+                               ylabel = "Number of Tracks")
+
+        histogram_name = "HadFrac"
+        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        from variables.variables import calc_HadFrac
+        plotter.BookHistograms(histogram_name,\
+                               calc_HadFrac,\
+                               list_selections = selections,\
+                               range_low = -1.0,\
+                               range_high = +2.0,\
+                               bins = 48,\
+                               xlabel = "E^{HAD}/E^{Total}",\
+                               ylabel = "Number of Tracks")
+
+        histogramName = "UnweightedTrkMultiplicityVsP_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False\
+                                                  )
+
+        histogramName = "TrkMultiplicityVsP_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins_fine,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+
+        histogramName = "EOPProfileVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+
+        histogramName = "EnergyBkgProfileVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+
+        histogramName = "2DHist_EnergyBkgVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+
+        #go and get the E/p distribution in each of the E/p bins
+        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
+        for p_range in p_ranges:
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y, z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin, sel_NTRT20]
+            histogramName = "EOPDistribution_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution"
+            histogramName = histogramName + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            EOPBkgDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            histogram_name = "trkTRTHits"
+            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_nTRT
+            plotter.BookHistograms(histogram_name,\
+                                   calc_nTRT,\
+                                   list_selections = selections,\
+                                   range_low = -0.5,\
+                                   range_high = 59.5,\
+                                   bins = 60,\
+                                   xlabel = "Number of TRT Hits",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "trkEMDR100"
+            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_EnergyEMDR100
+            plotter.BookHistograms(histogram_name,\
+                                   calc_EnergyEMDR100,\
+                                   list_selections = selections,\
+                                   range_low = -2.0,\
+                                   range_high = + 10.0,\
+                                   bins = 48,\
+                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "MomentumHadFrac"
+            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_MomentumHadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_MomentumHadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 5.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/P",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "HadFrac"
+            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+            from variables.variables import calc_HadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_HadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 2.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/E^{Total}",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+                histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
+                plotter.BookHistograms(histogram_name,\
+                                       variable,\
+                                       list_selections = selections,\
+                                       bins = 10,\
+                                       range_low = -0.5,\
+                                       range_high = 9.5,\
+                                       xlabel=xlabel,\
+                                       ylabel="Number of Tracks")
+
+
+
 
 #   #go and get the average eneryg in the EM anulus for MIP particles in each of the eta bins.
 #   from variables.variables import calc_EnergyAnulus
 #   for eta_range, eta_descriptor, eta_binSelection in zip(eta_ranges, eta_descriptors, eta_binSelections):
 #       selections = MIP_selection + [eta_binSelection]
-#       AverageAnulus =  plotter.GetTProfileHistograms(calc_trkP,\
+#       AverageAnulus =  plotter.BookTProfileHistograms(calc_trkP,\
 #                                                  calc_EnergyAnulus,\
 #                                                 list_selections = selections,\
 #                                                 bins = p_bins,\
 #                                                 xlabel ="P[GeV]",\
 #                                                 ylabel = "<E_{EM Anulus}>[GeV]",\
-#                                                 normalize = False,\
 #                                                 )
 #       description = ["MIP Selection"] + [eta_descriptor] + ["P_{T} Reweighted"]
 #       trkAnulus_canvas = DrawDataVsMC(     AverageAnulus,\
@@ -1691,13 +2242,12 @@ def FillingScript(plotter, outputRootFileName):
 #   from variables.variables import calc_EOPBkg
 #   for eta_range, eta_descriptor, eta_binSelection in zip(eta_ranges, eta_descriptors, eta_binSelections):
 #       selections = MIP_selection + [eta_binSelection]
-#       AverageAnulus =  plotter.GetTProfileHistograms(calc_trkP,\
+#       AverageAnulus =  plotter.BookTProfileHistograms(calc_trkP,\
 #                                                  calc_EnergyAnulus,\
 #                                                 list_selections = selections,\
 #                                                 bins = p_bins,\
 #                                                 xlabel ="P[GeV]",\
 #                                                 ylabel = "<E/p>_{BKG}",\
-#                                                 normalize = False,\
 #                                                 )
 #       description = ["MIP Selection"] + [eta_descriptor] + ["P_{T} Reweighted"]
 #       trkAnulus_canvas = DrawDataVsMC(     AverageAnulus,\
@@ -1712,4 +2262,7 @@ def FillingScript(plotter, outputRootFileName):
 #                                         doLogy = False\
 #                                         )
 #       trkAnulus_canvas.Print(plotter_directory+"/AverageEOPBkgVsMomentumInEtaBin" + str(eta_range[0]) + "_" + str(eta_range[1]) + ".png")
+    histograms = plotter.DumpHistograms()
+    for histogram_name in histograms:
+        WriteToFile(histograms[histogram_name], outFile)
     print("THEJOBFINISHED!")

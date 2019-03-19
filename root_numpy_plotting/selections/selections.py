@@ -6,6 +6,11 @@ def NoSelection(trk):
 branches = []
 sel_NoSelection = calculation(NoSelection, branches)
 
+def hasHADExtrapolation(trk):
+    return (trk["trk_phiHEC1"] > -100) | (trk["trk_phiTileBar2"] > -100) | (trk["trk_phiTileExt1"] > -100)
+branches =["trk_phiHEC1", "trk_phiTileBar2", "trk_phiTileExt1"]
+sel_hasHADExtrapolation = calculation(hasHADExtrapolation, branches)
+
 #A selection for plotting event-based variables
 def Event(trk):
     '''get only the variables associated with the first track in the event.
@@ -114,14 +119,14 @@ sel_AnyElectron = calculation(AnyElectron, branches)
 #Define a significant hadron energy deposit with the amount of energy in the HAD calorimeter
 def EHadBetween30And90OfMomentum(trk):
     '''At least 30 % of the track momentum and no more than 90 % of the track momentum was found the HAD calorimeter'''
-    E_HAD_frac = trk["trk_sumE_HAD_200"]/trk["trk_p"]
+    E_HAD_frac = trk["trk_ClusterEnergy_HAD_200"]/trk["trk_p"]
     return (E_HAD_frac > 0.3) & (E_HAD_frac < 0.9) #This selection only works for EM-scale
-branches = ["trk_E_HAD_200", "trk_p"]
+branches = ["trk_ClusterEnergy_HAD_200", "trk_p"]
 sel_EHadBetween30And90OfMomentum = calculation(EHadBetween30And90OfMomentum, branches)
 
 def Lar1_1GeV(trk):
-    return trk["trk_sumE_EM_100"] < 1.1
-branches = ["trk_sumE_EM_100"]
+    return trk["trk_ClusterEnergy_EM_100"] < 1.1
+branches = ["trk_ClusterEnergy_EM_100"]
 sel_Lar1_1GeV = calculation(Lar1_1GeV, branches)
 
 def Z0SinThetaLess1_5(trk):
@@ -147,14 +152,19 @@ def EM2AcceptanceCalculator(trk, min_cut, max_cut):
     return (upper_in_acceptance_EMB | upper_in_acceptance_EME) & (lower_in_acceptance_EMB | lower_in_acceptance_EME)
 
 def NonZeroEnergy(trk):
-    return np.logical_not(np.abs(trk["trk_sumE_Total_200"]) < 1e-8)
-branches = ["trk_sumE_Total_200"]
+    return (trk["trk_nclusters_EM"] + trk["trk_nclusters_HAD"]) > 0.5 #there was at least one cluster assocated with the track
+branches = ["trk_nclusters_EM", "trk_nclusters_HAD"]
 sel_NonZeroEnergy = calculation(NonZeroEnergy, branches)
 
 def ELessEqual0(trk):
-    return trk["trk_sumE_Total_200"] <= 1e-6
-branches = ["trk_sumE_Total_200"]
+    return (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"]) <= 1e-6
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 sel_ELessEqual0 = calculation(ELessEqual0, branches)
+
+def EHadFracAbove70(trk):
+    return ((trk["trk_ClusterEnergy_HAD_200"]) / (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"]) >= 0.7) & ((trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"]) > 0.0)
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
+sel_EHadFracAbove70 = calculation(EHadFracAbove70, branches)
 
 #A general function to pick different regions of the atlas detector based on track eta in the ID
 def IDAcceptanceCalculator(trk, min_cut, max_cut):
@@ -176,10 +186,28 @@ branches = ["trk_etaEMB2", "trk_etaEME2"]
 sel_ECALEta0_6 = calculation(ECALEta0_6, branches)
 
 #### Here are the eta track selections ###
-def IDEta0_6(trk):
+def IDEta00_06(trk):
     return IDAcceptanceCalculator(trk, 0.0, 0.6)
 branches = ["trk_etaID"]
-sel_IDEta0_6 = calculation(IDEta0_6, branches)
+sel_IDEta00_06 = calculation(IDEta00_06, branches)
+
+#### Here are the eta track selections ###
+def IDEta00_02(trk):
+    return IDAcceptanceCalculator(trk, 0.0, 0.2)
+branches = ["trk_etaID"]
+sel_IDEta00_02 = calculation(IDEta00_02, branches)
+
+#### Here are the eta track selections ###
+def IDEta02_04(trk):
+    return IDAcceptanceCalculator(trk, 0.2, 0.4)
+branches = ["trk_etaID"]
+sel_IDEta02_04 = calculation(IDEta02_04, branches)
+
+#### Here are the eta track selections ###
+def IDEta04_06(trk):
+    return IDAcceptanceCalculator(trk, 0.4, 0.6)
+branches = ["trk_etaID"]
+sel_IDEta04_06 = calculation(IDEta04_06, branches)
 
 def IDEta06_11(trk):
     return IDAcceptanceCalculator(trk, 0.6, 1.1)

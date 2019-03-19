@@ -1,8 +1,7 @@
 from pyximport import install
 
 import numpy as np
-install(setup_args={"include_dirs":np.get_include()},
-                  reload_support=True)
+install(setup_args={"include_dirs":np.get_include()},reload_support=True)
 from util import getWeightsFromBins
 
 class calculationDataMC:
@@ -61,6 +60,7 @@ class weightCalculation:
         return weights
 
     def addReweightHistogram(self, channel, variable, histogram):
+        histogram.SetDirectory(0)
         if channel not in self.reweightDictionary:
             self.reweightDictionary[channel] = {}
             self.reweightDictionary[channel]["variables"] = []

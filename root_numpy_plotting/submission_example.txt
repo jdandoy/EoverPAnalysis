@@ -1,2 +1,1 @@
-python batchPlottingSubmission/PrepareSubmission.py -tn EoverP_ClusterEnergyInDetTrackParticlesLooseIsolatedVertexAssociated_tree --NPartitions 2 --jobName test1
-source submit_test1.sh
+python condorSubmission/PrepareSubmission.py -tn EoverP_InDetTrackParticlesLooseIsolatedVertexAssociated_tree --NPartitions 2 --jobName test1

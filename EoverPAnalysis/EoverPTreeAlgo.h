@@ -5,6 +5,7 @@
 #define EoverPAnalysis_EoverPTreeAlgo_H
 
 #include "TTree.h"
+#include "TH1.h"
 
 #include "xAODTracking/VertexContainer.h"
 #include "xAODTracking/TrackParticleContainer.h"
@@ -30,8 +31,8 @@ class EoverPTreeAlgo : public xAH::Algorithm
     // turn on cutflows
     bool m_useCutFlow = false; 
 
-    // energy calibration, either "ClusterEnergy", "ClusterEnergyLCW", or "CellEnergy"
-    std::string m_energyCalibList = "ClusterEnergy,CellEnergy,ClusterEnergyLCW";
+    // energy calibration, either "ClusterEnergy", "LCWClusterEnergy", or "CellEnergy"
+    std::string m_energyCalibList = "ClusterEnergy,CellEnergy,LCWClusterEnergy";
     // pileup reweighting
     bool m_doCustomPUreweighting = false;
     std::string m_pileupReweightingFile = "pileup_reweighting.root";
@@ -42,7 +43,7 @@ class EoverPTreeAlgo : public xAH::Algorithm
   private:
 
     std::string ClusterEnergy = "ClusterEnergy";
-    std::string ClusterEnergyLCW = "ClusterEnergyLCW";
+    std::string LCWClusterEnergy = "LCWClusterEnergy";
     std::string CellEnergy = "CellEnergy";
     std::string m_energyCalib = "";
     // variables to dump to the output ttree
@@ -67,9 +68,16 @@ class EoverPTreeAlgo : public xAH::Algorithm
     float trk_z0sintheta;
     float trk_etaEMB2;
     float trk_phiEMB2;
+    float trk_etaTileBar2;
+    float trk_phiTileBar2;
+    float trk_etaTileExt1;
+    float trk_phiTileExt1;
+    float trk_etaHEC1;
+    float trk_phiHEC1;
     float trk_etaEME2;
     float trk_phiEME2;
-    float trk_nearest_dR;
+    float trk_nearest_dR_EM;
+    float trk_nearest_dR_HAD;
     float trkWeight;
     uint8_t trk_NPV_2;
     uint8_t trk_NPV_4;
@@ -102,22 +110,22 @@ class EoverPTreeAlgo : public xAH::Algorithm
     float trk_ClusterEnergy_Total_nopresampler_100;
     float trk_ClusterEnergy_Total_nopresampler_200;
 
-    float trk_ClusterEnergyLCW_Pos_EM_100;
-    float trk_ClusterEnergyLCW_Pos_EM_200;
-    float trk_ClusterEnergyLCW_EM_200;
-    float trk_ClusterEnergyLCW_EM_100;
-    float trk_ClusterEnergyLCW_Pos_HAD_200;
-    float trk_ClusterEnergyLCW_Pos_HAD_100;
-    float trk_ClusterEnergyLCW_HAD_200;
-    float trk_ClusterEnergyLCW_HAD_100;
-    //float trk_ClusterEnergyLCW_Pos_Total_200;
-    //float trk_ClusterEnergyLCW_Pos_Total_100;
-    //float trk_ClusterEnergyLCW_Total_200;
-    //float trk_ClusterEnergyLCW_Total_100;
-    float trk_ClusterEnergyLCW_EM_nopresampler_100;
-    float trk_ClusterEnergyLCW_EM_nopresampler_200;
-    float trk_ClusterEnergyLCW_Total_nopresampler_100;
-    float trk_ClusterEnergyLCW_Total_nopresampler_200;
+    float trk_LCWClusterEnergy_Pos_EM_100;
+    float trk_LCWClusterEnergy_Pos_EM_200;
+    float trk_LCWClusterEnergy_EM_200;
+    float trk_LCWClusterEnergy_EM_100;
+    float trk_LCWClusterEnergy_Pos_HAD_200;
+    float trk_LCWClusterEnergy_Pos_HAD_100;
+    float trk_LCWClusterEnergy_HAD_200;
+    float trk_LCWClusterEnergy_HAD_100;
+    //float trk_LCWClusterEnergy_Pos_Total_200;
+    //float trk_LCWClusterEnergy_Pos_Total_100;
+    //float trk_LCWClusterEnergy_Total_200;
+    //float trk_LCWClusterEnergy_Total_100;
+    float trk_LCWClusterEnergy_EM_nopresampler_100;
+    float trk_LCWClusterEnergy_EM_nopresampler_200;
+    float trk_LCWClusterEnergy_Total_nopresampler_100;
+    float trk_LCWClusterEnergy_Total_nopresampler_200;
 
     float trk_CellEnergy_Pos_EM_100;
     float trk_CellEnergy_Pos_EM_200;
@@ -146,11 +154,6 @@ class EoverPTreeAlgo : public xAH::Algorithm
 
     TH1D* m_trk_cutflowHist_1;  //!
     // list of calo layers
-    const std::vector<std::string> m_layer = {"PreSamplerB","PreSamplerE", "EMB1", "EMB2", "EMB3", "EME1", "EME2", "EME3", "HEC0", "HEC1", "HEC2", "HEC3", "TileBar0", "TileBar1", "TileBar2", "TileGap1", "TileGap2", "TileGap3", "TileExt0", "TileExt1", "TileExt2"}; //! array of all the calo layers
-    const std::vector<std::string> m_layer_EM = {"PreSamplerB","PreSamplerE", "EMB1", "EMB2", "EMB3", "EME1", "EME2", "EME3"};
-    const std::vector<std::string> m_layer_HAD = {"TileBar0", "TileBar1", "TileBar2", "TileGap1", "TileGap2", "TileGap3", "TileExt0", "TileExt1", "TileExt2", "HEC0", "HEC1", "HEC2", "HEC3"}; //! array of HAD layers only
-    const std::map<std::string, int> m_layer_to_id = { {"PreSamplerB", 0}, {"PreSamplerE", 1}, {"EMB1", 2} , {"EMB2", 3}, {"EMB3",4}, {"EME1",5}, {"EME2",6}, {"EME3",7} , {"HEC0", 8}, {"HEC1", 9}, {"HEC2", 10}, {"HEC3", 11}, {"TileBar0", 12}, {"TileBar1", 13}, {"TileBar2", 14}, {"TileGap1", 15}, {"TileGap2", 16}, {"TileGap3", 17}, {"TileExt0", 18}, {"TileExt1", 19}, {"TileExt2", 20}};
-    const std::map<int, std::string> m_id_to_layer = { {0, "PreSamplerB"}, {1, "PreSamplerE"}, {2, "EMB1"} , {3, "EMB2"}, {4, "EMB3"}, {5, "EME1"}, {6, "EME2"}, {7, "EME3"} , {8, "HEC0"}, {9, "HEC1"}, {10, "HEC2"}, {11, "HEC3"}, {12, "TileBar0"}, {13, "TileBar1"}, {14, "TileBar2"}, {15, "TileGap1"}, {16, "TileGap2"}, {17, "TileGap3"}, {18, "TileExt0"}, {19, "TileExt1"}, {20, "TileExt2"}};
 
     // variables that don't get filled at submission time should be
     // protected from being send from the submission node to the worker

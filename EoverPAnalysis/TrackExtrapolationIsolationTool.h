@@ -5,6 +5,7 @@
 #define TrackExtrapolationIsolationTool_TrackExtrapolationIsolationTool_H
 
 #include "TTree.h"
+#include "TH1.h"
 #include "xAODTracking/VertexContainer.h"
 #include "xAODTracking/TrackParticleContainer.h"
 #include "xAODTruth/TruthParticle.h"
@@ -43,7 +44,17 @@ class TrackExtrapolationIsolationTool : public xAH::Algorithm
     float trk1_etaEME2;
     float trk1_phiEME2;
 
-    float trk1_nearest_dR;
+    float trk1_etaTileBar2;
+    float trk1_phiTileBar2;
+
+    float trk1_etaTileExt1;
+    float trk1_phiTileExt1;
+
+    float trk1_etaHEC1;
+    float trk1_phiHEC1;
+
+    float trk1_nearest_dR_HAD;
+    float trk1_nearest_dR_EM;
 
     TTree *m_tree; //!
     TFile *file; //!

@@ -26,3 +26,23 @@ cpdef  np.ndarray[FLOATDTYPE_t, ndim =1] getWeightsFromBins(variable_in_histogra
                 weights[j] = normalization[i]
     return weights
 
+#cpder np.ndarray[FLOATDTYPE_t, ndim =1] getHighestVariablesPerEvent(variable_in_histogram_type trkIndex, variable_in_histogram_type findMaxOfThis, variable_in_histogram_type weights, int NEvents):
+#    cdef float current_max = 0.0
+#    cdef int i
+#    cdef int eventIndex = 0
+#    cdef int ntracks = trkIndex.shape[0]
+#    cdef np.ndarray[FLOATDTYPE_t, ndim=1] highestVec = np.zeros(NEvents, dtype=np.float)
+
+#    current_max = findMaxOfThis[0]
+#    for i in range(1, ntracks):
+#        if trkIndex[i] == 0:
+#            highestVec[eventIndex] = current_max
+#            eventIndex = eventIndex + 1
+#            current_max = 0.0
+#        elif current_max < findMaxOfThis[i]:
+#            current_max = findMaxOfThis[i]
+#
+#    return highestVec
+
+        
+
