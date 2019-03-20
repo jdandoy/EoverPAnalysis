@@ -162,7 +162,7 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_averagemu", &trk_averagemu);
   m_tree->Branch("trk_corrected_averagemu", &trk_corrected_averagemu);
 
-  //All energy deposits at EM-Scale and Had Scale
+  //All energy deposits in EM-Calorimeter and HAD-Calorimeter
   for (std::string energyCalib : m_energyCalibList){
       for (std::string radiusCut : m_radiusCutList){
           ANA_MSG_INFO("Made ttree branches for energy of clusters at scale " + energyCalib + " and cut " + radiusCut);
