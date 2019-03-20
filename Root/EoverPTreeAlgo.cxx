@@ -270,7 +270,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
 
     trkWeight = eventWeight;//The track weight is just the event weight
 
-    //Sum all energy deposits in the EM calorimeter and the HAD caloriemter in different calorimeter regions
+    //Sum all energy deposits in the EM calorimeter and the HAD caloriemter with different radius cuts
     for (std::string energyCalib : m_energyCalibList){
         for (std::string radiusCut : m_radiusCutList){
             std::string key_EM = "trk_" + energyCalib + "_EM_" + radiusCut;
