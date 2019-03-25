@@ -112,7 +112,8 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_ti
         ''' E/p histograms with LoosePrimary track selection'''
         c.setalg("EoverPTreeAlgo", {"m_name": "EoverP_" + track_container,
                                     "m_inTrackContainerName": track_container,
-                                    "m_energyCalibList": "ClusterEnergy,CellEnergy,LCWClusterEnergy", # ClusterEnergy, LCWClusterEnergy, or CellEnergy
+                                    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,ClusterEMActiveCalibHitEnergy,ClusterNonEMActiveCalibHitEnergy,ClusterInvisibleActiveCalibHitEnergy,ClusterEscapedActiveCalibHitEnergy",\
+                                    "m_radiusCutCommaList": "100,200,300",\
                                     "m_useCutFlow": True,
                                     "m_msgLevel": "info"})
 

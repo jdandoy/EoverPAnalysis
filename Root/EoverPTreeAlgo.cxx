@@ -85,6 +85,13 @@ EL::StatusCode EoverPTreeAlgo :: changeInput (bool /*firstFile*/) { return EL::S
 
 EL::StatusCode EoverPTreeAlgo :: initialize ()
 {
+  std::string a;
+  for(std::stringstream sst(m_energyCalibCommaList); getline(sst, a, ','); )  // that's all ! 
+     m_energyCalibList.push_back(a);
+
+  for(std::stringstream sst(m_radiusCutCommaList); getline(sst, a, ','); )  // that's all ! 
+     m_radiusCutList.push_back(a);
+
   Info("initialize()", "EoverPTreeAlgo");
   m_event = wk()->xaodEvent();
   m_store = wk()->xaodStore();
@@ -144,46 +151,6 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_nclusters_HAD", &trk_nclusters_HAD);
   m_tree->Branch("trk_nclusters_emlike", &trk_nclusters_emlike);
   m_tree->Branch("trkWeight", &trkWeight);
-
-  //All energy deposits at EM-Scale
-  if (m_energyCalibList.find(ClusterEnergy) != std::string::npos){
-  ANA_MSG_INFO("Made ttree branches for energy of clusters at scale " + ClusterEnergy);
-  m_tree->Branch("trk_ClusterEnergy_Pos_EM_200", & trk_ClusterEnergy_Pos_EM_200); 
-  m_tree->Branch("trk_ClusterEnergy_Pos_EM_100", &trk_ClusterEnergy_Pos_EM_100);
-  m_tree->Branch("trk_ClusterEnergy_EM_200", &trk_ClusterEnergy_EM_200);
-  m_tree->Branch("trk_ClusterEnergy_EM_100", &trk_ClusterEnergy_EM_100);
-  m_tree->Branch("trk_ClusterEnergy_Pos_HAD_200", &trk_ClusterEnergy_Pos_HAD_200);
-  m_tree->Branch("trk_ClusterEnergy_Pos_HAD_100", &trk_ClusterEnergy_Pos_HAD_100);
-  m_tree->Branch("trk_ClusterEnergy_HAD_200", &trk_ClusterEnergy_HAD_200);
-  m_tree->Branch("trk_ClusterEnergy_HAD_100", &trk_ClusterEnergy_HAD_100);
-  }
-
-  if (m_energyCalibList.find(LCWClusterEnergy) != std::string::npos){
-  ANA_MSG_INFO("Made ttree branches for energy of clusters at scale " + LCWClusterEnergy);
-  //All energy deposits at LCW scale
-  m_tree->Branch("trk_LCWClusterEnergy_Pos_EM_200", & trk_LCWClusterEnergy_Pos_EM_200); 
-  m_tree->Branch("trk_LCWClusterEnergy_Pos_EM_100", &trk_LCWClusterEnergy_Pos_EM_100);
-  m_tree->Branch("trk_LCWClusterEnergy_EM_200", &trk_LCWClusterEnergy_EM_200);
-  m_tree->Branch("trk_LCWClusterEnergy_EM_100", &trk_LCWClusterEnergy_EM_100);
-  m_tree->Branch("trk_LCWClusterEnergy_Pos_HAD_200", &trk_LCWClusterEnergy_Pos_HAD_200);
-  m_tree->Branch("trk_LCWClusterEnergy_Pos_HAD_100", &trk_LCWClusterEnergy_Pos_HAD_100);
-  m_tree->Branch("trk_LCWClusterEnergy_HAD_200", &trk_LCWClusterEnergy_HAD_200);
-  m_tree->Branch("trk_LCWClusterEnergy_HAD_100", &trk_LCWClusterEnergy_HAD_100);
-  }
-
-  if (m_energyCalibList.find(CellEnergy) != std::string::npos){
-  ANA_MSG_INFO("Made ttree branches for energy of clusters at scale " + CellEnergy);
-  //All energy deposits at Cell-Level
-  m_tree->Branch("trk_CellEnergy_Pos_EM_200", & trk_CellEnergy_Pos_EM_200); 
-  m_tree->Branch("trk_CellEnergy_Pos_EM_100", &trk_CellEnergy_Pos_EM_100);
-  m_tree->Branch("trk_CellEnergy_EM_200", &trk_CellEnergy_EM_200);
-  m_tree->Branch("trk_CellEnergy_EM_100", &trk_CellEnergy_EM_100);
-  m_tree->Branch("trk_CellEnergy_Pos_HAD_200", &trk_CellEnergy_Pos_HAD_200);
-  m_tree->Branch("trk_CellEnergy_Pos_HAD_100", &trk_CellEnergy_Pos_HAD_100);
-  m_tree->Branch("trk_CellEnergy_HAD_200", &trk_CellEnergy_HAD_200);
-  m_tree->Branch("trk_CellEnergy_HAD_100", &trk_CellEnergy_HAD_100);
-  }
-
   m_tree->Branch("trk_NPV_2", &trk_NPV_2);
   m_tree->Branch("trk_NPV_4", &trk_NPV_4);
   m_tree->Branch("trk_hasTruthParticle", &trk_hasTruthParticle);
@@ -195,6 +162,18 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_averagemu", &trk_averagemu);
   m_tree->Branch("trk_corrected_averagemu", &trk_corrected_averagemu);
 
+  //All energy deposits in EM-Calorimeter and HAD-Calorimeter
+  for (std::string energyCalib : m_energyCalibList){
+      for (std::string radiusCut : m_radiusCutList){
+          ANA_MSG_INFO("Made ttree branches for energy of clusters at scale " + energyCalib + " and cut " + radiusCut);
+          std::string key_EM = "trk_" + energyCalib + "_EM_" + radiusCut;
+          m_energyVariablesForTree[key_EM] = 0.0;
+          std::string key_HAD = "trk_" + energyCalib + "_HAD_" + radiusCut;
+          m_energyVariablesForTree[key_HAD] = 0.0;
+          m_tree->Branch(("trk_" + energyCalib + "_EM_" + radiusCut).c_str(), &(m_energyVariablesForTree[key_EM]));
+          m_tree->Branch(("trk_" + energyCalib + "_HAD_" + radiusCut).c_str(), &(m_energyVariablesForTree[key_HAD]));
+      }
+  }
 
   ANA_MSG_DEBUG("Getting the cuflows");
   if(m_useCutFlow) {
@@ -291,59 +270,18 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
 
     trkWeight = eventWeight;//The track weight is just the event weight
 
-    //Sum all energy deposits in the EM calorimeter
-    //Do this at cell-level, at EM-scale and LCW scale
-    //["ClusterEnergy", "CellEnergy", "LCWClusterEnergy"]
-
-    ////////////////////////////////CLUSTER ENERGY/////////////////////////////////////////////////////////////////////////////
-    if (m_energyCalibList.find(ClusterEnergy) != std::string::npos){
-      m_energyCalib = "ClusterEnergy";
-      ANA_MSG_DEBUG("Summing up energy deposits in calorimeter at scale " + m_energyCalib);
-      trk_ClusterEnergy_EM_200 = 0.;
-      trk_ClusterEnergy_EM_100 = 0.;
-      trk_ClusterEnergy_HAD_200 = 0.;
-      trk_ClusterEnergy_HAD_100 = 0.;
-      std::map<std::string, float> energySum100 = EnergySumHelper::getEnergySumInCalorimeterRegions(trk,m_energyCalib, "100", false);
-      std::map<std::string, float> energySum200 = EnergySumHelper::getEnergySumInCalorimeterRegions(trk,m_energyCalib, "200", false);
-      trk_ClusterEnergy_EM_200 = energySum200["EM"];
-      trk_ClusterEnergy_EM_100 = energySum100["EM"];
-      trk_ClusterEnergy_HAD_200 = energySum200["HAD"];
-      trk_ClusterEnergy_HAD_100 = energySum100["HAD"];
+    //Sum all energy deposits in the EM calorimeter and the HAD caloriemter with different radius cuts
+    for (std::string energyCalib : m_energyCalibList){
+        for (std::string radiusCut : m_radiusCutList){
+            std::string key_EM = "trk_" + energyCalib + "_EM_" + radiusCut;
+            m_energyVariablesForTree[key_EM] = 0.0;
+            std::string key_HAD = "trk_" + energyCalib + "_HAD_" + radiusCut;
+            m_energyVariablesForTree[key_HAD] = 0.0;
+            std::map<std::string, float> energySum = EnergySumHelper::getEnergySumInCalorimeterRegions(trk,energyCalib,radiusCut,false);
+            m_energyVariablesForTree[key_HAD] = energySum["HAD"];
+            m_energyVariablesForTree[key_EM] = energySum["EM"];
+        }
     }
-
-    ////////////////////////////////LCW CLUSTER ENERGY/////////////////////////////////////////////////////////////////////////////
-    if (m_energyCalibList.find(LCWClusterEnergy) != std::string::npos){
-      m_energyCalib = "LCWClusterEnergy";
-      ANA_MSG_DEBUG("Summing up energy deposits in calorimeter at scale " + m_energyCalib);
-      //These decorations are available at the derivation level. the "EM" energy does not include the endcap and barrel presamplers.
-      trk_LCWClusterEnergy_EM_200 = 0.;
-      trk_LCWClusterEnergy_EM_100 = 0.;
-      trk_LCWClusterEnergy_HAD_200 = 0.;
-      trk_LCWClusterEnergy_HAD_100 = 0.;
-      std::map<std::string, float> energySum100 = EnergySumHelper::getEnergySumInCalorimeterRegions(trk,m_energyCalib, "100", false);
-      std::map<std::string, float> energySum200 = EnergySumHelper::getEnergySumInCalorimeterRegions(trk,m_energyCalib, "200", false);
-      trk_LCWClusterEnergy_EM_200 = energySum200["EM"];
-      trk_LCWClusterEnergy_EM_100 = energySum100["EM"];
-      trk_LCWClusterEnergy_HAD_200 = energySum200["HAD"];
-      trk_LCWClusterEnergy_HAD_100 = energySum100["HAD"];
-    } 
-
-    ////////////////////////////////CELL ENERGY/////////////////////////////////////////////////////////////////////////////
-    if (m_energyCalibList.find(CellEnergy) != std::string::npos){
-      m_energyCalib = "CellEnergy";
-      ANA_MSG_DEBUG("Summing up energy deposits in calorimeter at scale " + m_energyCalib);
-      trk_CellEnergy_EM_200 = 0.;
-      trk_CellEnergy_EM_100 = 0.;
-      trk_CellEnergy_HAD_200 = 0.;
-      trk_CellEnergy_HAD_100 = 0.;
-      std::map<std::string, float> energySum100 = EnergySumHelper::getEnergySumInCalorimeterRegions(trk,m_energyCalib, "100", false);
-      std::map<std::string, float> energySum200 = EnergySumHelper::getEnergySumInCalorimeterRegions(trk,m_energyCalib, "200", false);
-      trk_CellEnergy_EM_200 = energySum200["EM"];
-      trk_CellEnergy_EM_100 = energySum100["EM"];
-      trk_CellEnergy_HAD_200 = energySum200["HAD"];
-      trk_CellEnergy_HAD_100 = energySum100["HAD"];
-    }
-
 
     ///////////////////////////////////////Information about the # of clusters ////////////////////////////////////////////////////////////////
     trk_nclusters_EM = 0;

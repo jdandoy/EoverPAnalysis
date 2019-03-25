@@ -32,7 +32,9 @@ class EoverPTreeAlgo : public xAH::Algorithm
     bool m_useCutFlow = false; 
 
     // energy calibration, either "ClusterEnergy", "LCWClusterEnergy", or "CellEnergy"
-    std::string m_energyCalibList = "ClusterEnergy,CellEnergy,LCWClusterEnergy";
+    std::string m_energyCalibCommaList = "ClusterEnergy,CellEnergy,LCWClusterEnergy";
+    std::string m_radiusCutCommaList = "100,200";
+
     // pileup reweighting
     bool m_doCustomPUreweighting = false;
     std::string m_pileupReweightingFile = "pileup_reweighting.root";
@@ -42,10 +44,10 @@ class EoverPTreeAlgo : public xAH::Algorithm
 
   private:
 
-    std::string ClusterEnergy = "ClusterEnergy";
-    std::string LCWClusterEnergy = "LCWClusterEnergy";
-    std::string CellEnergy = "CellEnergy";
-    std::string m_energyCalib = "";
+    std::map<std::string, float> m_energyVariablesForTree;
+    std::vector<std::string> m_energyCalibList;
+    std::vector<std::string> m_radiusCutList;
+
     // variables to dump to the output ttree
     float trk_etaID;
     float trk_phiID;
@@ -93,46 +95,28 @@ class EoverPTreeAlgo : public xAH::Algorithm
     float trk_averagemu;
     float trk_corrected_averagemu;
 
-    float trk_ClusterEnergy_Pos_EM_100;
-    float trk_ClusterEnergy_Pos_EM_200;
+
+
     float trk_ClusterEnergy_EM_200;
     float trk_ClusterEnergy_EM_100;
-    float  trk_ClusterEnergy_Pos_HAD_200;
-    float  trk_ClusterEnergy_Pos_HAD_100;
     float  trk_ClusterEnergy_HAD_200;
     float  trk_ClusterEnergy_HAD_100;
     //float  trk_ClusterEnergy_Pos_Total_200;
     //float  trk_ClusterEnergy_Pos_Total_100;
     //float  trk_ClusterEnergy_Total_200;
     //float  trk_ClusterEnergy_Total_100;
-    float trk_ClusterEnergy_EM_nopresampler_100;
-    float trk_ClusterEnergy_EM_nopresampler_200;
-    float trk_ClusterEnergy_Total_nopresampler_100;
-    float trk_ClusterEnergy_Total_nopresampler_200;
 
-    float trk_LCWClusterEnergy_Pos_EM_100;
-    float trk_LCWClusterEnergy_Pos_EM_200;
     float trk_LCWClusterEnergy_EM_200;
     float trk_LCWClusterEnergy_EM_100;
-    float trk_LCWClusterEnergy_Pos_HAD_200;
-    float trk_LCWClusterEnergy_Pos_HAD_100;
     float trk_LCWClusterEnergy_HAD_200;
     float trk_LCWClusterEnergy_HAD_100;
     //float trk_LCWClusterEnergy_Pos_Total_200;
     //float trk_LCWClusterEnergy_Pos_Total_100;
     //float trk_LCWClusterEnergy_Total_200;
     //float trk_LCWClusterEnergy_Total_100;
-    float trk_LCWClusterEnergy_EM_nopresampler_100;
-    float trk_LCWClusterEnergy_EM_nopresampler_200;
-    float trk_LCWClusterEnergy_Total_nopresampler_100;
-    float trk_LCWClusterEnergy_Total_nopresampler_200;
 
-    float trk_CellEnergy_Pos_EM_100;
-    float trk_CellEnergy_Pos_EM_200;
     float trk_CellEnergy_EM_200;
     float trk_CellEnergy_EM_100;
-    float trk_CellEnergy_Pos_HAD_200;
-    float trk_CellEnergy_Pos_HAD_100;
     float trk_CellEnergy_HAD_200;
     float trk_CellEnergy_HAD_100;
     //float trk_CellEnergy_Pos_Total_200;
