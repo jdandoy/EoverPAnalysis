@@ -1,3 +1,6 @@
+#ifndef eoverpanalysis_EnergySumHelper_H
+#define eoverpanalysis_EnergySumHelper_H
+
 #include <map>
 #include <xAODTracking/TrackParticleContainer.h>
 
@@ -43,4 +46,4 @@ namespace EnergySumHelper
     }
 }
 
-
+#endif

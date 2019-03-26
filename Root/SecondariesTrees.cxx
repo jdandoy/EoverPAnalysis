@@ -5,8 +5,9 @@
   for Run 2 E/p studies on identified resonances.
 */
 
-#include <AsgTools/MessageCheck.h>
-#include <EoverPAnalysis/SecondariesTrees.h>
+#include "AsgTools/MessageCheck.h"
+#include "EoverPAnalysis/SecondariesTrees.h"
+#include "EoverPAnalysis/EnergySumHelper.h"
 
 #include <EventLoop/Job.h>
 #include <EventLoop/StatusCode.h>
@@ -53,9 +54,6 @@ SecondariesTrees :: ~SecondariesTrees()
 {
   // vector output branches need to be cleaned up
   //delete m_jetPt;
-  //delete m_jetEta;
-  //delete m_jetPhi;
-  //delete m_jetM;
 }
 
 StatusCode SecondariesTrees :: initialize ()
@@ -63,6 +61,14 @@ StatusCode SecondariesTrees :: initialize ()
   m_event = wk()->xaodEvent();
 
   // Histogram booking
+
+  std::string a;
+  for(std::stringstream sst(m_energyCalibCommaList); getline(sst, a, ','); )  // that's all ! 
+    m_energyCalibList.push_back(a);
+
+  for(std::stringstream sst(m_radiusCutCommaList); getline(sst, a, ','); )  // that's all ! 
+    m_radiusCutList.push_back(a);
+
 
   ANA_CHECK (book (TH1F ("h_npv_"+m_label, "h_npv_"+m_label, 60, 0, 60))); // NPV
   ANA_CHECK (book (TH1F ("h_mu_"+m_label, "h_mu_"+m_label, 80, 0, 80))); // mu
@@ -93,13 +99,92 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("vertex_chiSquared",&m_vertex_chiSquared);
   t->Branch("vertex_numberDoF",&m_vertex_numberDoF);
   t->Branch("vertex_dr",&m_vertex_dr);
-  
+
+  /*
   t->Branch("track1_pt",&m_track1_pt);
   t->Branch("track2_pt",&m_track2_pt);
   t->Branch("track1_etaID",&m_track1_etaID);
   t->Branch("track1_phiID",&m_track1_phiID);
   t->Branch("track2_etaID",&m_track2_etaID);
   t->Branch("track2_phiID",&m_track2_phiID);
+  */
+
+  // 
+  t->Branch("trk1Index",      &m_trk1Index);
+  t->Branch("trk1_etaID", &trk1_etaID);
+  t->Branch("trk1_phiID", &trk1_phiID);
+  t->Branch("trk1_pt", &trk1_pt);
+  t->Branch("trk1_d0", &trk1_d0);
+  t->Branch("trk1_nTRT", &trk1_nTRT);
+  t->Branch("trk1_charge", &trk1_charge);
+  t->Branch("trk1_z0sintheta", &trk1_z0sintheta);
+  t->Branch("trk1_p", &trk1_p);
+  t->Branch("trk1_etaEMB2", &trk1_etaEMB2);
+  t->Branch("trk1_phiEMB2", &trk1_phiEMB2);
+  t->Branch("trk1_etaEME2", &trk1_etaEME2);
+  t->Branch("trk1_phiEME2", &trk1_phiEME2);
+  t->Branch("trk1_etaTileBar2", &trk1_etaTileBar2);
+  t->Branch("trk1_phiTileBar2", &trk1_phiTileBar2);
+  t->Branch("trk1_etaTileExt1", &trk1_etaTileExt1);
+  t->Branch("trk1_phiTileExt1", &trk1_phiTileExt1);
+  t->Branch("trk1_etaHEC1", &trk1_etaHEC1);
+  t->Branch("trk1_phiHEC1", &trk1_phiHEC1);
+  t->Branch("trk1_nearest_dR_EM", &trk1_nearest_dR_EM);
+  t->Branch("trk1_nearest_dR_HAD", &trk1_nearest_dR_HAD);
+  t->Branch("trk1_nclusters", &trk1_nclusters);
+  t->Branch("trk1_nclusters_EM", &trk1_nclusters_EM);
+  t->Branch("trk1_nclusters_hadlike", &trk1_nclusters_hadlike);
+  t->Branch("trk1_nclusters_HAD", &trk1_nclusters_HAD);
+  t->Branch("trk1_nclusters_emlike", &trk1_nclusters_emlike);
+  t->Branch("trk1Weight", &trk1Weight);
+  t->Branch("trk1_NPV_2", &trk1_NPV_2);
+  t->Branch("trk1_NPV_4", &trk1_NPV_4);
+  t->Branch("trk1_hasTruthParticle", &trk1_hasTruthParticle);
+  t->Branch("trk1_truthPdgId", &trk1_truthPdgId);
+  t->Branch("trk1_truthEnergy", &trk1_truthEnergy);
+  t->Branch("trk1_truthP", &trk1_truthP);
+  t->Branch("trk1_truthProb", &trk1_truthProb);
+  t->Branch("trk1_actualmu", &trk1_actualmu);
+  t->Branch("trk1_averagemu", &trk1_averagemu);
+  t->Branch("trk1_corrected_averagemu", &trk1_corrected_averagemu);
+
+  t->Branch("trk2Index",      &m_trk2Index);
+  t->Branch("trk2_etaID", &trk2_etaID);
+  t->Branch("trk2_phiID", &trk2_phiID);
+  t->Branch("trk2_pt", &trk2_pt);
+  t->Branch("trk2_d0", &trk2_d0);
+  t->Branch("trk2_nTRT", &trk2_nTRT);
+  t->Branch("trk2_charge", &trk2_charge);
+  t->Branch("trk2_z0sintheta", &trk2_z0sintheta);
+  t->Branch("trk2_p", &trk2_p);
+  t->Branch("trk2_etaEMB2", &trk2_etaEMB2);
+  t->Branch("trk2_phiEMB2", &trk2_phiEMB2);
+  t->Branch("trk2_etaEME2", &trk2_etaEME2);
+  t->Branch("trk2_phiEME2", &trk2_phiEME2);
+  t->Branch("trk2_etaTileBar2", &trk2_etaTileBar2);
+  t->Branch("trk2_phiTileBar2", &trk2_phiTileBar2);
+  t->Branch("trk2_etaTileExt1", &trk2_etaTileExt1);
+  t->Branch("trk2_phiTileExt1", &trk2_phiTileExt1);
+  t->Branch("trk2_etaHEC1", &trk2_etaHEC1);
+  t->Branch("trk2_phiHEC1", &trk2_phiHEC1);
+  t->Branch("trk2_nearest_dR_EM", &trk2_nearest_dR_EM);
+  t->Branch("trk2_nearest_dR_HAD", &trk2_nearest_dR_HAD);
+  t->Branch("trk2_nclusters", &trk2_nclusters);
+  t->Branch("trk2_nclusters_EM", &trk2_nclusters_EM);
+  t->Branch("trk2_nclusters_hadlike", &trk2_nclusters_hadlike);
+  t->Branch("trk2_nclusters_HAD", &trk2_nclusters_HAD);
+  t->Branch("trk2_nclusters_emlike", &trk2_nclusters_emlike);
+  t->Branch("trk2Weight", &trk2Weight);
+  t->Branch("trk2_NPV_2", &trk2_NPV_2);
+  t->Branch("trk2_NPV_4", &trk2_NPV_4);
+  t->Branch("trk2_hasTruthParticle", &trk2_hasTruthParticle);
+  t->Branch("trk2_truthPdgId", &trk2_truthPdgId);
+  t->Branch("trk2_truthEnergy", &trk2_truthEnergy);
+  t->Branch("trk2_truthP", &trk2_truthP);
+  t->Branch("trk2_truthProb", &trk2_truthProb);
+  t->Branch("trk2_actualmu", &trk2_actualmu);
+  t->Branch("trk2_averagemu", &trk2_averagemu);
+  t->Branch("trk2_corrected_averagemu", &trk2_corrected_averagemu);
     
   return StatusCode::SUCCESS;
 }
@@ -178,44 +263,44 @@ StatusCode SecondariesTrees :: execute ()
       else
 	{
 	  //This is the track pT, and coordinates of the track in the ID	  	  	  
-	  m_track1_pt = vertex->trackParticle(0)->pt()/1.e3;
-	  m_track1_etaID = vertex->trackParticle(0)->eta();
-	  m_track1_phiID = vertex->trackParticle(0)->phi();
+	  trk1_pt = vertex->trackParticle(0)->pt()/1.e3;
+	  trk1_etaID = vertex->trackParticle(0)->eta();
+	  trk1_phiID = vertex->trackParticle(0)->phi();
 	  //m_track1_m = vertex->trackParticle(0)->m()/1.e3;
 	  
-	  m_track2_pt = vertex->trackParticle(1)->pt()/1.e3;
-	  m_track2_etaID = vertex->trackParticle(1)->eta();
-          m_track2_phiID = vertex->trackParticle(1)->phi();
+	  trk2_pt = vertex->trackParticle(1)->pt()/1.e3;
+	  trk2_etaID = vertex->trackParticle(1)->eta();
+          trk2_phiID = vertex->trackParticle(1)->phi();
 	  //m_track2_m = vertex->trackParticle(1)->m()/1.e3;
 
 	  if(m_label=="Lambda")
 	    {
-	      if(m_track1_pt > m_track2_pt) m_track1_m = 0.938272;
-	      else if (m_track1_pt < m_track2_pt) m_track2_m = 0.938272;
+	      if(trk1_pt > trk2_pt) trk1_m = 0.938272;
+	      else if (trk1_pt < trk2_pt) trk2_m = 0.938272;
 	    }
 	  if(m_label=="Ks")
             {
-              m_track1_m = 0.13957;
-              m_track2_m = 0.13957;
+              trk1_m = 0.13957;
+              trk2_m = 0.13957;
             }
 	  if(m_label=="Phi")
             {
-              m_track1_m = 0.493677;
-              m_track2_m = 0.493677;
+              trk1_m = 0.493677;
+              trk2_m = 0.493677;
             }
 	}
       
       TLorentzVector tlv_track1;
-      tlv_track1.SetPtEtaPhiM(m_track1_pt, 
-			      m_track1_etaID,
-			      m_track1_phiID,
-			      m_track1_m);
+      tlv_track1.SetPtEtaPhiM(trk1_pt, 
+			      trk1_etaID,
+			      trk1_phiID,
+			      trk1_m);
       
       TLorentzVector tlv_track2;
-      tlv_track2.SetPtEtaPhiM(m_track2_pt,
-                              m_track2_etaID,
-                              m_track2_phiID,
-                              m_track2_m);
+      tlv_track2.SetPtEtaPhiM(trk2_pt,
+                              trk2_etaID,
+                              trk2_phiID,
+                              trk2_m);
 
       tlv_vertex.Clear();
       tlv_vertex += tlv_track1;
@@ -274,7 +359,142 @@ StatusCode SecondariesTrees :: execute ()
 
       m_vertex_Rxy = vertex->position().perp();
 
-      // Fill for every vertex??
+      // Track e/p stuff
+
+      //Sum all energy deposits in the EM calorimeter and the HAD caloriemter with different radius cuts
+      for (std::string energyCalib : m_energyCalibList)
+	{
+	  for (std::string radiusCut : m_radiusCutList)
+	    {
+	      std::string key_EM1 = "trk1_" + energyCalib + "_EM_" + radiusCut;
+	      m_energyVariablesForTree[key_EM1] = 0.0;
+	      std::string key_HAD1 = "trk1_" + energyCalib + "_HAD_" + radiusCut;
+	      m_energyVariablesForTree[key_HAD1] = 0.0;
+
+	      std::string key_EM2 = "trk2_" + energyCalib + "_EM_" + radiusCut;
+	      m_energyVariablesForTree[key_EM2] = 0.0;
+	      std::string key_HAD2 = "trk2_" + energyCalib + "_HAD_" + radiusCut;
+              m_energyVariablesForTree[key_HAD2] = 0.0;
+
+	      std::map<std::string, float> energySum1 = EnergySumHelper::getEnergySumInCalorimeterRegions(vertex->trackParticle(0),energyCalib,radiusCut,false);
+	      std::map<std::string, float> energySum2 = EnergySumHelper::getEnergySumInCalorimeterRegions(vertex->trackParticle(1),energyCalib,radiusCut,false);
+	      m_energyVariablesForTree[key_HAD1] = energySum1["HAD"];
+	      m_energyVariablesForTree[key_EM1] = energySum1["EM"];
+	      m_energyVariablesForTree[key_HAD2] = energySum2["HAD"];
+              m_energyVariablesForTree[key_EM2] = energySum2["EM"];
+	    }
+	}
+
+      ///////////////////////////////////////Information about the # of clusters ////////////////////////////////////////////////////////////////
+      trk1_nclusters_EM = 0;
+      trk1_nclusters_HAD = 0;
+      trk1_nclusters_hadlike = 0;
+      trk1_nclusters_emlike = 0;
+
+      trk2_nclusters_EM = 0;
+      trk2_nclusters_HAD = 0;
+      trk2_nclusters_hadlike = 0;
+      trk2_nclusters_emlike = 0;
+
+      SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_Energy("CALO_ClusterEnergy_Energy");
+      SG::AuxElement::ConstAccessor< std::vector<int> > acc_ClusterEnergy_maxEnergyLayer("CALO_ClusterEnergy_maxEnergyLayer");
+      SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_emProbability("CALO_ClusterEnergy_emProbability");
+
+      // TRACK ONE
+      //make sure that the information is available
+      if (acc_ClusterEnergy_Energy.isAvailable(*vertex->trackParticle(0)) 
+	  && acc_ClusterEnergy_maxEnergyLayer.isAvailable(*vertex->trackParticle(0)) 
+	  && acc_ClusterEnergy_emProbability.isAvailable(*vertex->trackParticle(0)) )
+	{
+	  std::vector<float> trk_cluster_energies = acc_ClusterEnergy_Energy(*vertex->trackParticle(0));
+	  std::vector<int> trk_cluster_maxEnergyLayer = acc_ClusterEnergy_maxEnergyLayer(*vertex->trackParticle(0));
+	  std::vector<float> trk_cluster_emProbability = acc_ClusterEnergy_emProbability(*vertex->trackParticle(0));
+	  
+	  //make sure that number of clusters is consistent between different decorations
+	  if (trk_cluster_energies.size() != trk_cluster_maxEnergyLayer.size())
+	    {
+	      ANA_MSG_ERROR("The cluster vectors do not all have the same length for a given track");
+	      return EL::StatusCode::FAILURE;
+	    }
+	  
+	  trk1_nclusters = trk_cluster_energies.size();
+	  ANA_MSG_DEBUG("The number of clusters associated with the track was " + std::to_string(trk1_nclusters));
+	  
+	  //Where were the clusters that are associated with the track
+	  ANA_MSG_DEBUG("Printing out the layer of maximum energy of the clusters");
+	  for (unsigned int i = 0; i < trk_cluster_maxEnergyLayer.size(); i ++)
+	    {
+	      int max_layer = trk_cluster_maxEnergyLayer.at(i);
+	      ANA_MSG_DEBUG(EnergySumHelper::id_to_layer.at(max_layer));
+	      
+	      if (std::find(EnergySumHelper::layer_EM.begin(),
+			    EnergySumHelper::layer_EM.end(),
+			    EnergySumHelper::id_to_layer.at(max_layer)) != EnergySumHelper::layer_EM.end())
+		trk1_nclusters_EM += 1;
+	      if (std::find(EnergySumHelper::layer_HAD.begin(),
+			    EnergySumHelper::layer_HAD.end(),
+			    EnergySumHelper::id_to_layer.at(max_layer)) != EnergySumHelper::layer_HAD.end())
+		trk1_nclusters_HAD += 1;
+	      
+	      float em_probability = trk_cluster_emProbability.at(i);
+	      if (em_probability > 0.5) trk1_nclusters_emlike += 1;
+	      else trk1_nclusters_hadlike += 1;
+	    }
+	  
+	  ANA_MSG_DEBUG("Track 1 clusters in the EM calorimeters: "  + std::to_string(trk1_nclusters_EM));
+	  ANA_MSG_DEBUG("Track 1 clusters in the HAD calorimeters: "  + std::to_string(trk1_nclusters_HAD));
+	  ANA_MSG_DEBUG("Track 1 clusters with EM prob greater than 0.5 : "  + std::to_string(trk1_nclusters_emlike));
+	  ANA_MSG_DEBUG("Track 1 clusters with EM prob less than 0.5 : " + std::to_string(trk1_nclusters_hadlike));
+	}
+
+      // TRACK TWO
+      //make sure that the information is available
+      if (acc_ClusterEnergy_Energy.isAvailable(*vertex->trackParticle(1))
+          && acc_ClusterEnergy_maxEnergyLayer.isAvailable(*vertex->trackParticle(1))
+          && acc_ClusterEnergy_emProbability.isAvailable(*vertex->trackParticle(1)) )
+	{
+	  std::vector<float> trk_cluster_energies = acc_ClusterEnergy_Energy(*vertex->trackParticle(1));
+	  std::vector<int> trk_cluster_maxEnergyLayer = acc_ClusterEnergy_maxEnergyLayer(*vertex->trackParticle(1));
+	  std::vector<float> trk_cluster_emProbability = acc_ClusterEnergy_emProbability(*vertex->trackParticle(1));
+	  
+          //make sure that number of clusters is consistent between different decorations
+          if (trk_cluster_energies.size() != trk_cluster_maxEnergyLayer.size())
+            {
+              ANA_MSG_ERROR("The cluster vectors do not all have the same length for a given track");
+              return EL::StatusCode::FAILURE;
+            }
+
+          trk2_nclusters = trk_cluster_energies.size();
+          ANA_MSG_DEBUG("The number of clusters associated with the track was " + std::to_string(trk2_nclusters));
+
+          //Where were the clusters that are associated with the track
+          ANA_MSG_DEBUG("Printing out the layer of maximum energy of the clusters");
+	  for (unsigned int i = 0; i < trk_cluster_maxEnergyLayer.size(); i ++)
+            {
+              int max_layer = trk_cluster_maxEnergyLayer.at(i);
+              ANA_MSG_DEBUG(EnergySumHelper::id_to_layer.at(max_layer));
+
+              if (std::find(EnergySumHelper::layer_EM.begin(),
+                            EnergySumHelper::layer_EM.end(),
+                            EnergySumHelper::id_to_layer.at(max_layer)) != EnergySumHelper::layer_EM.end())
+		trk2_nclusters_EM += 1;
+              if (std::find(EnergySumHelper::layer_HAD.begin(),
+                            EnergySumHelper::layer_HAD.end(),
+                            EnergySumHelper::id_to_layer.at(max_layer)) != EnergySumHelper::layer_HAD.end())
+		trk2_nclusters_HAD += 1;
+
+              float em_probability = trk_cluster_emProbability.at(i);
+              if (em_probability > 0.5) trk2_nclusters_emlike += 1;
+              else trk2_nclusters_hadlike += 1;
+            }
+
+	  ANA_MSG_DEBUG("Track 2 clusters in the EM calorimeters: "  + std::to_string(trk2_nclusters_EM));
+          ANA_MSG_DEBUG("Track 2 clusters in the HAD calorimeters: "  + std::to_string(trk2_nclusters_HAD));
+	  ANA_MSG_DEBUG("Track 2 clusters with EM prob greater than 0.5 : "  + std::to_string(trk2_nclusters_emlike));
+          ANA_MSG_DEBUG("Track 2 clusters with EM prob less than 0.5 : " + std::to_string(trk2_nclusters_hadlike));
+	}
+
+	// Fill for every vertex??
       tree (TString("Tree_"+m_label).Data())->Fill ();
     }  
     
