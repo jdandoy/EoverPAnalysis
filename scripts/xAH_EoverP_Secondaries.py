@@ -139,7 +139,7 @@ for sv in ['Lambda','Ks','Phi']:
 		c.algorithm("SecondariesTrees", {"m_name": "EoverP_" + t+sv,
 						 "label": sv,
 						 "isData": True,				
-						 "MessageFrequency": 10000,
+						 "MessageFrequency": 1,
 						 "VertexContainer" : sv+"Candidates"
 						 })
 
