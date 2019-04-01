@@ -12,6 +12,7 @@ trks_loose_isolated = trks_loose + "Isolated"
 trks_tight_isolated = trks_tight + "Isolated"
 trks_loose_isolated_vertex = trks_loose_isolated + "VertexAssociated"
 trks_tight_isolated_vertex = trks_tight_isolated + "VertexAssociated"
+radiusCuts = "100,200,300"
 
 
 ''' Set up all the Basic Event Selection '''
@@ -40,6 +41,7 @@ c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
                             "m_msgLevel": "info"})
 
 
+
 '''track selection algorithm'''
 c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_loose,
                                   "m_inputTrackContainer": trks,
@@ -47,6 +49,34 @@ c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_loose,
                                   "m_CutLevel": "Loose",
                                   "m_outputTrackContainer": trks_loose,
                                   "m_msgLevel": "info"})
+
+
+
+
+'''Create new energy sum decorations for the tracks'''
+c.setalg("TrackEnergyDecorator", {"m_energySumName":"TotalCalibHitEnergy",\
+                                  "m_inTrackContainerName": trks_loose,\
+                                  "m_radiusCutCommaList":radiusCuts,\
+                                  "m_energyCalibCommaList":"ClusterEMActiveCalibHitEnergy,ClusterNonEMActiveCalibHitEnergy,ClusterEscapedActiveCalibHitEnergy,ClusterInvisibleActiveCalibHitEnergy,ClusterEMInactiveCalibHitEnergy,ClusterNonEMInactiveCalibHitEnergy,ClusterEscapedInactiveCalibHitEnergy,ClusterInvisibleInactiveCalibHitEnergy",\
+                                 })
+
+'''Create new energy sum decorations for the tracks'''
+c.setalg("TrackEnergyDecorator", {"m_energySumName":"TotalPhotonBackgroundCalibHitEnergy",\
+                                  "m_inTrackContainerName": trks_loose,\
+                                  "m_radiusCutCommaList":radiusCuts,\
+                                  "m_energyCalibCommaList":"ClusterPhotonBackgroundEMActiveCalibHitEnergy,ClusterPhotonBackgroundNonEMActiveCalibHitEnergy,ClusterPhotonBackgroundEscapedActiveCalibHitEnergy,ClusterPhotonBackgroundInvisibleActiveCalibHitEnergy,ClusterPhotonBackgroundEMInactiveCalibHitEnergy,ClusterPhotonBackgroundNonEMInactiveCalibHitEnergy,ClusterPhotonBackgroundEscapedInactiveCalibHitEnergy,ClusterPhotonBackgroundInvisibleInactiveCalibHitEnergy",\
+                                  })
+
+'''Create new energy sum decorations for the tracks'''
+c.setalg("TrackEnergyDecorator", {"m_energySumName":"TotalHadronicBackgroundCalibHitEnergy",\
+                                  "m_inTrackContainerName": trks_loose,\
+                                  "m_radiusCutCommaList":radiusCuts,\
+                                  "m_energyCalibCommaList":"ClusterHadronicBackgroundEMActiveCalibHitEnergy,ClusterHadronicBackgroundNonEMActiveCalibHitEnergy,ClusterHadronicBackgroundEscapedActiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleActiveCalibHitEnergy,ClusterHadronicBackgroundEMInactiveCalibHitEnergy,ClusterHadronicBackgroundNonEMInactiveCalibHitEnergy,ClusterHadronicBackgroundEscapedInactiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleInactiveCalibHitEnergy",\
+                                  })
+
+
+
+
 
 ''' Fill histograms with tracking details, after LoosePrimary selection '''
 c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose,
@@ -111,8 +141,8 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_ti
         ''' E/p histograms with LoosePrimary track selection'''
         c.setalg("EoverPTreeAlgo", {"m_name": "EoverP_" + track_container,\
                                     "m_inTrackContainerName": track_container,\
-                                    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,ClusterEMActiveCalibHitEnergy,ClusterNonEMActiveCalibHitEnergy,ClusterInvisibleActiveCalibHitEnergy,ClusterEscapedActiveCalibHitEnergy",\
-                                    "m_radiusCutCommaList": "100,200,300",\
+                                    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,ClusterEMActiveCalibHitEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",\
+                                    "m_radiusCutCommaList": radiusCuts,\
                                     "m_useCutFlow": True,
                                     "m_msgLevel": "info"})
 
