@@ -30,7 +30,7 @@ find_package( Eigen REQUIRED )
 
 # build a dictionary for the library
 atlas_add_root_dictionary ( EoverPAnalysisLib EoverPAnalysisDictSource
-                            ROOT_HEADERS EoverPAnalysis/EoverPTreeAlgo.h EoverPAnalysis/TrackExtrapolationIsolationTool.h Root/LinkDef.h
+			    ROOT_HEADERS EoverPAnalysis/EoverPTreeAlgo.h EoverPAnalysis/TrackExtrapolationIsolationTool.h EoverPAnalysis/SecondariesTrees.h Root/LinkDef.h
                             EXTERNAL_PACKAGES ROOT
 )
 

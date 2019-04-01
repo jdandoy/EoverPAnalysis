@@ -1,8 +1,8 @@
+#ifndef eoverpanalysis_EoverPTreeAlgo_H
+#define eoverpanalysis_EoverPTreeAlgo_H
+
 // E/p analysis for run 2
 // Joakim Olsson (joakim.olsson@cern.ch)
-
-#ifndef EoverPAnalysis_EoverPTreeAlgo_H
-#define EoverPAnalysis_EoverPTreeAlgo_H
 
 #include "TTree.h"
 #include "TH1.h"
