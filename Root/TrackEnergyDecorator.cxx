@@ -65,7 +65,7 @@ EL::StatusCode TrackEnergyDecorator :: execute ()
   for(auto trk: *trks){
     ANA_MSG_DEBUG("Beginning track loop");
 
-    //Sum all energy deposits in the EM calorimeter and the HAD caloriemter with different radius cuts
+    //create energy deposit decorations for different radii
     for (std::string radiusCut : m_radiusCutList){
         for (std::string calorimeterLayer : EnergySumHelper::layer){
             //create a name for the new decoration
