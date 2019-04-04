@@ -94,6 +94,20 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
   // loop over all tracks only once
   int trk1_counter = 0;
   ANA_MSG_DEBUG("Beginning track loop");
+
+  //Create links to the nearest track
+  ElementLink<xAOD::TrackParticleContainer> linkNearestTrackEM2;
+  ElementLink<xAOD::TrackParticleContainer> linkSecondNearestTrackEM2;
+
+  ElementLink<xAOD::TrackParticleContainer> linkNearestTrackHAD2;
+  ElementLink<xAOD::TrackParticleContainer> linkSecondNearestTrackHAD2;
+
+  static SG::AuxElement::Decorator< ElementLink<xAOD::TrackParticleContainer> > nearestEMLinkDecorator ("LinkToNearestTrackInEM");
+  static SG::AuxElement::Decorator< ElementLink<xAOD::TrackParticleContainer> > nearestHADLinkDecorator ("LinkToNearestTrackInHAD");
+  
+  static SG::AuxElement::Decorator< ElementLink<xAOD::TrackParticleContainer> > secondNearestEMLinkDecorator ("LinkToSecondNearestTrackInEM");
+  static SG::AuxElement::Decorator< ElementLink<xAOD::TrackParticleContainer> > secondNearestHADLinkDecorator ("LinkToSecondNearestTrackInHAD");
+
   for(auto trk1 : *inputTracks) {
     trk1_counter += 1; //keep track of which track this is. 
 
@@ -116,6 +130,7 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
     bool trk1_hasHEC1 = (fabs(trk1_etaHEC1) < (float)1000.0) && (fabs(trk1_phiHEC1) < (float)1000.0);
 
     trk1_nearest_dR_HAD = 999999.0; //how close was the nearest track?
+    float trk1_secondNearest_dR_HAD = 999999.0; //how close was the second nearest track?
 
     int trk2_counter = 0; //keep track of which track it is
     for (auto trk2 : *inputTracks ) {
@@ -144,7 +159,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
         //the distance between track 1 and track 2 in the TileBar
         float trk1_trk2_dR_TileBar2 = deltaR(trk1_etaTileBar2, trk1_phiTileBar2, trk2_etaTileBar2, trk2_phiTileBar2);
         // was this the nearest track? is the track isolated?
-        if (trk1_trk2_dR_TileBar2 < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_trk2_dR_TileBar2;
+        if (trk1_trk2_dR_TileBar2 < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_trk2_dR_TileBar2;
+            linkNearestTrackHAD2.toContainedElement(*inputTracks, trk2);
+        }
+        else if (trk1_trk2_dR_TileBar2 < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_trk2_dR_TileBar2; 
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, trk2);
+        }
       } //tracks have extrapolation to TileBar
 
       //Does track 1 have an TileBar extrapolation, and track 2 a TileExt?
@@ -152,7 +178,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
       if (trk1_hasTileBar2 && trk2_hasTileExt1){
         float trk1_TileBar_trk2_TileExt_dR = deltaR(trk1_etaTileBar2, trk1_phiTileBar2, trk2_etaTileExt1, trk2_phiTileExt1);
         // was this the nearest track? Is the track isolated?
-        if (trk1_TileBar_trk2_TileExt_dR < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_TileBar_trk2_TileExt_dR;
+        if (trk1_TileBar_trk2_TileExt_dR < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_TileBar_trk2_TileExt_dR; 
+            linkNearestTrackHAD2.toContainedElement(*inputTracks,trk2);
+        }
+        else if (trk1_TileBar_trk2_TileExt_dR < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_TileBar_trk2_TileExt_dR; 
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks,trk2);
+        }
       }
 
       //does track 1 have an TileExt extrapolation, and track 2 an TileBar?
@@ -160,7 +197,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
       if (trk1_hasTileExt1 && trk2_hasTileBar2){
         float trk1_TileExt_trk2_TileBar_dR = deltaR(trk1_etaTileExt1, trk1_phiTileExt1, trk2_etaTileBar2, trk2_phiTileBar2);
         // was this the nearest track? Is the track isolated?
-        if (trk1_TileExt_trk2_TileBar_dR < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_TileExt_trk2_TileBar_dR;
+        if (trk1_TileExt_trk2_TileBar_dR < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_TileExt_trk2_TileBar_dR; 
+            linkNearestTrackHAD2.toContainedElement(*inputTracks,trk2);
+        }
+        else if (trk1_TileExt_trk2_TileBar_dR < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_TileExt_trk2_TileBar_dR; 
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks,trk2);
+        }
       }
 
       //Do the tracks have an extrapoltion to the TileExt1?
@@ -168,7 +216,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
         //the distance between track 2 and track 2 in the TileExt1
         float trk1_trk2_dR_TileExt1 = deltaR(trk1_etaTileExt1, trk1_phiTileExt1, trk2_etaTileExt1, trk2_phiTileExt1);
         // was this the nearest track? Is the track isolated?
-        if (trk1_trk2_dR_TileExt1 < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_trk2_dR_TileExt1;
+        if (trk1_trk2_dR_TileExt1 < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_trk2_dR_TileExt1;
+            linkNearestTrackHAD2.toContainedElement(*inputTracks, trk2);
+        }
+        else if (trk1_trk2_dR_TileExt1 < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_trk2_dR_TileExt1;
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, trk2);
+        }
       } //tracks have extrapolation to EME
 
       //Do the tracks have an extrapolation to HEC1?
@@ -176,7 +235,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
         //the distance between track 1 and track 2 in the HEC
         float trk1_trk2_dR_HEC1 = deltaR(trk1_etaHEC1, trk1_phiHEC1, trk2_etaHEC1, trk2_phiHEC1);
         // was this the nearest track? is the track isolated?
-        if (trk1_trk2_dR_HEC1 < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_trk2_dR_HEC1;
+        if (trk1_trk2_dR_HEC1 < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_trk2_dR_HEC1; 
+            linkNearestTrackHAD2.toContainedElement(*inputTracks,     trk2);
+        }
+        else if (trk1_trk2_dR_HEC1 < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_trk2_dR_HEC1; 
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks,     trk2);
+        }
       } //tracks have extrapolation to HEC
 
       //Does track 1 have an HEC extrapolation, and track 2 a TileExt?
@@ -184,7 +254,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
       if (trk1_hasHEC1 && trk2_hasTileExt1){
         float trk1_HEC_trk2_TileExt_dR = deltaR(trk1_etaHEC1, trk1_phiHEC1, trk2_etaTileExt1, trk2_phiTileExt1);
         // was this the nearest track? Is the track isolated?
-        if (trk1_HEC_trk2_TileExt_dR < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_HEC_trk2_TileExt_dR;
+        if (trk1_HEC_trk2_TileExt_dR < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_HEC_trk2_TileExt_dR; 
+            linkNearestTrackHAD2.toContainedElement(*inputTracks, trk2);
+        }
+        else if (trk1_HEC_trk2_TileExt_dR < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_HEC_trk2_TileExt_dR; 
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, trk2);
+        }
       }
 
       //does track 1 have a TileExt extrapolation, and track 2 an HEC?
@@ -192,7 +273,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
       if (trk1_hasTileExt1 && trk2_hasHEC1){
         float trk1_TileExt_trk2_HEC_dR = deltaR(trk1_etaTileExt1, trk1_phiTileExt1, trk2_etaHEC1, trk2_phiHEC1);
         // was this the nearest track? Is the track isolated?
-        if (trk1_TileExt_trk2_HEC_dR < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_TileExt_trk2_HEC_dR;
+        if (trk1_TileExt_trk2_HEC_dR < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_TileExt_trk2_HEC_dR;
+            linkNearestTrackHAD2.toContainedElement(*inputTracks,trk2);
+        }
+        else if (trk1_TileExt_trk2_HEC_dR < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_TileExt_trk2_HEC_dR; 
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks,     trk2);
+        }
       }
 
       //Do the tracks have an extrapoltion to the HEC1?
@@ -200,10 +292,24 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
         //the distance between track 2 and track 2 in the HEC1
         float trk1_trk2_dR_HEC1 = deltaR(trk1_etaHEC1, trk1_phiHEC1, trk2_etaHEC1, trk2_phiHEC1);
         // was this the nearest track? Is the track isolated?
-        if (trk1_trk2_dR_HEC1 < trk1_nearest_dR_HAD) trk1_nearest_dR_HAD = trk1_trk2_dR_HEC1;
+        if (trk1_trk2_dR_HEC1 < trk1_nearest_dR_HAD) {
+            if (linkNearestTrackHAD2.isValid() ) {
+                linkSecondNearestTrackHAD2.toContainedElement(*inputTracks, *linkNearestTrackHAD2);
+                trk1_secondNearest_dR_HAD = trk1_nearest_dR_HAD;
+            }
+            trk1_nearest_dR_HAD = trk1_trk2_dR_HEC1;
+            linkNearestTrackHAD2.toContainedElement(*inputTracks,trk2);
+        }
+        else if (trk1_trk2_dR_HEC1 < trk1_secondNearest_dR_HAD) {
+            trk1_secondNearest_dR_HAD = trk1_trk2_dR_HEC1; 
+            linkSecondNearestTrackHAD2.toContainedElement(*inputTracks,     trk2);
+        }
       } //tracks have extrapolation to HEC
     } // END looping trk2
     nearestHADDRDecorator(*trk1) = trk1_nearest_dR_HAD;//decorate the track with the distance to the nearest track
+    nearestHADLinkDecorator(*trk1) = linkNearestTrackHAD2; //decorate the track with a link to the nearest track in the HAD calorimeter
+    secondNearestHADLinkDecorator(*trk1) = linkSecondNearestTrackHAD2; //decorate the track with a link to the second nearest track in the HAD calorimeter
+
   }
 
   //Check for track isolation in the second layer of the EM Calorimeter
@@ -228,6 +334,7 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
     bool trk1_hasEMB2 = (fabs(trk1_etaEMB2) < (float)1000.0) && (fabs(trk1_phiEMB2) < (float)1000.0);
 
     trk1_nearest_dR_EM = 999999.0; //how close was the nearest track?
+    float trk1_secondNearest_dR_EM = 999999.0; //how close was the second nearest track?
 
     //These values will be set to true if the track is not isolated
     bool trk1_not_isolated_EMB2 = false;
@@ -255,7 +362,19 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
         //the distance between track 1 and track 2 in the EMB
         float trk1_trk2_dR_EMB2 = deltaR(trk1_etaEMB2, trk1_phiEMB2, trk2_etaEMB2, trk2_phiEMB2);
         // was this the nearest track? is the track isolated?
-        if (trk1_trk2_dR_EMB2 < trk1_nearest_dR_EM) trk1_nearest_dR_EM = trk1_trk2_dR_EMB2;
+        if (trk1_trk2_dR_EMB2 < trk1_nearest_dR_EM) {
+            //The nearest track becomes the second-nearest
+            if (linkNearestTrackEM2.isValid() ) {
+                linkSecondNearestTrackEM2.toContainedElement(*inputTracks, *linkNearestTrackEM2);
+                trk1_secondNearest_dR_EM = trk1_nearest_dR_EM;
+            }
+            trk1_nearest_dR_EM = trk1_trk2_dR_EMB2; 
+            linkNearestTrackEM2.toContainedElement(*inputTracks, trk2);
+        }
+        else if (trk1_trk2_dR_EMB2 < trk1_secondNearest_dR_EM) {
+            trk1_secondNearest_dR_EM = trk1_trk2_dR_EMB2; 
+            linkSecondNearestTrackEM2.toContainedElement(*inputTracks,     trk2);
+        }
         if (trk1_trk2_dR_EMB2 <= m_trkIsoDRmax) trk1_not_isolated_EMB2 = true;
       } //tracks have extrapolation to EMB
 
@@ -264,7 +383,19 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
       if (trk1_hasEMB2 && trk2_hasEME2){
         float trk1_EMB_trk2_EME_dR = deltaR(trk1_etaEMB2, trk1_phiEMB2, trk2_etaEME2, trk2_phiEME2);
         // was this the nearest track? Is the track isolated?
-        if (trk1_EMB_trk2_EME_dR < trk1_nearest_dR_EM) trk1_nearest_dR_EM = trk1_EMB_trk2_EME_dR;
+        if (trk1_EMB_trk2_EME_dR < trk1_nearest_dR_EM) {
+            //The nearest track becomes the second-nearest
+            if (linkNearestTrackEM2.isValid() ) {
+                linkSecondNearestTrackEM2.toContainedElement(*inputTracks, *linkNearestTrackEM2);
+                trk1_secondNearest_dR_EM = trk1_nearest_dR_EM;
+            }
+            trk1_nearest_dR_EM = trk1_EMB_trk2_EME_dR; 
+            linkNearestTrackEM2.toContainedElement(*inputTracks, trk2);
+        }
+        else if (trk1_EMB_trk2_EME_dR < trk1_secondNearest_dR_EM) {
+            trk1_secondNearest_dR_EM = trk1_EMB_trk2_EME_dR; 
+            linkSecondNearestTrackEM2.toContainedElement(*inputTracks,     trk2);
+        }
         if (trk1_EMB_trk2_EME_dR < m_trkIsoDRmax) trk1_not_isolated_EMB2 = true; //the track is in the EMB, and it is not isolated
       }
 
@@ -273,7 +404,18 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
       if (trk1_hasEME2 && trk2_hasEMB2){
         float trk1_EME_trk2_EMB_dR = deltaR(trk1_etaEME2, trk1_phiEME2, trk2_etaEMB2, trk2_phiEMB2);
         // was this the nearest track? Is the track isolated?
-        if (trk1_EME_trk2_EMB_dR < trk1_nearest_dR_EM) trk1_nearest_dR_EM = trk1_EME_trk2_EMB_dR;
+        if (trk1_EME_trk2_EMB_dR < trk1_nearest_dR_EM) {
+            if (linkNearestTrackEM2.isValid() ) {
+                linkSecondNearestTrackEM2.toContainedElement(*inputTracks, *linkNearestTrackEM2);
+                trk1_secondNearest_dR_EM = trk1_nearest_dR_EM;
+            }
+            trk1_nearest_dR_EM = trk1_EME_trk2_EMB_dR; 
+            linkNearestTrackEM2.toContainedElement(*inputTracks, trk2);
+        }
+        else if (trk1_EME_trk2_EMB_dR < trk1_secondNearest_dR_EM) {
+            trk1_secondNearest_dR_EM = trk1_EME_trk2_EMB_dR; 
+            linkSecondNearestTrackEM2.toContainedElement(*inputTracks,     trk2);
+        }
         if (trk1_EME_trk2_EMB_dR < m_trkIsoDRmax) trk1_not_isolated_EME2 = true;
       }
 
@@ -282,15 +424,28 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
         //the distance between track 2 and track 2 in the EME
         float trk1_trk2_dR_EME2 = deltaR(trk1_etaEME2, trk1_phiEME2, trk2_etaEME2, trk2_phiEME2);
         // was this the nearest track? Is the track isolated?
-        if (trk1_trk2_dR_EME2 < trk1_nearest_dR_EM) trk1_nearest_dR_EM = trk1_trk2_dR_EME2;
+        if (trk1_trk2_dR_EME2 < trk1_nearest_dR_EM) {
+            if (linkNearestTrackEM2.isValid() ) {
+                linkSecondNearestTrackEM2.toContainedElement(*inputTracks, *linkNearestTrackEM2);
+                trk1_secondNearest_dR_EM = trk1_nearest_dR_EM;
+            }
+            trk1_nearest_dR_EM = trk1_trk2_dR_EME2; 
+            linkNearestTrackEM2.toContainedElement(*inputTracks, trk2);
+        }
+        else if (trk1_trk2_dR_EME2 < trk1_secondNearest_dR_EM) {
+            trk1_secondNearest_dR_EM = trk1_trk2_dR_EME2; 
+            linkSecondNearestTrackEM2.toContainedElement(*inputTracks,     trk2);
+        }
         if (trk1_trk2_dR_EME2 <= m_trkIsoDRmax) trk1_not_isolated_EME2 = true;
       } //tracks have extrapolation to EME
     } // END looping trk2
 
-    if (trk1_not_isolated_EMB2) {ANA_MSG_DEBUG("Track failed isolation"); continue;}
-    if (trk1_not_isolated_EME2) {ANA_MSG_DEBUG("Track failed isolation");  continue;}
     ANA_MSG_DEBUG("Track passed isolation cut, decorating with dR = " + std::to_string(trk1_nearest_dR_EM));
     nearestEMDRDecorator(*trk1) = trk1_nearest_dR_EM;//decorate the track with the distance to the nearest track
+    nearestEMLinkDecorator(*trk1) = linkNearestTrackEM2; //decorate the track with a link to the nearest track in the HAD calorimeter
+    secondNearestEMLinkDecorator(*trk1) = linkSecondNearestTrackEM2; //decorate the track with a link to the nearest track in the HAD calorimeter
+    if (trk1_not_isolated_EMB2) {ANA_MSG_DEBUG("Track failed isolation"); continue;}
+    if (trk1_not_isolated_EME2) {ANA_MSG_DEBUG("Track failed isolation");  continue;}
     selectedTracks->push_back(trk1);
     if(m_useCutFlow) m_trk_cutflowHist_1->Fill("Isolated in EM Layer 2", 1);
   } //END looping trk1
