@@ -21,7 +21,7 @@ Clone the packages that this analysis depends on.
 git clone http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers
 git clone http://github.com/luadamek/EoverPAnalysis
 git clone https://github.com/mattleblanc/IDTrackSel.git
-asetup AnalysisBase,21.2.44,here
+asetup AnalysisBase,21.2.64,here
 cd ../build
 cmake ../source && make
 ```
@@ -41,7 +41,7 @@ xAH_run.py --files user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root -
 Grid jobs are handled by a submission script located in $TestArea/EoverPAnalysis/scripts/. The grid job script takes four arguments as input: the submission directory, a txt file with all samples listed, a descriptor to label the output, and a configuration file. As an example, the following command will submit grid jobs to run over the 361022 jet jet MC sample.
 ```
 cd ../run
-python $TestArea/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 21.2.44 --submitDir results --FileList $TestArea/EoverPAnalysis/filelists/test_list.txt --config $TestArea/EoverPAnalysis/scripts/config_eop_tree_dump.py --descriptor test
+python $TestArea/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 21.2.64 --submitDir results --FileList $TestArea/EoverPAnalysis/filelists/test_list.txt --config $TestArea/EoverPAnalysis/scripts/config_eop_tree_dump.py --descriptor test
 ```
 
 ## Plotting
