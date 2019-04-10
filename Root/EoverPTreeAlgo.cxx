@@ -203,7 +203,6 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         pileupWeight = weight_pileup(*eventInfo);
         eventWeight *= pileupWeight;
     }
-    else {ANA_MSG_WARNING("No Pileup Weight Available");}
   }
   else {ANA_MSG_ERROR("No Event Weight Available");}
 
@@ -257,7 +256,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_phiHEC1 = trk->auxdata<float>("CALO_trkPhi_HEC1");
 
     trk_d0 = trk->d0(); //This is the correct d0
-    trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct z0sin theta impact parameter. I need to fix this later. For now, just use the track vertex association tool
+    trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct impact parameter w.r.t the primary vertex
 
     //get the track momentum from q/p
     trk_p = 0.0;
@@ -292,12 +291,14 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_Energy("CALO_ClusterEnergy_Energy");
     SG::AuxElement::ConstAccessor< std::vector<int> > acc_ClusterEnergy_maxEnergyLayer("CALO_ClusterEnergy_maxEnergyLayer");
     SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_emProbability("CALO_ClusterEnergy_emProbability");
+    SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_dRToTrack("CALO_ClusterEnergy_dRToTrack");
 
     //make sure that the information is available
     if (acc_ClusterEnergy_Energy.isAvailable(*trk) && acc_ClusterEnergy_maxEnergyLayer.isAvailable(*trk) && acc_ClusterEnergy_emProbability.isAvailable(*trk) ){
       std::vector<float> trk_cluster_energies = acc_ClusterEnergy_Energy(*trk);
       std::vector<int> trk_cluster_maxEnergyLayer = acc_ClusterEnergy_maxEnergyLayer(*trk);
       std::vector<float> trk_cluster_emProbability = acc_ClusterEnergy_emProbability(*trk);
+      std::vector<float> trk_cluster_dRToTrack = acc_ClusterEnergy_dRToTrack(*trk);
 
       //make sure that number of clusters is consistent between different decorations
       if (trk_cluster_energies.size() != trk_cluster_maxEnergyLayer.size()){
@@ -312,6 +313,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
       ANA_MSG_DEBUG("Printing out the layer of maximum energy of the clusters");
       for (unsigned int i = 0; i < trk_cluster_maxEnergyLayer.size(); i ++)
       {
+         if (trk_cluster_dRToTrack.at(i) > 0.2){continue;} //only count those clsuters within a dR cut of 0.2
          int max_layer = trk_cluster_maxEnergyLayer.at(i);
          ANA_MSG_DEBUG(EnergySumHelper::id_to_layer.at(max_layer));
 

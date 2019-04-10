@@ -5,7 +5,8 @@ from xAH_config import xAH_config
 c = xAH_config()
 
 # input containers
-trks = "InDetTrackParticles"
+trks_unsorted = "InDetTrackParticles"
+trks = "InDetTrackParticlesSorted"
 trks_loose = trks + "Loose"
 trks_tight = trks + "Tight"
 trks_loose_isolated = trks_loose + "Isolated"
@@ -24,23 +25,29 @@ c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
                                  "m_applyCoreFlagsCut": False,
                                  "m_applyTriggerCut": False,
                                  #"m_useCutflow": True,
-                                 "m_GRLxml": "EoverPAnalysis/data17_13TeV.periodN_DetStatus-v98-pro21-16_Unknown_PHYS_StandardGRL_All_Good_25ns_ignore_GLOBAL_LOWMU_for_specific_run341294.xml",
+                                 "m_GRLxml": "data17_13TeV.periodN_DetStatus-v98-pro21-16_Unknown_PHYS_StandardGRL_All_Good_25ns_ignore_GLOBAL_LOWMU.xml",
                                  "m_lumiCalcFileNames": "EoverPAnalysis/ilumicalc_histograms_HLT_mb_sptrk_341294_OflLumi-13TeV-010.root",
                                  "m_PRWFileNames": "EoverPAnalysis/ntup_prw_36102_JZ012.root",
                                  "m_triggerSelection": "HLT_mb_sptrk",
                                  "m_applyPrimaryVertexCut": True,
                                  "m_PVNTrack": 2,
+                                 "m_applyPrimaryVertexCut":True,
                                  "m_useMetaData": False,
                                  "m_checkDuplicatesData": False,
                                  "m_checkDuplicatesMC": False})
+
+'''Sort the tracks by pt first'''
+c.setalg("TrackSorter", {"m_name" : "TrackSorting",\
+                         "m_inTrackContainerName":trks_unsorted,\
+                         "m_sort":"Pt",\
+                         "m_sortedTrackContainerName" : trks,\
+                         })
 
 ''' Fill histograms with tracking details, passing only basic event selection'''
 c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
                             "m_inContainerName": trks,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
                             "m_msgLevel": "info"})
-
-
 
 '''track selection algorithm'''
 c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_loose,
@@ -49,9 +56,6 @@ c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_loose,
                                   "m_CutLevel": "Loose",
                                   "m_outputTrackContainer": trks_loose,
                                   "m_msgLevel": "info"})
-
-
-
 
 '''Create new energy sum decorations for the tracks'''
 c.setalg("TrackEnergyDecorator", {"m_energySumName":"TotalCalibHitEnergy",\
@@ -73,10 +77,6 @@ c.setalg("TrackEnergyDecorator", {"m_energySumName":"TotalHadronicBackgroundCali
                                   "m_radiusCutCommaList":radiusCuts,\
                                   "m_energyCalibCommaList":"ClusterHadronicBackgroundEMActiveCalibHitEnergy,ClusterHadronicBackgroundNonEMActiveCalibHitEnergy,ClusterHadronicBackgroundEscapedActiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleActiveCalibHitEnergy,ClusterHadronicBackgroundEMInactiveCalibHitEnergy,ClusterHadronicBackgroundNonEMInactiveCalibHitEnergy,ClusterHadronicBackgroundEscapedInactiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleInactiveCalibHitEnergy",\
                                   })
-
-
-
-
 
 ''' Fill histograms with tracking details, after LoosePrimary selection '''
 c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose,
@@ -111,8 +111,8 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated,
 c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociationTool",\
                                             "m_inputTrackContainer": trks_loose_isolated,\
                                             "m_outputTrackContainer": trks_loose_isolated_vertex,\
-                                            "m_dzSinTheta_cut": 0.5,
-                                            "m_d0_cut": 0.5,
+                                            "m_dzSinTheta_cut": 1.5,
+                                            "m_d0_cut": 1.5,
                                             "m_msgLevel": "info",
                                             })
 
@@ -125,8 +125,8 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated_vertex,
 c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociatedTool",\
                                             "m_inputTrackContainer": trks_tight_isolated,\
                                             "m_outputTrackContainer": trks_tight_isolated_vertex,\
-                                            "m_dzSinTheta_cut":0.5,
-                                            "m_d0_cut":0.5,
+                                            "m_dzSinTheta_cut": 1.5,
+                                            "m_d0_cut": 1.5,
                                             "m_msgLevel": "info",
                                             })
 
@@ -141,7 +141,7 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_ti
         ''' E/p histograms with LoosePrimary track selection'''
         c.setalg("EoverPTreeAlgo", {"m_name": "EoverP_" + track_container,\
                                     "m_inTrackContainerName": track_container,\
-                                    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,ClusterEMActiveCalibHitEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",\
+                                    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",\
                                     "m_radiusCutCommaList": radiusCuts,\
                                     "m_useCutFlow": True,
                                     "m_msgLevel": "info"})

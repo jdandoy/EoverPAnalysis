@@ -2,6 +2,7 @@
 #include "EoverPAnalysis/EoverPTreeAlgo.h"
 #include "EoverPAnalysis/TrackExtrapolationIsolationTool.h"
 #include "EoverPAnalysis/TrackEnergyDecorator.h"
+#include "EoverPAnalysis/TrackSorter.h"
 
 #ifdef __CINT__
 
@@ -17,4 +18,5 @@
 #pragma link C++ class TrackExtrapolationIsolationTool+;
 #pragma link C++ class EoverPTreeAlgo+;
 #pragma link C++ class SecondariesTrees+;
+#pragma link C++ class TrackSorter+;
 #endif
