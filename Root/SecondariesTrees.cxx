@@ -185,6 +185,27 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("trk2_actualmu", &trk2_actualmu);
   t->Branch("trk2_averagemu", &trk2_averagemu);
   t->Branch("trk2_corrected_averagemu", &trk2_corrected_averagemu);
+
+  //All energy deposits in EM-Calorimeter and HAD-Calorimeter
+  for (std::string energyCalib : m_energyCalibList)
+    {
+      for (std::string radiusCut : m_radiusCutList)
+	{
+	  ANA_MSG_INFO("Made ttree branches for energy of clusters at scale " + energyCalib + " and cut " + radiusCut);
+	  std::string key1_EM = "trk1_" + energyCalib + "_EM_" + radiusCut;
+	  m_energyVariablesForTree[key1_EM] = 0.0;
+	  std::string key1_HAD = "trk1_" + energyCalib + "_HAD_" + radiusCut;
+	  m_energyVariablesForTree[key1_HAD] = 0.0;
+	  std::string key2_EM = "trk2_" + energyCalib + "_EM_" + radiusCut;
+	  m_energyVariablesForTree[key2_EM] = 0.0;
+	  std::string key2_HAD = "trk2_" + energyCalib + "_HAD_" + radiusCut;
+	  m_energyVariablesForTree[key2_HAD] = 0.0;
+	  t->Branch(("trk1_" + energyCalib + "_EM_" + radiusCut).c_str(), &(m_energyVariablesForTree[key1_EM]));
+	  t->Branch(("trk1_" + energyCalib + "_HAD_" + radiusCut).c_str(), &(m_energyVariablesForTree[key1_HAD]));
+	  t->Branch(("trk2_" + energyCalib + "_EM_" + radiusCut).c_str(), &(m_energyVariablesForTree[key2_EM]));
+	  t->Branch(("trk2_" + energyCalib + "_HAD_" + radiusCut).c_str(), &(m_energyVariablesForTree[key2_HAD]));
+	}
+    }
     
   return StatusCode::SUCCESS;
 }
@@ -267,11 +288,17 @@ StatusCode SecondariesTrees :: execute ()
 	  trk1_etaID = vertex->trackParticle(0)->eta();
 	  trk1_phiID = vertex->trackParticle(0)->phi();
 	  //m_track1_m = vertex->trackParticle(0)->m()/1.e3;
+	  trk1_p = 0.0; //get the track momentum from q/p
+	  if (fabs(vertex->trackParticle(0)->qOverP())>0.) trk1_p = (1./fabs(vertex->trackParticle(0)->qOverP()))/1e3; 
+	  trk1_charge = (vertex->trackParticle(0)->qOverP()>0.) ? 1 : -1;
 	  
 	  trk2_pt = vertex->trackParticle(1)->pt()/1.e3;
 	  trk2_etaID = vertex->trackParticle(1)->eta();
           trk2_phiID = vertex->trackParticle(1)->phi();
 	  //m_track2_m = vertex->trackParticle(1)->m()/1.e3;
+	  trk2_p = 0.0; //get the track momentum from q/p
+	  if (fabs(vertex->trackParticle(1)->qOverP())>0.) trk2_p = (1./fabs(vertex->trackParticle(1)->qOverP()))/1e3;
+          trk2_charge = (vertex->trackParticle(1)->qOverP()>0.) ? 1 : -1;
 
 	  if(m_label=="Lambda")
 	    {
