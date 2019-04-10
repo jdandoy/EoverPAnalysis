@@ -30,7 +30,7 @@ cmake ../source && make
 Inside the scripts folder are two different config files. These are config_eop_tree_dump.py for running over MC, and config_eop_dump_data.py for running over data. These files create ttrees for four different track selections, and store information about calorimeter energy deposits at the cell, EM, and LCW scale. To run a test job locally, try the following lines:
 ```
 cd ../build
-source x86_64-slc6-gcc62-opt/setup.sh
+source */setup.sh
 cd ../run
 mkdir results
 rucio download user.luadamek.14704913.EXT1._000001.pool.root
