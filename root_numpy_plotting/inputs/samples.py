@@ -2,7 +2,7 @@ import os
 user = os.environ['USER']
 
 #TOP_DIRECTORY = "/tmp/" + user + "/HmumuTuplesVer_2_4/"
-TOP_DIRECTORY = "/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/"
+TOP_DIRECTORY = "/mnt/"
 
 INPUT = \
 { "PythiaJetJet": ("Pythia8 MinBias and Dijet", [\

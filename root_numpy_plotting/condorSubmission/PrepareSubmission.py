@@ -42,7 +42,10 @@ for key in INPUT:
             files =  glob.glob(search_for)
             files.sort()
             for f in files:
-                tfile = ROOT.TFile.Open("root://eosatlas/" + f, "READ")
+                if "eos" in f:
+                     tfile = ROOT.TFile.Open("root://eosatlas/" + f, "READ")
+                else:
+                     tfile = ROOT.TFile.Open(f, "READ")
                 print "Adding "+f
                 tree.Add(f)
                 tfile.Close()

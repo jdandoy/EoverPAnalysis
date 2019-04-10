@@ -8,6 +8,8 @@ import os
 from math import pi
 import pickle
 import numpy as np
+from calculation.calculation import calculation
+from selections.selections import EtaBin, PBin
 
 def WriteToFile(histogram_dictionary, outFile):
     outFile.cd()
@@ -18,6 +20,254 @@ def WriteToFile(histogram_dictionary, outFile):
         print("Writing histogram " + histogram_dictionary[key].GetName())
         histogram_dictionary[key].Write()
 
+
+def PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description):
+    #create std::vectors for the eta ranges of std::vectors
+    VectorForEtaLow = ROOT.std.vector("float")()
+    VectorForEtaHigh = ROOT.std.vector("float")()
+
+    VectorForPBinsLowList = []
+    VectorForPBinsHighList = []
+    for i in range(0, len(eta_ranges)):
+        VectorForPBinsLowList.append(ROOT.std.vector("float")())
+        VectorForPBinsHighList.append(ROOT.std.vector("float")())
+
+    if not outFile.GetListOfKeys().Contains(description + "BinningTree"):
+        outFile.cd()
+        binningTree = ROOT.TTree(description + "BinningTree", description + "BinningTree")
+
+        binningTree.Branch(description + "EtaBinsLow", VectorForEtaLow)
+        binningTree.Branch(description + "EtaBinsHigh", VectorForEtaHigh)
+        eta_count = -1
+
+        for eta_range in eta_ranges:
+            eta_count += 1
+            binningTree.Branch(description + "PBinsLow_Eta" + str(eta_count), VectorForPBinsLowList[i])
+            binningTree.Branch(description + "PBinsHigh_Eta" + str(eta_count), VectorForPBinsHighList[i])
+
+        for eta_range, p_bins, VectorForPBinsLow, VectorForPBinsHigh in zip(eta_ranges, p_bins_for_eta_range, VectorForPBinsLowList, VectorForPBinsHighList):
+            p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
+            for p_range in p_ranges:
+                VectorForPBinsLow.push_back(p_range[0])
+                VectorForPBinsHigh.push_back(p_range[1])
+
+            VectorForEtaLow.push_back(eta_range[0])
+            VectorForEtaHigh.push_back(eta_range[1])
+
+        binningTree.Fill()
+        binningTree.Write()
+    
+
+def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description):
+    #define a set of eta bins
+    eta_count = -1
+    for eta_range, p_bins in zip(eta_ranges, p_bins_for_eta_range):
+        eta_count += 1
+        #get the function that selects tracks in that bin
+        EtaBinFunction = lambda x, y = eta_range[0], z=eta_range[1]: EtaBin(x, y,z)
+        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
+        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+
+        selections = base_selection + [eta_binSelection]
+
+        NPtBins = len(p_bins)
+        Pt_low = 0.5
+        Pt_high = max(p_bins)
+        ptbins = getLogBins(Pt_low, Pt_high, NPtBins)
+        eop_bins = getBins(-1.0, +5.0, 100)
+
+        from variables.variables import calc_trkPt
+        histogram_name = "trkMultiplicityVsPt"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                           calc_trkPt,\
+                                           list_selections = selections,\
+                                           bins = ptbins,\
+                                           xlabel ="Track P_{T} [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+        from variables.variables import calc_trkP
+        histogramName = "TrkMultiplicityVsP"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  )
+
+        histogramName = "UnweightedTrkMultiplicityVsP"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+        trkMultiplicity =  plotter.BookHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "Number of Tracks",\
+                                                  useWeights=False
+                                                  )
+
+        histogramName = "EOPProfileVsMomentum"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+
+        from variables.variables import calc_EOP
+        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+        histogramName = "2DHist_EOPVsMomentum"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+        AverageEOP  =  plotter.Book2DHistograms(histogramName,
+                                                  calc_trkP,\
+                                                  calc_EOP,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p",\
+                                                  )
+
+        histogramName = "EnergyAnulusProfileVsMomentum"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+        from variables.variables import calc_EnergyAnulus
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
+                                                  )
+
+        histogramName = "2DHist_EnergyAnulusVsMomentum"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EnergyAnulus,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E_{EM Anulus} [GeV]",\
+                                                  )
+
+        histogramName = "EnergyBkgProfileVsMomentum"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+        from variables.variables import calc_EOPBkg
+        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+
+        histogramName = "2DHist_EnergyBkgVsMomentum"
+        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
+        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkg,\
+                                                  list_selections = selections,\
+                                                  bins_x = p_bins,\
+                                                  bins_y = eop_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "E/p BKG",\
+                                                  )
+
+        p_count = -1
+        p_ranges = [(p_bins[i],p_bins[i+1]) for i in range(0, len(p_bins)-1)]
+        for p_range in p_ranges:
+            p_count += 1
+            print("The prange is " + str(p_range))
+            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y,z)
+            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
+            sel_PBin = calculation(PBinFunction, ["trk_p"])
+            selections = base_selection + [eta_binSelection] + [sel_PBin]
+
+            histogramName = "EOPDistribution" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            EOPDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOP,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p",\
+                                                      )
+
+            histogramName = "EOPBkgDistribution" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            EOPBkgDist  =  plotter.BookHistograms(histogramName,
+                                                      calc_EOPBkg,\
+                                                      list_selections = selections,\
+                                                      bins = eop_bins,\
+                                                      xlabel ="E/p Bkg",\
+                                                      )
+            histogram_name = "trkTRTHits" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            from variables.variables import calc_nTRT
+            plotter.BookHistograms(histogram_name,\
+                                   calc_nTRT,\
+                                   list_selections = selections,\
+                                   range_low = -0.5,\
+                                   range_high = 59.5,\
+                                   bins = 60,\
+                                   xlabel = "Number of TRT Hits",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "trkEMDR100" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            from variables.variables import calc_EnergyEMDR100
+            plotter.BookHistograms(histogram_name,\
+                                   calc_EnergyEMDR100,\
+                                   list_selections = selections,\
+                                   range_low = -2.0,\
+                                   range_high = + 10.0,\
+                                   bins = 48,\
+                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "MomentumHadFrac" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            from variables.variables import calc_MomentumHadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_MomentumHadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 5.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/P",\
+                                   ylabel = "Number of Tracks")
+
+            histogram_name = "HadFrac" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            from variables.variables import calc_HadFrac
+            plotter.BookHistograms(histogram_name,\
+                                   calc_HadFrac,\
+                                   list_selections = selections,\
+                                   range_low = -1.0,\
+                                   range_high = + 2.0,\
+                                   bins = 48,\
+                                   xlabel = "E^{HAD}/E^{Total}",\
+                                   ylabel = "Number of Tracks")
+
+            from variables.variables import calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD,  calc_trkNClusters_emlike, calc_trkNClusters_hadlike
+            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+                histogram_name = histogram_name + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+                plotter.BookHistograms(histogram_name,\
+                                       variable,\
+                                       list_selections = selections,\
+                                       bins = 10,\
+                                       range_low = -0.5,\
+                                       range_high = 9.5,\
+                                       xlabel=xlabel,\
+                                       ylabel="Number of Tracks")
+
+
 #This is a script that fills the histograms for
 def FillingScript(plotter, outputRootFileName):
     #import thje variables that we want to plot
@@ -25,7 +275,7 @@ def FillingScript(plotter, outputRootFileName):
     #import the selections that we want to plot
     from selections.selections import sel_NTRT20, sel_NTRT25, sel_NTRT30, sel_ECALEta0_6, sel_PGreater1 ,sel_PGreater1_5, sel_PGreater2, sel_PGreater2_5, sel_Z0SinThetaLess1_5, sel_d0Less1_5, sel_Event, sel_hasHADExtrapolation
     #impot the ID selections that we want to plot
-    from selections.selections import sel_IDEta00_06,sel_IDEta06_11,sel_IDEta11_14,sel_IDEta14_15, sel_IDEta15_18, sel_IDEta18_23
+    from selections.selections import sel_IDEta00_06,sel_IDEta06_11,sel_IDEta11_14,sel_IDEta14_15, sel_IDEta15_18, sel_IDEta18_23, EtaBin
 
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
 
@@ -790,1479 +1040,71 @@ def FillingScript(plotter, outputRootFileName):
 
     ################################################################################
     ##Create a set of p and eta bins for the measurement ##########################
+
     from calculation.calculation import calculation
     from selections.selections import EtaBin, PBin
     from variables.variables import calc_EOPBkg, calc_EnergyAnulus
 
-    #create a set of strings that could describe the eta or momentum selections
+    ##Create a set of binned EOP response histograms 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
-
-    #go and get the average E/P for MIP particles in each of the eta bins.
+    base_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
+    p_bins_for_eta_range = []
     for eta_range in eta_ranges:
-        #get the function that selectts tracks in that bin
-        EtaBinFunction = lambda x, y = eta_range[0], z=eta_range[1]: EtaBin(x, y,z)
-        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
-        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "MIPSelectionBetween30and90OfMomentum"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
-        #calculate the lowest momentum track that can end up in that bin
-        #create nbins where there are at least 10,000 entries per bin
-        eta = eta_range[1]
-        p_bins_max = 15.05
-        p_bins_min = getP(0.5, eta)
-        nBins = 20
-        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
-        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
-
-        eop_bins_min = 0.0
-        eop_bins_max = 5
-        nBins = 500
-        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
-
-        print("+" * 50)
-        print("for Eta " + str(eta))
-        print(eop_bins)
-        print(p_bins)
-
-        MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
-        selections = MIP_selection + [eta_binSelection]
-
-        histogram_name = "trkPtHist"
-        histogram_name = histogram_name + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
-                                           calc_trkPt,\
-                                           list_selections = [eta_binSelection],\
-                                           bins = p_bins_reference,\
-                                           xlabel ="Track P_{T} [GeV]",\
-                                           ylabel = "Number of Tracks")
-
-   #    ################################################################################
-        #prepare the momentum bins
-        histogram_name = "trkPtHist"
-        histogram_name = histogram_name + "_MIPSelection_HADBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
-                                           calc_trkPt,\
-                                           list_selections = selections,\
-                                           bins = p_bins_reference,\
-                                           xlabel ="Track P_{T} [GeV]",\
-                                           ylabel = "Number of Tracks")
-
-        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-            histogram_name = histogram_name + "_MIPSelection_HADBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-            plotter.BookHistograms(histogram_name,\
-                                   variable,\
-                                   list_selections = selections,\
-                                   bins = 10,\
-                                   range_low = -0.5,\
-                                   range_high = 9.5,\
-                                   xlabel=xlabel,\
-                                   ylabel="Number of Tracks")
-
-        histogramName = "TrkMultiplicityVsP_Inclusive_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = [eta_binSelection],\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
-
-        histogramName = "UnweightedTrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  useWeights=False
-                                                  )
-
-
-        histogramName = "TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
-
-        #get the binning histograms for the histograms to be used for fitting
-        binningHistogram = plotter.binningHistograms[histogramName]
-        FourThousandTracks_pbins = GetBinsFromHistogram(binningHistogram, 4000.0)[0]
-
-        print FourThousandTracks_pbins
-
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "EOPProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "2DHist_EOPVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "2DHist_EOPVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-        histogramName = "EnergyBkgProfileVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-
-        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
-        for p_range in p_ranges:
-            print("The prange is " + str(p_range))
-            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y,z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPBkgDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1])  for i in range(0, len(FourThousandTracks_pbins)-1) ]
-        for p_range in p_ranges:
-            print("The prange is " + str(p_range))
-            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x, y,z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution_FourThousandTracks_MIPSelection_HadBetween30And90OfMomentum_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPBkgDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-
-        from selections.selections import sel_EHadFracAbove70
-        MIP_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70]
-        selections = MIP_selection + [eta_binSelection]
-
-    #    ################################################################################
-        #prepare the momentum bins
-        histogram_name = "trkPtHist"
-        histogram_name = histogram_name + "_MIPSelection_HADFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
-                                           calc_trkPt,\
-                                           list_selections = selections,\
-                                           bins = p_bins_reference,\
-                                           xlabel ="Track P_{T} [GeV]",\
-                                           ylabel = "Number of Tracks")
-
-        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-            plotter.BookHistograms(histogram_name,\
-                                   variable,\
-                                   list_selections = selections,\
-                                   bins = 10,\
-                                   range_low = -0.5,\
-                                   range_high = 9.5,\
-                                   xlabel=xlabel,\
-                                   ylabel="Number of Tracks")
-
-        histogramName = "UnweightedTrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  useWeights=False
-                                                  )
-
-        histogramName = "TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P [GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
-
-        #get the binning histograms for the histograms to be used for fitting
-        binningHistogram = plotter.binningHistograms[histogramName]
-        FourThousandTracks_pbins = GetBinsFromHistogram(binningHistogram, 4000.0)[0]
-
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "EOPProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "2DHist_EOPVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P [GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "2DHist_EOPVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P [GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-        histogramName = "EnergyBkgProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_MIPSelection_HadFracAbove70_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
-        for p_range in p_ranges:
-            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-            histogram_name = "trkTRTHits"
-            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_nTRT
-            plotter.BookHistograms(histogram_name,\
-                                   calc_nTRT,\
-                                   list_selections = selections,\
-                                   range_low = -0.5,\
-                                   range_high = 59.5,\
-                                   bins = 60,\
-                                   xlabel = "Number of TRT Hits",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "trkEMDR100"
-            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_EnergyEMDR100
-            plotter.BookHistograms(histogram_name,\
-                                   calc_EnergyEMDR100,\
-                                   list_selections = selections,\
-                                   range_low = -2.0,\
-                                   range_high = + 10.0,\
-                                   bins = 48,\
-                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "MomentumHadFrac"
-            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_MomentumHadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_MomentumHadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 5.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/P",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "HadFrac"
-            histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_HadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_HadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 2.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/E^{Total}",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-                histogram_name = histogram_name + "_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-                plotter.BookHistograms(histogram_name,\
-                                       variable,\
-                                       list_selections = selections,\
-                                       bins = 10,\
-                                       range_low = -0.5,\
-                                       range_high = 9.5,\
-                                       xlabel=xlabel,\
-                                       ylabel="Number of Tracks")
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (p_bins[i], p_bins[i+1] ) for i in range(0, len(p_bins)-1) ]
-        for p_range in p_ranges:
-            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [sel_NTRT20, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-            histogram_name = "trkTRTHits"
-            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_nTRT
-            plotter.BookHistograms(histogram_name,\
-                                   calc_nTRT,\
-                                   list_selections = selections,\
-                                   range_low = -0.5,\
-                                   range_high = 59.5,\
-                                   bins = 60,\
-                                   xlabel = "Number of TRT Hits",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "trkEMDR100"
-            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_EnergyEMDR100
-            plotter.BookHistograms(histogram_name,\
-                                   calc_EnergyEMDR100,\
-                                   list_selections = selections,\
-                                   range_low = -2.0,\
-                                   range_high = + 10.0,\
-                                   bins = 48,\
-                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "MomentumHadFrac"
-            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_MomentumHadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_MomentumHadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 5.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/P",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "HadFrac"
-            histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_HadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_HadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 2.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/E^{Total}",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-                histogram_name = histogram_name + "_20TRTHits_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-                plotter.BookHistograms(histogram_name,\
-                                       variable,\
-                                       list_selections = selections,\
-                                       bins = 10,\
-                                       range_low = -0.5,\
-                                       range_high = 9.5,\
-                                       xlabel=xlabel,\
-                                       ylabel="Number of Tracks")
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (FourThousandTracks_pbins[i], FourThousandTracks_pbins[i+1] ) for i in range(0, len(FourThousandTracks_pbins)-1) ]
-        for p_range in p_ranges:
-            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x,y,z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadFracAbove70, eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_FourThousandTracks_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution_FourThousandTracks_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-
-
-    ################################################################################
-    ##Create a set of p and eta bins for the measurement ##########################
-    from calculation.calculation import calculation
-    from selections.selections import EtaBin, PBin
-    from variables.variables import calc_EOPBkg, calc_EnergyAnulus
-
-    #create a set of strings that could describe the eta or momentum selections
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
-
-    #go and get the average E/P for MIP particles in each of the eta bins.
+    from selections.selections import sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV
+    base_selection = [sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV]
+    p_bins_for_eta_range = []
     for eta_range in eta_ranges:
-        #get the function that selectts tracks in that bin
-        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z)
-        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
-        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "MIPSelectionHadFracAbove70"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
-        #calculate the lowest momentum track that can end up in that bin
-        #create nbins where there are at least 10,000 entries per bin
-        eta = eta_range[1]
-        p_bins_max = 15.05
-        p_bins_min = getP(0.5, eta)
-        nBins = 20
-        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
-        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
-
-        eop_bins_min = 0.0
-        eop_bins_max = 5
-        nBins = 500
-        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
-
-        print("+" * 50)
-        print("for Eta " + str(eta))
-        print(eop_bins)
-        print(p_bins)
-
-        selections = [eta_binSelection]
-
-        histogramName = "UnweightedTrkMultiplicityVsP_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  useWeights=False
-                                                  )
-
-        histogramName = "TrkMultiplicityVsP_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
-
-
-        histogramName = "EOPProfileVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "2DHist_EOPVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-        histogramName = "EnergyBkgProfileVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
-        for p_range in p_ranges:
-            print("The prange is " + str(p_range))
-            PBinFunction = lambda x,y=p_range[0],z=p_range[1]: PBin(x, y,z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            AverageEOPBkg  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-
-    #Select only those tracks with a cluster
-    ################################################################################
-    ##Create a set of p and eta bins for the measurement ##########################
-    from calculation.calculation import calculation
-    from selections.selections import EtaBin, PBin, sel_NonZeroEnergy
-    from variables.variables import calc_EOPBkg, calc_EnergyAnulus
-
-    #create a set of strings that could describe the eta or momentum selections
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
-
-    #go and get the average E/P for MIP particles in each of the eta bins.
+    from selections.selections import sel_NTRT20, sel_NonZeroEnergy
+    base_selection = [sel_NTRT20, sel_NonZeroEnergy]
+    p_bins_for_eta_range = []
     for eta_range in eta_ranges:
-        #get the function that selectts tracks in that bin
-        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z)
-        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
-        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "20TRTHitsNonZeroEnergy"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
-        #calculate the lowest momentum track that can end up in that bin
-        #create nbins where there are at least 10,000 entries per bin
-        eta = eta_range[1]
-        p_bins_max = 15.05
-        p_bins_min = getP(0.5, eta)
-        nBins = 20
-        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
-        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
-
-        eop_bins_min = -1
-        eop_bins_max = 5
-        nBins = 500
-        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
-
-        print("+" * 50)
-        print("for Eta " + str(eta))
-        print(eop_bins)
-        selections = [sel_NonZeroEnergy, eta_binSelection]
-
-    #    ################################################################################
-        #prepare the momentum bins
-        histogram_name = "trkPtHist"
-        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
-                                           calc_trkPt,\
-                                           list_selections = selections,\
-                                           bins = p_bins_reference,\
-                                           xlabel ="Track P_{T} [GeV]",\
-                                           ylabel = "Number of Tracks")
-
-        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-            histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-            plotter.BookHistograms(histogram_name,\
-                                   variable,\
-                                   list_selections = selections,\
-                                   bins = 10,\
-                                   range_low = -0.5,\
-                                   range_high = 9.5,\
-                                   xlabel=xlabel,\
-                                   ylabel="Number of Tracks")
-
-        histogram_name = "trkTRTHits"
-        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_nTRT
-        plotter.BookHistograms(histogram_name,\
-                               calc_nTRT,\
-                               list_selections = selections,\
-                               range_low = -0.5,\
-                               range_high = 59.5,\
-                               bins = 60,\
-                               xlabel = "Number of TRT Hits",\
-                               ylabel = "Number of Tracks")
-
-        histogram_name = "trkEMDR100"
-        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_EnergyEMDR100
-        plotter.BookHistograms(histogram_name,\
-                               calc_EnergyEMDR100,\
-                               list_selections = selections,\
-                               range_low = -2.0,\
-                               range_high = + 10.0,\
-                               bins = 48,\
-                               xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
-                               ylabel = "Number of Tracks")
-
-        histogram_name = "MomentumHadFrac"
-        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_MomentumHadFrac
-        plotter.BookHistograms(histogram_name,\
-                               calc_MomentumHadFrac,\
-                               list_selections = selections,\
-                               range_low = -1.0,\
-                               range_high = + 5.0,\
-                               bins = 48,\
-                               xlabel = "E^{HAD}/P",\
-                               ylabel = "Number of Tracks")
-
-        histogram_name = "HadFrac"
-        histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_HadFrac
-        plotter.BookHistograms(histogram_name,\
-                               calc_HadFrac,\
-                               list_selections = selections,\
-                               range_low = -1.0,\
-                               range_high = + 2.0,\
-                               bins = 48,\
-                               xlabel = "E^{HAD}/E^{Total}",\
-                               ylabel = "Number of Tracks")
-
-        histogramName = "UnweightedTrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  useWeights=False\
-                                                  )
-
-        histogramName = "TrkMultiplicityVsP_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
-
-        #get the custom bins for the EOP Measurement
-        hist = plotter.binningHistograms[histogramName]
-        FourThousandTracks_pbins = GetBinsFromHistogram(hist, 4000.0)[0]
-
-        histogramName = "EOPProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "EOPProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "2DHist_EOPVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "2DHist_FourThousandTracks_EOPVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-        histogramName = "EnergyBkgProfileVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-        histogramName = "EnergyBkgProfileVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = FourThousandTracks_pbins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_FourThousandTracks_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = FourThousandTracks_pbins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
-        for p_range in p_ranges:
-            print("The prange is " + str(p_range))
-            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y, z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin]
-            histogramName = "EOPDistribution_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution"
-            histogramName = histogramName + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPBkgDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-            histogram_name = "trkTRTHits"
-            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_nTRT
-            plotter.BookHistograms(histogram_name,\
-                                   calc_nTRT,\
-                                   list_selections = selections,\
-                                   range_low = -0.5,\
-                                   range_high = 59.5,\
-                                   bins = 60,\
-                                   xlabel = "Number of TRT Hits",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "trkEMDR100"
-            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_EnergyEMDR100
-            plotter.BookHistograms(histogram_name,\
-                                   calc_EnergyEMDR100,\
-                                   list_selections = selections,\
-                                   range_low = -2.0,\
-                                   range_high = + 10.0,\
-                                   bins = 48,\
-                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "MomentumHadFrac"
-            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_MomentumHadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_MomentumHadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 5.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/P",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "HadFrac"
-            histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_HadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_HadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 2.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/E^{Total}",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-                histogram_name = histogram_name + "_NonZeroE_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-                plotter.BookHistograms(histogram_name,\
-                                       variable,\
-                                       list_selections = selections,\
-                                       bins = 10,\
-                                       range_low = -0.5,\
-                                       range_high = 9.5,\
-                                       xlabel=xlabel,\
-                                       ylabel="Number of Tracks")
-
-
-    from selections.selections import sel_NTRT20
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    base_selection = [sel_NonZeroEnergy]
+    p_bins_for_eta_range = []
     for eta_range in eta_ranges:
-        #get the function that selectts tracks in that bin
-        EtaBinFunction = lambda x,y=eta_range[0],z=eta_range[1]: EtaBin(x,y,z)
-        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
-        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "NonZeroEnergy"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
-        #calculate the lowest momentum track that can end up in that bin
-        #create nbins where there are at least 10,000 entries per bin
-        eta = eta_range[1]
-        p_bins_max = 15.05
-        p_bins_min = getP(0.5, eta)
-        nBins = 20
-        p_bins = getLogBins(p_bins_min, p_bins_max, nBins)
-        p_bins_fine = getLogBins(p_bins_min, p_bins_max, 10000)
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    base_selection = []
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "Inclusive"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
-        eop_bins_min = -1
-        eop_bins_max = 5
-        nBins = 500
-        eop_bins = getBins(eop_bins_min, eop_bins_max, nBins)
-
-        print("+" * 50)
-        print("for Eta " + str(eta))
-        print(eop_bins)
-        selections = [sel_NonZeroEnergy, eta_binSelection, sel_NTRT20]
-
-    #    ################################################################################
-        #prepare the momentum bins
-        histogram_name = "trkPtHist"
-        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkPtHistZoom = plotter.BookHistograms(histogram_name,\
-                                           calc_trkPt,\
-                                           list_selections = selections,\
-                                           bins = p_bins_reference,\
-                                           xlabel ="Track P_{T} [GeV]",\
-                                           ylabel = "Number of Tracks")
-
-        histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-        xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-        variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-        for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-            histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-            plotter.BookHistograms(histogram_name,\
-                                   variable,\
-                                   list_selections = selections,\
-                                   bins = 10,\
-                                   range_low = -0.5,\
-                                   range_high = 9.5,\
-                                   xlabel=xlabel,\
-                                   ylabel="Number of Tracks")
-
-        histogram_name = "trkTRTHits"
-        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_nTRT
-        plotter.BookHistograms(histogram_name,\
-                               calc_nTRT,\
-                               list_selections = selections,\
-                               range_low = -0.5,\
-                               range_high = 59.5,\
-                               bins = 60,\
-                               xlabel = "Number of TRT Hits",\
-                               ylabel = "Number of Tracks")
-
-        histogram_name = "trkEMDR100"
-        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_EnergyEMDR100
-        plotter.BookHistograms(histogram_name,\
-                               calc_EnergyEMDR100,\
-                               list_selections = selections,\
-                               range_low = -2.0,\
-                               range_high = + 10.0,\
-                               bins = 48,\
-                               xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
-                               ylabel = "Number of Tracks")
-
-        histogram_name = "MomentumHadFrac"
-        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_MomentumHadFrac
-        plotter.BookHistograms(histogram_name,\
-                               calc_MomentumHadFrac,\
-                               list_selections = selections,\
-                               range_low = -1.0,\
-                               range_high = + 5.0,\
-                               bins = 48,\
-                               xlabel = "E^{HAD}/P",\
-                               ylabel = "Number of Tracks")
-
-        histogram_name = "HadFrac"
-        histogram_name = histogram_name + "_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        from variables.variables import calc_HadFrac
-        plotter.BookHistograms(histogram_name,\
-                               calc_HadFrac,\
-                               list_selections = selections,\
-                               range_low = -1.0,\
-                               range_high = +2.0,\
-                               bins = 48,\
-                               xlabel = "E^{HAD}/E^{Total}",\
-                               ylabel = "Number of Tracks")
-
-        histogramName = "UnweightedTrkMultiplicityVsP_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  useWeights=False\
-                                                  )
-
-        histogramName = "TrkMultiplicityVsP_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        trkMultiplicity =  plotter.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins_fine,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
-
-        histogramName = "EOPProfileVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.BookTProfileHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
-                                                  )
-
-        histogramName = "2DHist_EOPVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageEOP  =  plotter.Book2DHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  calc_EOP,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p",\
-                                                  )
-
-        histogramName = "EnergyAnulusProfileVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E_{EM Anulus}>[GeV]",\
-                                                  )
-
-
-        histogramName = "2DHist_EnergyAnulusVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EnergyAnulus,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E_{EM Anulus} [GeV]",\
-                                                  )
-
-
-        histogramName = "EnergyBkgProfileVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.BookTProfileHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>_{BKG}",\
-                                                  )
-
-
-        histogramName = "2DHist_EnergyBkgVsMomentum_NonZeroE_20TRT_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
-        AverageAnulus =  plotter.Book2DHistograms(histogramName,\
-                                                  calc_trkP,\
-                                                  calc_EOPBkg,\
-                                                  list_selections = selections,\
-                                                  bins_x = p_bins,\
-                                                  bins_y = eop_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "E/p BKG",\
-                                                  )
-
-
-        #go and get the E/p distribution in each of the E/p bins
-        p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
-        for p_range in p_ranges:
-            print("The prange is " + str(p_range))
-            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y, z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = [sel_NonZeroEnergy,eta_binSelection, sel_PBin, sel_NTRT20]
-            histogramName = "EOPDistribution_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOP,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p",\
-                                                      )
-
-            histogramName = "EOPBkgDistribution"
-            histogramName = histogramName + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            EOPBkgDist  =  plotter.BookHistograms(histogramName,
-                                                      calc_EOPBkg,\
-                                                      list_selections = selections,\
-                                                      bins = eop_bins,\
-                                                      xlabel ="E/p Bkg",\
-                                                      )
-            histogram_name = "trkTRTHits"
-            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_nTRT
-            plotter.BookHistograms(histogram_name,\
-                                   calc_nTRT,\
-                                   list_selections = selections,\
-                                   range_low = -0.5,\
-                                   range_high = 59.5,\
-                                   bins = 60,\
-                                   xlabel = "Number of TRT Hits",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "trkEMDR100"
-            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_EnergyEMDR100
-            plotter.BookHistograms(histogram_name,\
-                                   calc_EnergyEMDR100,\
-                                   list_selections = selections,\
-                                   range_low = -2.0,\
-                                   range_high = + 10.0,\
-                                   bins = 48,\
-                                   xlabel = "E_{EM}^{#DeltaR<0.1}[GeV]",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "MomentumHadFrac"
-            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_MomentumHadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_MomentumHadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 5.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/P",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_name = "HadFrac"
-            histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-            from variables.variables import calc_HadFrac
-            plotter.BookHistograms(histogram_name,\
-                                   calc_HadFrac,\
-                                   list_selections = selections,\
-                                   range_low = -1.0,\
-                                   range_high = + 2.0,\
-                                   bins = 48,\
-                                   xlabel = "E^{HAD}/E^{Total}",\
-                                   ylabel = "Number of Tracks")
-
-            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
-
-            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-                histogram_name = histogram_name + "_NonZeroE_20TRT_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*p_range[0])) + "_" + str(int(100*p_range[1]))
-                plotter.BookHistograms(histogram_name,\
-                                       variable,\
-                                       list_selections = selections,\
-                                       bins = 10,\
-                                       range_low = -0.5,\
-                                       range_high = 9.5,\
-                                       xlabel=xlabel,\
-                                       ylabel="Number of Tracks")
-
-
-
-
-#   #go and get the average eneryg in the EM anulus for MIP particles in each of the eta bins.
-#   from variables.variables import calc_EnergyAnulus
-#   for eta_range, eta_descriptor, eta_binSelection in zip(eta_ranges, eta_descriptors, eta_binSelections):
-#       selections = MIP_selection + [eta_binSelection]
-#       AverageAnulus =  plotter.BookTProfileHistograms(calc_trkP,\
-#                                                  calc_EnergyAnulus,\
-#                                                 list_selections = selections,\
-#                                                 bins = p_bins,\
-#                                                 xlabel ="P[GeV]",\
-#                                                 ylabel = "<E_{EM Anulus}>[GeV]",\
-#                                                 )
-#       description = ["MIP Selection"] + [eta_descriptor] + ["P_{T} Reweighted"]
-#       trkAnulus_canvas = DrawDataVsMC(     AverageAnulus,\
-#                                         plotter.channelLabels,\
-#                                         MCKey='PythiaJetJet',\
-#                                         DataKey='LowMuData',\
-#                                         extra_description = description,\
-#                                         scale_factor = scale_factor,\
-#                                         ratio_min = 0.6,\
-#                                         ratio_max = 1.4,\
-#                                         doLogx = True,\
-#                                         doLogy = False\
-#                                         )
-#       trkAnulus_canvas.Print(plotter_directory+"/AverageEnergyInAnulusVsMomentumInEtaBin" + str(eta_range[0]) + "_" + str(eta_range[1]) + ".png")
-
-#   #go and get the average eneryg in the EM anulus for MIP particles in each of the eta bins.
-#   from variables.variables import calc_EOPBkg
-#   for eta_range, eta_descriptor, eta_binSelection in zip(eta_ranges, eta_descriptors, eta_binSelections):
-#       selections = MIP_selection + [eta_binSelection]
-#       AverageAnulus =  plotter.BookTProfileHistograms(calc_trkP,\
-#                                                  calc_EnergyAnulus,\
-#                                                 list_selections = selections,\
-#                                                 bins = p_bins,\
-#                                                 xlabel ="P[GeV]",\
-#                                                 ylabel = "<E/p>_{BKG}",\
-#                                                 )
-#       description = ["MIP Selection"] + [eta_descriptor] + ["P_{T} Reweighted"]
-#       trkAnulus_canvas = DrawDataVsMC(     AverageAnulus,\
-#                                         plotter.channelLabels,\
-#                                         MCKey='PythiaJetJet',\
-#                                         DataKey='LowMuData',\
-#                                         extra_description = description,\
-#                                         scale_factor = scale_factor,\
-#                                         ratio_min = 0.6,\
-#                                         ratio_max = 1.4,\
-#                                         doLogx = True,\
-#                                         doLogy = False\
-#                                         )
-#       trkAnulus_canvas.Print(plotter_directory+"/AverageEOPBkgVsMomentumInEtaBin" + str(eta_range[0]) + "_" + str(eta_range[1]) + ".png")
     histograms = plotter.DumpHistograms()
     for histogram_name in histograms:
         WriteToFile(histograms[histogram_name], outFile)
+
     print("THEJOBFINISHED!")
