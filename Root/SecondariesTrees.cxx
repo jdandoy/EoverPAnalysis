@@ -48,6 +48,9 @@ SecondariesTrees :: SecondariesTrees (const std::string& name,
 
   declareProperty( "VertexContainer", m_VertexContainer = "PrimaryVertices",
                    "Input vertex container?" );
+
+  declareProperty( "TrackContainer", m_TrackContainer = "InDetTrackParticlesLoose",
+		   "Input track container?" );
 }
 
 SecondariesTrees :: ~SecondariesTrees()
@@ -99,6 +102,8 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("vertex_chiSquared",&m_vertex_chiSquared);
   t->Branch("vertex_numberDoF",&m_vertex_numberDoF);
   t->Branch("vertex_dr",&m_vertex_dr);
+  t->Branch("vertex_isIsolatedPairEM",m_vertex_isIsolatedPairEM);
+  t->Branch("vertex_isIsolatedPairHAD",m_vertex_isIsolatedPairHAD);
 
   /*
   t->Branch("track1_pt",&m_track1_pt);
@@ -119,6 +124,10 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("trk1_charge", &trk1_charge);
   t->Branch("trk1_z0sintheta", &trk1_z0sintheta);
   t->Branch("trk1_p", &trk1_p);
+  t->Branch("trk1_iso1_EM2", &trk1_iso1_EM2);
+  t->Branch("trk1_iso1_HAD2", &trk1_iso1_HAD2);
+  t->Branch("trk1_iso2_EM2", &trk1_iso2_EM2);
+  t->Branch("trk1_iso2_HAD2", &trk1_iso2_HAD2);
   t->Branch("trk1_etaEMB2", &trk1_etaEMB2);
   t->Branch("trk1_phiEMB2", &trk1_phiEMB2);
   t->Branch("trk1_etaEME2", &trk1_etaEME2);
@@ -157,6 +166,10 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("trk2_charge", &trk2_charge);
   t->Branch("trk2_z0sintheta", &trk2_z0sintheta);
   t->Branch("trk2_p", &trk2_p);
+  t->Branch("trk2_iso1_EM2", &trk2_iso1_EM2);
+  t->Branch("trk2_iso1_HAD2", &trk2_iso1_HAD2);
+  t->Branch("trk2_iso2_EM2", &trk2_iso2_EM2);
+  t->Branch("trk2_iso2_HAD2", &trk2_iso2_HAD2);
   t->Branch("trk2_etaEMB2", &trk2_etaEMB2);
   t->Branch("trk2_phiEMB2", &trk2_phiEMB2);
   t->Branch("trk2_etaEME2", &trk2_etaEME2);
@@ -235,6 +248,10 @@ StatusCode SecondariesTrees :: execute ()
   m_vertex_N = npv;
 
   if(debug) std::cout << "SecondariesTrees :: execute()\t" << npv << " primary vertices!" << std::endl; 
+
+  // Track particles
+  const xAOD::TrackParticleContainer* TrackParticles = 0;
+  m_event->retrieve(TrackParticles, m_TrackContainer.Data());
 
   // Truth particles
   const xAOD::TruthParticleContainer* TruthParticles = 0;
@@ -316,7 +333,7 @@ StatusCode SecondariesTrees :: execute ()
               trk2_m = 0.493677;
             }
 	}
-      
+
       TLorentzVector tlv_track1;
       tlv_track1.SetPtEtaPhiM(trk1_pt, 
 			      trk1_etaID,
@@ -328,6 +345,29 @@ StatusCode SecondariesTrees :: execute ()
                               trk2_etaID,
                               trk2_phiID,
                               trk2_m);
+
+      static SG::AuxElement::ConstAccessor< float > acc_iso1_EM2("dRToNearestTrackInEM");
+      static SG::AuxElement::ConstAccessor< float > acc_iso1_HAD2("dRToNearestTrackInHAD");
+      static SG::AuxElement::ConstAccessor< float > acc_iso2_EM2("dRToSecondNearestTrackInEM");
+      static SG::AuxElement::ConstAccessor< float > acc_iso2_HAD2("dRToSecondNearestTrackInHAD");
+
+      if( acc_iso1_EM2.isAvailable(*vertex->trackParticle(0)))  trk1_iso1_EM2  = acc_iso1_EM2(*vertex->trackParticle(0));
+      if( acc_iso1_HAD2.isAvailable(*vertex->trackParticle(0))) trk1_iso1_HAD2 = acc_iso1_HAD2(*vertex->trackParticle(0));
+      if( acc_iso2_EM2.isAvailable(*vertex->trackParticle(0)))  trk1_iso2_EM2  = acc_iso2_EM2(*vertex->trackParticle(0));
+      if( acc_iso2_HAD2.isAvailable(*vertex->trackParticle(0))) trk1_iso2_HAD2 = acc_iso2_HAD2(*vertex->trackParticle(0));
+
+      if( acc_iso1_EM2.isAvailable(*vertex->trackParticle(1)))  trk2_iso1_EM2  = acc_iso1_EM2(*vertex->trackParticle(1));
+      if( acc_iso1_HAD2.isAvailable(*vertex->trackParticle(1))) trk2_iso1_HAD2 = acc_iso1_HAD2(*vertex->trackParticle(1));
+      if( acc_iso2_EM2.isAvailable(*vertex->trackParticle(1)))  trk2_iso2_EM2  = acc_iso2_EM2(*vertex->trackParticle(1));
+      if( acc_iso2_HAD2.isAvailable(*vertex->trackParticle(1))) trk2_iso2_HAD2 = acc_iso2_HAD2(*vertex->trackParticle(1));
+
+      if(debug)
+	{
+	  std::cout << "track 1 isolation: nearest\tEM " << trk1_iso1_EM2 << " HAD " << trk1_iso1_HAD2 
+		    << "\tnext\tEM " << trk1_iso2_EM2 << " HAD " << trk1_iso2_HAD2 << std::endl
+		    << "track 2 isolation: nearest\tEM " << trk2_iso1_EM2 << " HAD " <<trk2_iso1_HAD2
+		    << "\tnext\tEM " <<trk2_iso2_EM2 << " HAD " << trk2_iso2_HAD2 << std::endl;	   
+	}
 
       tlv_vertex.Clear();
       tlv_vertex += tlv_track1;
@@ -385,7 +425,22 @@ StatusCode SecondariesTrees :: execute ()
       m_vertex_dr = tlv_track1.DeltaR(tlv_track2);
 
       m_vertex_Rxy = vertex->position().perp();
-
+     
+      m_vertex_isIsolatedPairEM = 0;      
+      static SG::AuxElement::ConstAccessor< ElementLink<xAOD::TrackParticleContainer > > acc_nearestEMLink("LinkToNearestTrackInEM");
+      if(acc_nearestEMLink.isAvailable(*vertex->trackParticle(0)) && acc_nearestEMLink.isAvailable(*vertex->trackParticle(1)))
+	if( (*acc_nearestEMLink(*vertex->trackParticle(0)) == vertex->trackParticle(1))
+	    && (*acc_nearestEMLink(*vertex->trackParticle(1)) == vertex->trackParticle(0)) )
+	  std::cout << "Oh hot damn. This is my jam." << std::endl;
+      
+      /*
+      m_vertex_isIsolatedPairHAD = 0;
+      static SG::AuxElement::ConstAccessor< ElementLink<xAOD::TrackParticleContainer > > acc_nearestHADLink("LinkToNearestTrackInHAD");
+      if(acc_nearestHADLink.isAvailable(*vertex->trackParticle(0)) && acc_nearestHADLink.isAvailable(*vertex->trackParticle(1)))
+        if( (*acc_nearestHADLink(*vertex->trackParticle(0)) == &vertex->trackParticle(1))
+	    && (*acc_nearestHADLink(*vertex->trackParticle(1)) == &vertex->trackParticle(0)) )
+	  std::cout << "Oh hot damn. This is my jam." << std::endl;
+      */
       // Track e/p stuff
 
       //Sum all energy deposits in the EM calorimeter and the HAD caloriemter with different radius cuts

@@ -85,7 +85,9 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
      Error("execute()","couldn't retrieve the input track container");
   }
   static SG::AuxElement::Decorator< float > nearestEMDRDecorator ("dRToNearestTrackInEM");
-  static SG::AuxElement::Decorator< float > nearestHADDRDecorator ("dRToNearestTrackInHAD");
+  static SG::AuxElement::Decorator< float > secondNearestEMDRDecorator ("dRToSecondNearestTrackInEM");
+  static SG::AuxElement::Decorator< float > nearestHADDRDecorator ("dRToSecondNearestTrackInHAD");
+  static SG::AuxElement::Decorator< float > secondNearestHADDRDecorator ("dRToSecondNearestTrackInHAD");
 
   ConstDataVector<xAOD::TrackParticleContainer>* selectedTracks(nullptr);
   selectedTracks = new ConstDataVector<xAOD::TrackParticleContainer>(SG::VIEW_ELEMENTS);
@@ -96,7 +98,7 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
   ANA_MSG_DEBUG("Beginning track loop");
 
   //Create links to the nearest track
-  ElementLink<xAOD::TrackParticleContainer> linkNearestTrackEM2;
+  ElementLink<xAOD::TrackParticleContainer> linkNearestTrackEM2;  
   ElementLink<xAOD::TrackParticleContainer> linkSecondNearestTrackEM2;
 
   ElementLink<xAOD::TrackParticleContainer> linkNearestTrackHAD2;
@@ -307,6 +309,7 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
       } //tracks have extrapolation to HEC
     } // END looping trk2
     nearestHADDRDecorator(*trk1) = trk1_nearest_dR_HAD;//decorate the track with the distance to the nearest track
+    secondNearestHADDRDecorator(*trk1) = trk1_secondNearest_dR_HAD;//decorate the track with the distance to the nearest track
     nearestHADLinkDecorator(*trk1) = linkNearestTrackHAD2; //decorate the track with a link to the nearest track in the HAD calorimeter
     secondNearestHADLinkDecorator(*trk1) = linkSecondNearestTrackHAD2; //decorate the track with a link to the second nearest track in the HAD calorimeter
 
@@ -442,6 +445,7 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
 
     ANA_MSG_DEBUG("Track passed isolation cut, decorating with dR = " + std::to_string(trk1_nearest_dR_EM));
     nearestEMDRDecorator(*trk1) = trk1_nearest_dR_EM;//decorate the track with the distance to the nearest track
+    secondNearestEMDRDecorator(*trk1) = trk1_secondNearest_dR_EM;//decorate the track with the distance to the nearest track
     nearestEMLinkDecorator(*trk1) = linkNearestTrackEM2; //decorate the track with a link to the nearest track in the HAD calorimeter
     secondNearestEMLinkDecorator(*trk1) = linkSecondNearestTrackEM2; //decorate the track with a link to the nearest track in the HAD calorimeter
     if (trk1_not_isolated_EMB2) {ANA_MSG_DEBUG("Track failed isolation"); continue;}

@@ -55,6 +55,8 @@ class TrackExtrapolationIsolationTool : public xAH::Algorithm
 
     float trk1_nearest_dR_HAD;
     float trk1_nearest_dR_EM;
+    float trk1_secondNearest_dR_HAD;
+    float trk1_secondNearest_dR_EM;
 
     TTree *m_tree; //!
     TFile *file; //!

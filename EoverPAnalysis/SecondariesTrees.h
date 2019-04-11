@@ -50,7 +50,8 @@ class SecondariesTrees : public EL::AnaAlgorithm
   Bool_t m_isData;
   TString m_label;
   TString m_VertexContainer;
-  
+  TString m_TrackContainer;
+
   // Output variables for tree
   
   Int_t m_DSID;
@@ -69,6 +70,8 @@ class SecondariesTrees : public EL::AnaAlgorithm
   Float_t m_vertex_dr;
   Float_t m_vertex_chiSquared;
   Float_t m_vertex_numberDoF; 
+  Int_t m_vertex_isIsolatedPairEM;
+  Int_t m_vertex_isIsolatedPairHAD;
 
   /*
   Float_t m_track1_pt;
@@ -137,6 +140,10 @@ class SecondariesTrees : public EL::AnaAlgorithm
   float trk1_actualmu;
   float trk1_averagemu;
   float trk1_corrected_averagemu;
+  float trk1_iso1_EM2;
+  float trk1_iso1_HAD2;
+  float trk1_iso2_EM2;
+  float trk1_iso2_HAD2;
 
   float trk1_ClusterEnergy_EM_200;
   float trk1_ClusterEnergy_EM_100;
@@ -215,6 +222,10 @@ class SecondariesTrees : public EL::AnaAlgorithm
   float trk2_actualmu;
   float trk2_averagemu;
   float trk2_corrected_averagemu;
+  float trk2_iso1_EM2;
+  float trk2_iso1_HAD2;
+  float trk2_iso2_EM2;
+  float trk2_iso2_HAD2;
 
   float trk2_ClusterEnergy_EM_200;
   float trk2_ClusterEnergy_EM_100;
