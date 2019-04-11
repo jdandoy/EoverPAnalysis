@@ -32,7 +32,7 @@ EL::StatusCode TrackEnergyDecorator :: setupJob (EL::Job& job)
 
 EL::StatusCode TrackEnergyDecorator :: histInitialize ()
 {
-
+  ANA_CHECK(xAH::Algorithm::algInitialize());
   if( m_inTrackContainerName.empty()){
     Error("configure()", "One or more required configuration values are empty");
     return EL::StatusCode::FAILURE;
