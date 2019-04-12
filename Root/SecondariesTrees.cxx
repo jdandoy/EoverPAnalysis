@@ -102,17 +102,8 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("vertex_chiSquared",&m_vertex_chiSquared);
   t->Branch("vertex_numberDoF",&m_vertex_numberDoF);
   t->Branch("vertex_dr",&m_vertex_dr);
-  t->Branch("vertex_isIsolatedPairEM",m_vertex_isIsolatedPairEM);
-  t->Branch("vertex_isIsolatedPairHAD",m_vertex_isIsolatedPairHAD);
-
-  /*
-  t->Branch("track1_pt",&m_track1_pt);
-  t->Branch("track2_pt",&m_track2_pt);
-  t->Branch("track1_etaID",&m_track1_etaID);
-  t->Branch("track1_phiID",&m_track1_phiID);
-  t->Branch("track2_etaID",&m_track2_etaID);
-  t->Branch("track2_phiID",&m_track2_phiID);
-  */
+  t->Branch("vertex_isIsolatedPairEM",&m_vertex_isIsolatedPairEM);
+  t->Branch("vertex_isIsolatedPairHAD",&m_vertex_isIsolatedPairHAD);
 
   // 
   t->Branch("trk1Index",      &m_trk1Index);
@@ -429,18 +420,19 @@ StatusCode SecondariesTrees :: execute ()
       m_vertex_isIsolatedPairEM = 0;      
       static SG::AuxElement::ConstAccessor< ElementLink<xAOD::TrackParticleContainer > > acc_nearestEMLink("LinkToNearestTrackInEM");
       if(acc_nearestEMLink.isAvailable(*vertex->trackParticle(0)) && acc_nearestEMLink.isAvailable(*vertex->trackParticle(1)))
-	if( (*acc_nearestEMLink(*vertex->trackParticle(0)) == vertex->trackParticle(1))
-	    && (*acc_nearestEMLink(*vertex->trackParticle(1)) == vertex->trackParticle(0)) )
-	  std::cout << "Oh hot damn. This is my jam." << std::endl;
-      
-      /*
+	if(acc_nearestEMLink(*vertex->trackParticle(0)).isValid() && acc_nearestEMLink(*vertex->trackParticle(1)).isValid())	 
+	  if( (*acc_nearestEMLink(*vertex->trackParticle(0)) == vertex->trackParticle(1))
+	      && (*acc_nearestEMLink(*vertex->trackParticle(1)) == vertex->trackParticle(0)))
+	    m_vertex_isIsolatedPairEM=1;
+	  
       m_vertex_isIsolatedPairHAD = 0;
       static SG::AuxElement::ConstAccessor< ElementLink<xAOD::TrackParticleContainer > > acc_nearestHADLink("LinkToNearestTrackInHAD");
       if(acc_nearestHADLink.isAvailable(*vertex->trackParticle(0)) && acc_nearestHADLink.isAvailable(*vertex->trackParticle(1)))
-        if( (*acc_nearestHADLink(*vertex->trackParticle(0)) == &vertex->trackParticle(1))
-	    && (*acc_nearestHADLink(*vertex->trackParticle(1)) == &vertex->trackParticle(0)) )
-	  std::cout << "Oh hot damn. This is my jam." << std::endl;
-      */
+	if(acc_nearestHADLink(*vertex->trackParticle(0)).isValid() && acc_nearestHADLink(*vertex->trackParticle(1)).isValid())
+	  if( (*acc_nearestHADLink(*vertex->trackParticle(0)) == vertex->trackParticle(1))
+	      && (*acc_nearestHADLink(*vertex->trackParticle(1)) == vertex->trackParticle(0)) )
+	    m_vertex_isIsolatedPairHAD=1;
+
       // Track e/p stuff
 
       //Sum all energy deposits in the EM calorimeter and the HAD caloriemter with different radius cuts
