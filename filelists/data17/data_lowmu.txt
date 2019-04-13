@@ -1,0 +1,6 @@
+user.luadamek.data17_13TeV.00341294.physics_MinBias.deriv.DAOD_EOP.r11054_p3694.240319_calibhitinfo_EXT0
+user.luadamek.data17_13TeV.00341312.physics_MinBias.deriv.DAOD_EOP.r11054_p3694.240319_calibhitinfo_EXT0
+user.luadamek.data17_13TeV.00341419.physics_MinBias.deriv.DAOD_EOP.r11054_p3694.240319_calibhitinfo_EXT0
+user.luadamek.data17_13TeV.00341534.physics_MinBias.deriv.DAOD_EOP.r11054_p3694.240319_calibhitinfo_EXT0
+user.luadamek.data17_13TeV.00341615.physics_MinBias.deriv.DAOD_EOP.r11054_p3694.240319_calibhitinfo_EXT0
+user.luadamek.data17_13TeV.00341649.physics_MinBias.deriv.DAOD_EOP.r11054_p3694.240319_calibhitinfo_EXT0
