@@ -129,10 +129,10 @@ namespace EnergySumHelper
 
     const std::map<unsigned int, std::string> id_to_layer = { 
                                   {0, "PreSamplerB"},
-							      {1, "PreSamplerE"},
-							      {2, "EMB1"},
-							      {3, "EMB2"},
-							      {4, "EMB3"},
+							      {1, "EMB1"},
+							      {2, "EMB2"},
+							      {3, "EMB3"},
+							      {4, "PreSamplerE"},
 							      {5, "EME1"},
 							      {6, "EME2"},
 							      {7, "EME3"},
