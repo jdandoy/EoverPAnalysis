@@ -306,7 +306,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         m_clusterVariablesForTree[key_HAD] = numberOfClusterMap["HAD"][radiusCut]["NClusters"];
         m_clusterVariablesForTree[key_EM_EMLike] = numberOfClusterMap["EM"][radiusCut]["NClusters_EMLike"];
         m_clusterVariablesForTree[key_EM_HADLike] = numberOfClusterMap["EM"][radiusCut]["NClusters_HADLike"];
-        m_clusterVariablesForTree[key_HAD_EMLike] = numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];
+        m_clusterVariablesForTree[key_HAD_EMLike] = numberOfClusterMap["HAD"][radiusCut]["NClusters_EMLike"];
         m_clusterVariablesForTree[key_HAD_HADLike] = numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];
     }
 
