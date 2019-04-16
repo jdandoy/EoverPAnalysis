@@ -103,6 +103,22 @@ namespace EnergySumHelper
 						"HEC3"
                         }; //! array of HAD layers only
 
+    const std::map<std::string, float> map_cutName_to_cutValue{
+                                  {"025",0.025},
+                                  {"050",0.050},
+                                  {"075",0.075},
+                                  {"100",0.100},
+                                  {"125",0.125},
+                                  {"150",0.150},
+                                  {"175",0.175},
+                                  {"200",0.200},
+                                  {"225",0.225},
+                                  {"250",0.250},
+                                  {"275",0.275},
+                                  {"300",0.300}
+                                  };
+               
+
     const std::map<std::string, unsigned int> layer_to_id = {
                                   {"PreSamplerB", 0},
 							      {"EMB1", 1},
