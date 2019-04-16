@@ -21,7 +21,7 @@ trks_loose_isolated = trks_loose + "Isolated"
 trks_tight_isolated = trks_tight + "Isolated"
 trks_loose_isolated_vertex = trks_loose_isolated + "VertexAssociated"
 trks_tight_isolated_vertex = trks_tight_isolated + "VertexAssociated"
-radiusCuts = "100,200,300"
+radiusCuts = "025,050,075,100,125,150,175,200,225,250,275,300"
 
 # Set up the Basic Event Selection for 2017 low-mu data
 c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
@@ -122,8 +122,8 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated,
 c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociationTool",
 						 "m_inputTrackContainer": trks_loose_isolated,
 						 "m_outputTrackContainer": trks_loose_isolated_vertex,
-						 "m_dzSinTheta_cut": 0.5,
-						 "m_d0_cut": 0.5,
+						 "m_dzSinTheta_cut": 1.5,
+						 "m_d0_cut": 1.5,
 						 "m_msgLevel": "info",
 						 })
 
@@ -137,8 +137,8 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated_vertex,
 c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociatedTool",
 						 "m_inputTrackContainer": trks_tight_isolated,
 						 "m_outputTrackContainer": trks_tight_isolated_vertex,
-						 "m_dzSinTheta_cut":0.5,
-						 "m_d0_cut":0.5,
+						 "m_dzSinTheta_cut":1.5,
+						 "m_d0_cut":1.5,
 						 "m_msgLevel": "info",
 						 })
 
@@ -150,7 +150,7 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated_vertex,
 			    })
 
 #### Make E/p ttree
-for track_container in [trks_loose_isolated, trks_loose_isolated_vertex, trks_tight_isolated, trks_tight_isolated_vertex]:
+for track_container in [trks_loose_isolated, trks_loose_isolated_vertex]:#, trks_tight_isolated, trks_tight_isolated_vertex]:
         # E/p histograms with LoosePrimary track selection
         c.setalg("EoverPTreeAlgo", {"m_name": "LA_EoverP_" + track_container,
 				    "m_inTrackContainerName": track_container,
