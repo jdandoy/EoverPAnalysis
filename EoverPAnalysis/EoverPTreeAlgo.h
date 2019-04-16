@@ -35,6 +35,10 @@ class EoverPTreeAlgo : public xAH::Algorithm
     std::string m_energyCalibCommaList = "ClusterEnergy,CellEnergy,LCWClusterEnergy";
     std::string m_radiusCutCommaList = "100,200";
 
+    std::map<std::string, float> m_trk_extrapolEta;
+    std::map<std::string, float> m_trk_extrapolPhi;
+    std::map<std::string, int> m_clusterVariablesForTree;
+
     // pileup reweighting
     bool m_doCustomPUreweighting = false;
     std::string m_pileupReweightingFile = "pileup_reweighting.root";

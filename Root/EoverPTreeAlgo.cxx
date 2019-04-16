@@ -133,23 +133,8 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_charge", &trk_charge);
   m_tree->Branch("trk_z0sintheta", &trk_z0sintheta);
   m_tree->Branch("trk_p", &trk_p);
-  m_tree->Branch("trk_etaEMB2", &trk_etaEMB2);
-  m_tree->Branch("trk_phiEMB2", &trk_phiEMB2);
-  m_tree->Branch("trk_etaEME2", &trk_etaEME2);
-  m_tree->Branch("trk_phiEME2", &trk_phiEME2);
-  m_tree->Branch("trk_etaTileBar2", &trk_etaTileBar2);
-  m_tree->Branch("trk_phiTileBar2", &trk_phiTileBar2);
-  m_tree->Branch("trk_etaTileExt1", &trk_etaTileExt1);
-  m_tree->Branch("trk_phiTileExt1", &trk_phiTileExt1);
-  m_tree->Branch("trk_etaHEC1", &trk_etaHEC1);
-  m_tree->Branch("trk_phiHEC1", &trk_phiHEC1);
   m_tree->Branch("trk_nearest_dR_EM", &trk_nearest_dR_EM);
   m_tree->Branch("trk_nearest_dR_HAD", &trk_nearest_dR_HAD);
-  m_tree->Branch("trk_nclusters", &trk_nclusters);
-  m_tree->Branch("trk_nclusters_EM", &trk_nclusters_EM);
-  m_tree->Branch("trk_nclusters_hadlike", &trk_nclusters_hadlike);
-  m_tree->Branch("trk_nclusters_HAD", &trk_nclusters_HAD);
-  m_tree->Branch("trk_nclusters_emlike", &trk_nclusters_emlike);
   m_tree->Branch("trkWeight", &trkWeight);
   m_tree->Branch("trk_NPV_2", &trk_NPV_2);
   m_tree->Branch("trk_NPV_4", &trk_NPV_4);
@@ -162,6 +147,11 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_averagemu", &trk_averagemu);
   m_tree->Branch("trk_corrected_averagemu", &trk_corrected_averagemu);
 
+  for (std::string l: EnergySumHelper::layer){
+      m_tree->Branch(("trk_eta" + l).c_str(), &(m_trk_extrapolEta[l]));
+      m_tree->Branch(("trk_phi" + l).c_str(), &(m_trk_extrapolPhi[l]));
+  }
+
   //All energy deposits in EM-Calorimeter and HAD-Calorimeter
   for (std::string energyCalib : m_energyCalibList){
       for (std::string radiusCut : m_radiusCutList){
@@ -173,6 +163,33 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
           m_tree->Branch(("trk_" + energyCalib + "_EM_" + radiusCut).c_str(), &(m_energyVariablesForTree[key_EM]));
           m_tree->Branch(("trk_" + energyCalib + "_HAD_" + radiusCut).c_str(), &(m_energyVariablesForTree[key_HAD]));
       }
+  }
+
+  //Count the number of clusters at different radius cuts
+  for (std::string radiusCut : m_radiusCutList){
+      std::string key_EM = "trk_ncluters_EM_" + radiusCut;
+      m_energyVariablesForTree[key_EM] = 0.0;
+      std::string key_HAD = "trk_ncluters_HAD_" + radiusCut;
+      m_energyVariablesForTree[key_HAD] = 0.0;
+
+      std::string key_EM_EMLike = "trk_ncluters_EM_EMLike_" + radiusCut;
+      m_energyVariablesForTree[key_EM_EMLike] = 0.0;
+      std::string key_EM_HADLike = "trk_ncluters_EM_HADLike_" + radiusCut;
+      m_energyVariablesForTree[key_EM_HADLike] = 0.0;
+
+      std::string key_HAD_EMLike = "trk_ncluters_HAD_EMLike_" + radiusCut;
+      m_energyVariablesForTree[key_HAD_EMLike] = 0.0;
+      std::string key_HAD_HADLike = "trk_ncluters_HAD_HADLike_" + radiusCut;
+      m_energyVariablesForTree[key_HAD_HADLike] = 0.0;
+
+      m_tree->Branch(("trk_nclusters_EM_" + radiusCut).c_str(), &(m_clusterVariablesForTree[key_EM]));
+      m_tree->Branch(("trk_nclusters_HAD_" + radiusCut).c_str(), &(m_clusterVariablesForTree[key_HAD]));
+
+      m_tree->Branch(("trk_nclusters_EM_emlike_" + radiusCut).c_str(), &(m_clusterVariablesForTree[key_EM_EMLike]));
+      m_tree->Branch(("trk_nclusters_HAD_emlike_" + radiusCut).c_str(), &(m_clusterVariablesForTree[key_HAD_EMLike]));
+
+      m_tree->Branch(("trk_nclusters_EM_hadlike_" + radiusCut).c_str(), &(m_clusterVariablesForTree[key_EM_HADLike]));
+      m_tree->Branch(("trk_nclusters_HAD_hadlike_" + radiusCut).c_str(), &(m_clusterVariablesForTree[key_HAD_HADLike]));
   }
 
   ANA_MSG_DEBUG("Getting the cuflows");
@@ -215,6 +232,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
   const xAOD::TrackParticleContainer* trks(nullptr);
   ANA_CHECK( HelperFunctions::retrieve(trks, m_inTrackContainerName, m_event, m_store) );
 
+  //"dRToNearestTrackInEM"
   SG::AuxElement::ConstAccessor< float > acc_dRToNearestTrackInEM("dRToNearestTrackInEM");
   SG::AuxElement::ConstAccessor< float > acc_dRToNearestTrackInHAD("dRToNearestTrackInHAD");
 
@@ -236,24 +254,10 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     trk_pt = trk->pt()/1e3;
 
     //Get the value of the eta and phi co-ordinates when extrapolated to the EMB/EME
-    trk_etaEMB2 = trk->auxdata<float>("CALO_trkEta_EMB2");
-    trk_phiEMB2 = trk->auxdata<float>("CALO_trkPhi_EMB2");
-
-    // EME2
-    trk_etaEME2 = trk->auxdata<float>("CALO_trkEta_EME2");
-    trk_phiEME2 = trk->auxdata<float>("CALO_trkPhi_EME2");
-
-    //TileBar2
-    trk_etaTileBar2 = trk->auxdata<float>("CALO_trkEta_TileBar2");
-    trk_phiTileBar2 = trk->auxdata<float>("CALO_trkPhi_TileBar2");
-
-    //TileExt1
-    trk_etaTileExt1 = trk->auxdata<float>("CALO_trkEta_TileExt1");
-    trk_phiTileExt1 = trk->auxdata<float>("CALO_trkPhi_TileExt1");
-
-    //HEC1
-    trk_etaHEC1 = trk->auxdata<float>("CALO_trkEta_HEC1");
-    trk_phiHEC1 = trk->auxdata<float>("CALO_trkPhi_HEC1");
+    for (std::string l: EnergySumHelper::layer){
+        m_trk_extrapolEta[l] = trk->auxdata<float>("CALO_trkEta_"+l);
+        m_trk_extrapolPhi[l] = trk->auxdata<float>("CALO_trkPhi_"+l);
+    }
 
     trk_d0 = trk->d0(); //This is the correct d0
     trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct impact parameter w.r.t the primary vertex
@@ -282,57 +286,31 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
         }
     }
 
+    //calorimeter region (EM or HAD) -> radius cut name (100, 200, etc) -> # number of clusters
+    std::map<std::string, std::map< std::string, std::map<std::string, int> > > numberOfClusterMap;
+    numberOfClusterMap = EnergySumHelper::getNumberOfClustersInCaloriemterRegions(trk, EnergySumHelper::map_cutName_to_cutValue);
+
     ///////////////////////////////////////Information about the # of clusters ////////////////////////////////////////////////////////////////
-    trk_nclusters_EM = 0;
-    trk_nclusters_HAD = 0;
-    trk_nclusters_hadlike = 0;
-    trk_nclusters_emlike = 0;
+    //Count the number of clusters at different radius cuts
+    for (std::string radiusCut : m_radiusCutList){
+        std::string key_EM = "trk_ncluters_EM_" + radiusCut;
+        std::string key_HAD = "trk_ncluters_HAD_" + radiusCut;
 
-    SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_Energy("CALO_ClusterEnergy_Energy");
-    SG::AuxElement::ConstAccessor< std::vector<int> > acc_ClusterEnergy_maxEnergyLayer("CALO_ClusterEnergy_maxEnergyLayer");
-    SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_emProbability("CALO_ClusterEnergy_emProbability");
-    SG::AuxElement::ConstAccessor< std::vector<float> > acc_ClusterEnergy_dRToTrack("CALO_ClusterEnergy_dRToTrack");
+        std::string key_EM_EMLike = "trk_ncluters_EM_EMLike_" + radiusCut;
+        std::string key_EM_HADLike = "trk_ncluters_EM_HADLike_" + radiusCut;
 
-    //make sure that the information is available
-    if (acc_ClusterEnergy_Energy.isAvailable(*trk) && acc_ClusterEnergy_maxEnergyLayer.isAvailable(*trk) && acc_ClusterEnergy_emProbability.isAvailable(*trk) ){
-      std::vector<float> trk_cluster_energies = acc_ClusterEnergy_Energy(*trk);
-      std::vector<int> trk_cluster_maxEnergyLayer = acc_ClusterEnergy_maxEnergyLayer(*trk);
-      std::vector<float> trk_cluster_emProbability = acc_ClusterEnergy_emProbability(*trk);
-      std::vector<float> trk_cluster_dRToTrack = acc_ClusterEnergy_dRToTrack(*trk);
+        std::string key_HAD_EMLike = "trk_ncluters_HAD_EMLike_" + radiusCut;
+        std::string key_HAD_HADLike = "trk_ncluters_HAD_HADLike_" + radiusCut;
 
-      //make sure that number of clusters is consistent between different decorations
-      if (trk_cluster_energies.size() != trk_cluster_maxEnergyLayer.size()){
-         ANA_MSG_ERROR("The cluster vectors do not all have the same length for a given track");
-         return EL::StatusCode::FAILURE;
-      }
-
-      trk_nclusters = trk_cluster_energies.size();
-      ANA_MSG_DEBUG("The number of clusters associated with the track was " + std::to_string(trk_nclusters));
-
-      //Where were the clusters that are associated with the track
-      ANA_MSG_DEBUG("Printing out the layer of maximum energy of the clusters");
-      for (unsigned int i = 0; i < trk_cluster_maxEnergyLayer.size(); i ++)
-      {
-         if (trk_cluster_dRToTrack.at(i) > 0.2){continue;} //only count those clsuters within a dR cut of 0.2
-         int max_layer = trk_cluster_maxEnergyLayer.at(i);
-         ANA_MSG_DEBUG(EnergySumHelper::id_to_layer.at(max_layer));
-
-         if (std::find(EnergySumHelper::layer_EM.begin(), EnergySumHelper::layer_EM.end(), EnergySumHelper::id_to_layer.at(max_layer)) != EnergySumHelper::layer_EM.end()) trk_nclusters_EM += 1;
-         if (std::find(EnergySumHelper::layer_HAD.begin(), EnergySumHelper::layer_HAD.end(), EnergySumHelper::id_to_layer.at(max_layer)) != EnergySumHelper::layer_HAD.end()) trk_nclusters_HAD += 1;
-
-         float em_probability = trk_cluster_emProbability.at(i);
-         if (em_probability > 0.5) trk_nclusters_emlike += 1;
-         else trk_nclusters_hadlike += 1;
-      }
-      ANA_MSG_DEBUG("This many clusters in the EM calorimeters: "  + std::to_string(trk_nclusters_EM));
-      ANA_MSG_DEBUG("This many clusters in the HAD calorimeters: "  + std::to_string(trk_nclusters_HAD));
-      ANA_MSG_DEBUG("This many clusters with EM prob greater than 0.5 : "  + std::to_string(trk_nclusters_emlike));
-      ANA_MSG_DEBUG("This many clusters with EM prob less than 0.5 : "  + std::to_string(trk_nclusters_hadlike));
+        m_clusterVariablesForTree[key_EM] = numberOfClusterMap["EM"][radiusCut]["NClusters"];
+        m_clusterVariablesForTree[key_HAD] = numberOfClusterMap["HAD"][radiusCut]["NClusters"];
+        m_clusterVariablesForTree[key_EM_EMLike] = numberOfClusterMap["EM"][radiusCut]["NClusters_EMLike"];
+        m_clusterVariablesForTree[key_EM_HADLike] = numberOfClusterMap["EM"][radiusCut]["NClusters_HADLike"];
+        m_clusterVariablesForTree[key_HAD_EMLike] = numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];
+        m_clusterVariablesForTree[key_HAD_HADLike] = numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];
     }
-    else ANA_MSG_DEBUG("There was no information about the number of clusters associated with the track");
 
     ///////////////////////////////////////TRUTH INFORMATION ////////////////////////////////////////////////////////////////
-
     //reset the truth information
     trk_truthPdgId = 0;
     trk_truthEnergy = -999.0;
