@@ -86,7 +86,7 @@ EL::StatusCode TrackExtrapolationIsolationTool :: execute ()
   }
   static SG::AuxElement::Decorator< float > nearestEMDRDecorator ("dRToNearestTrackInEM");
   static SG::AuxElement::Decorator< float > secondNearestEMDRDecorator ("dRToSecondNearestTrackInEM");
-  static SG::AuxElement::Decorator< float > nearestHADDRDecorator ("dRToSecondNearestTrackInHAD");
+  static SG::AuxElement::Decorator< float > nearestHADDRDecorator ("dRToNearestTrackInHAD");
   static SG::AuxElement::Decorator< float > secondNearestHADDRDecorator ("dRToSecondNearestTrackInHAD");
 
   ConstDataVector<xAOD::TrackParticleContainer>* selectedTracks(nullptr);
