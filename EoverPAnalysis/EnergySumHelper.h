@@ -159,6 +159,14 @@ namespace EnergySumHelper
 									 std::string variableToSum, 
 									 std::string radiusCut,
 									 bool onlyPositiveEnergy = false);
+
+    extern std::map<unsigned int, std::map<std::string, std::map<std::string, int > > > getNumberOfClustersInLayers(
+                                     const xAOD::TrackParticle* trk,
+                                     const std::map<std::string,float> map_cut_names_to_values);
+
+    extern std::map<std::string, std::map< std::string, std::map<std::string, int> > > getNumberOfClustersInCaloriemterRegions(
+                                     const xAOD::TrackParticle* trk,
+                                     const std::map<std::string,float> map_cut_names_to_values);
 }
 
 #endif
