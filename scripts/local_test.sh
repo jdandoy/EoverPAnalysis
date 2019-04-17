@@ -7,7 +7,7 @@ xAH_run.py \
     --inputList \
     --submitDir localtest/ \
     -f \
-    --nevents 15000 \
+    --nevents 1500 \
     direct
     
 # Test on a data file
@@ -17,6 +17,6 @@ xAH_run.py \
     --inputList \
     --submitDir localtest_data/ \
     -f \
-    --nevents 5000 \
+    --nevents 1500 \
     --extraOptions="--isData" \
     direct
