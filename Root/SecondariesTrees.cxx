@@ -96,6 +96,13 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("vertex_isIsolatedPairHAD",&m_vertex_isIsolatedPairHAD);
 
   // 
+  for (std::string l: EnergySumHelper::layer){
+    t->Branch(("trk1_eta" + l).c_str(), &(m_trk1_extrapolEta[l]));
+    t->Branch(("trk1_phi" + l).c_str(), &(m_trk1_extrapolPhi[l]));
+    t->Branch(("trk2_eta" + l).c_str(), &(m_trk2_extrapolEta[l]));
+    t->Branch(("trk2_phi" + l).c_str(), &(m_trk2_extrapolPhi[l]));
+  }
+
   t->Branch("trk1Index",      &m_trk1Index);
   t->Branch("trk1_etaID", &trk1_etaID);
   t->Branch("trk1_phiID", &trk1_phiID);
@@ -467,8 +474,15 @@ StatusCode SecondariesTrees :: execute ()
 	      && (*acc_nearestHADLink(*vertex->trackParticle(1)) == vertex->trackParticle(0)) )
 	    m_vertex_isIsolatedPairHAD=1;
 
-      // Track e/p stuff
+      //Get the value of the eta and phi co-ordinates when extrapolated to the EMB/EME
+      for (std::string l: EnergySumHelper::layer){
+        m_trk1_extrapolEta[l] = vertex->trackParticle(0)->auxdata<float>("CALO_trkEta_"+l);
+        m_trk1_extrapolPhi[l] = vertex->trackParticle(0)->auxdata<float>("CALO_trkPhi_"+l);
+	m_trk2_extrapolEta[l] = vertex->trackParticle(1)->auxdata<float>("CALO_trkEta_"+l);
+        m_trk2_extrapolPhi[l] = vertex->trackParticle(1)->auxdata<float>("CALO_trkPhi_"+l);
+      }
 
+      // Track e/p stuff
       //Sum all energy deposits in the EM calorimeter and the HAD caloriemter with different radius cuts
       for (std::string energyCalib : m_energyCalibList)
 	{

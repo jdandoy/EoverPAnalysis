@@ -43,6 +43,10 @@ class SecondariesTrees : public EL::AnaAlgorithm
  private:
   std::map<std::string, float> m_energyVariablesForTree;
   std::map<std::string, int> m_clusterVariablesForTree;
+  std::map<std::string, float> m_trk1_extrapolEta;
+  std::map<std::string, float> m_trk1_extrapolPhi;
+  std::map<std::string, float> m_trk2_extrapolEta;
+  std::map<std::string, float> m_trk2_extrapolPhi;
   std::vector<std::string> m_energyCalibList;
   std::vector<std::string> m_radiusCutList;
   
