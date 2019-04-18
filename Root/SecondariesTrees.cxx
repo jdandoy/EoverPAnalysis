@@ -51,6 +51,12 @@ SecondariesTrees :: SecondariesTrees (const std::string& name,
 
   declareProperty( "TrackContainer", m_TrackContainer = "InDetTrackParticlesLoose",
 		   "Input track container?" );
+
+  declareProperty( "energyCalibCommaList", m_energyCalibCommaList = "",
+		   "energyCalibCommaList?" );
+
+  declareProperty( "radiusCutCommaList", m_radiusCutCommaList = "",
+		   "radiusCutCommaList?" );
 }
 
 SecondariesTrees :: ~SecondariesTrees()

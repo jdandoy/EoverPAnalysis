@@ -8,7 +8,7 @@ import shlex,argparse
 
 # Parser for options passed through xAH_run.py --extraOptions="(...)"
 parser = argparse.ArgumentParser("MLBJESJER")
-parser.add_argument('--isData', action='store_true', default=False)
+parser.add_argument('--isData', action='store_true', default=True)
 args = parser.parse_args(shlex.split(args.extra_options))
 
 c.output("ANALYSIS")
@@ -166,8 +166,8 @@ for sv in ['Lambda','Ks','Phi']:
 					 "isData": True,
 					 "MessageFrequency": 10000,
 					 "VertexContainer" : sv+"Candidates",
-				     "m_radiusCutCommaList": radiusCuts,
-				      "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
+				     "radiusCutCommaList": radiusCuts,
+				     "energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
 					 "TrackContainer" : trks_loose
 					 })
 	

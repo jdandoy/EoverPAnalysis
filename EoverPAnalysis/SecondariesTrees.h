@@ -29,9 +29,6 @@ class SecondariesTrees : public EL::AnaAlgorithm
 
   xAOD::TEvent *m_event; //!
 
-  // energy calibration, either "ClusterEnergy", "LCWClusterEnergy", or "CellEnergy"
-  std::string m_energyCalibCommaList = "ClusterEnergy,CellEnergy,LCWClusterEnergy";
-  std::string m_radiusCutCommaList = "100,200";
 
   // pileup reweighting
   bool m_doCustomPUreweighting = false;
@@ -56,6 +53,10 @@ class SecondariesTrees : public EL::AnaAlgorithm
   TString m_label;
   TString m_VertexContainer;
   TString m_TrackContainer;
+
+  // energy calibration, either "ClusterEnergy", "LCWClusterEnergy", or "CellEnergy"
+  std::string m_energyCalibCommaList = "ClusterEnergy,CellEnergy,LCWClusterEnergy";
+  std::string m_radiusCutCommaList = "100,200";
 
   // Output variables for tree
   
