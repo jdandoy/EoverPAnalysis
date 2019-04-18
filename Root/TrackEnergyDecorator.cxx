@@ -75,7 +75,10 @@ EL::StatusCode TrackEnergyDecorator :: execute ()
             for (std::string energyCalib : m_energyCalibList){
                 //Sum the energy deposit for the track
                 std::string toAccess = "CALO_" + energyCalib + "_" + calorimeterLayer + "_" + radiusCut;
-                EnergySum += trk->auxdata<float>(toAccess);
+                SG::AuxElement::ConstAccessor<float> accessor(toAccess);
+                if (accessor.isAvailable(*trk)){
+                    EnergySum += trk->auxdata<float>(toAccess);
+                }
             }
             decor(*trk) = EnergySum;
         }
