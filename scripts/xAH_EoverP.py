@@ -154,7 +154,7 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex]:#, trks
         # E/p histograms with LoosePrimary track selection
         c.setalg("EoverPTreeAlgo", {"m_name": "LA_EoverP_" + track_container,
 				    "m_inTrackContainerName": track_container,
-				    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,ClusterEMActiveCalibHitEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
+				    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
 				    "m_radiusCutCommaList": radiusCuts,
 				    "m_useCutFlow": True,
                                     "m_msgLevel": "info"
@@ -166,6 +166,8 @@ for sv in ['Lambda','Ks','Phi']:
 					 "isData": True,
 					 "MessageFrequency": 10000,
 					 "VertexContainer" : sv+"Candidates",
+				     "m_radiusCutCommaList": radiusCuts,
+				      "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
 					 "TrackContainer" : trks_loose
 					 })
 	
