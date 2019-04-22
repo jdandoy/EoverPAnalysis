@@ -14,7 +14,8 @@ args = parser.parse_args(shlex.split(args.extra_options))
 c.output("ANALYSIS")
 
 # input containers
-trks = "InDetTrackParticles"
+trks_unsorted = "InDetTrackParticles"
+trks = "InDetTrackParticlesSorted"
 trks_loose = trks + "Loose"
 trks_tight = trks + "Tight"
 trks_loose_isolated = trks_loose + "Isolated"
@@ -47,8 +48,14 @@ c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
                             "m_inContainerName": trks,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
                             "m_msgLevel": "info"
-			    })
+			               })
 
+'''Sort the tracks by pt first'''
+c.setalg("TrackSorter", {"m_name" : "TrackSorting",\
+                         "m_inTrackContainerName":trks_unsorted,\
+                         "m_sort":"Pt",\
+                         "m_sortedTrackContainerName" : trks,\
+                         })
 
 
 # track selection algorithm
@@ -89,7 +96,7 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose,
                             "m_inContainerName": trks_loose,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
                             "m_msgLevel": "info"
-			    })
+			                })
 
 c.setalg("TrackExtrapolationIsolationTool", {"m_name": "TrackIso_" + trks_loose,
 					     "m_inputTrackContainer": trks_loose,
@@ -103,7 +110,7 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated,
                             "m_inContainerName": trks_loose_isolated,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
                             "m_msgLevel": "info"
-			    })
+			               })
 
 c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_tight_isolated ,
 					 "m_inputTrackContainer": trks_loose_isolated,
@@ -117,7 +124,7 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated,
                             "m_inContainerName": trks_tight_isolated,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
                             "m_msgLevel": "info"
-			    })
+			               })
 
 c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociationTool",
 						 "m_inputTrackContainer": trks_loose_isolated,
@@ -132,7 +139,7 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated_vertex,
                             "m_inContainerName": trks_loose_isolated_vertex,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
                             "m_msgLevel": "info"
-			    })
+			               })
 
 c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociatedTool",
 						 "m_inputTrackContainer": trks_tight_isolated,
@@ -147,7 +154,7 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated_vertex,
                             "m_inContainerName": trks_tight_isolated_vertex,
                             "m_detailStr": "2D IPDetails HitCounts Chi2Details",
                             "m_msgLevel": "info"
-			    })
+			               })
 
 #### Make E/p ttree
 for track_container in [trks_loose_isolated, trks_loose_isolated_vertex]:#, trks_tight_isolated, trks_tight_isolated_vertex]:
@@ -157,7 +164,7 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex]:#, trks
 				    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
 				    "m_radiusCutCommaList": radiusCuts,
 				    "m_useCutFlow": True,
-                                    "m_msgLevel": "info"
+                    "m_msgLevel": "info"
 				    })
 
 for sv in ['Lambda','Ks','Phi']:
@@ -165,7 +172,7 @@ for sv in ['Lambda','Ks','Phi']:
 					 "label": sv,
 					 "isData": True,
 					 "MessageFrequency": 10000,
-					 "VertexContainer" : sv+"Candidates",
+    				 "VertexContainer" : sv+"Candidates",
 				     "radiusCutCommaList": radiusCuts,
 				     "energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
 					 "TrackContainer" : trks_loose

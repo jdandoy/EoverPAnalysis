@@ -337,7 +337,7 @@ StatusCode SecondariesTrees :: execute ()
       TLorentzVector tlv_vertex;
       if(vertex->trackParticleLinks().size()!=2) continue;
       else
-	{
+	  {
 	  //This is the track pT, and coordinates of the track in the ID	  	  	  
 	  trk1_pt = vertex->trackParticle(0)->pt()/1.e3;
 	  trk1_etaID = vertex->trackParticle(0)->eta();
@@ -370,7 +370,7 @@ StatusCode SecondariesTrees :: execute ()
               trk1_m = 0.493677;
               trk2_m = 0.493677;
             }
-	}
+	  }
 
       TLorentzVector tlv_track1;
       tlv_track1.SetPtEtaPhiM(trk1_pt, 
@@ -509,7 +509,7 @@ StatusCode SecondariesTrees :: execute ()
 	      m_energyVariablesForTree[key_HAD1] = energySum1["HAD"];
 	      m_energyVariablesForTree[key_EM1] = energySum1["EM"];
 	      m_energyVariablesForTree[key_HAD2] = energySum2["HAD"];
-              m_energyVariablesForTree[key_EM2] = energySum2["EM"];
+          m_energyVariablesForTree[key_EM2] = energySum2["EM"];
 	    }
 	}
 
@@ -537,35 +537,35 @@ StatusCode SecondariesTrees :: execute ()
       ///////////////////////////////////////Information about the # of clusters ////////////////////////////////////////////////////////////////
       //Count the number of clusters at different radius cuts
       for (std::string radiusCut : m_radiusCutList)
-	{
-	  std::string key_EM_trk1 = "trk1_ncluters_EM_" + radiusCut;
-	  std::string key_HAD_trk1 = "trk1_ncluters_HAD_" + radiusCut;
-	  std::string key_EM_EMLike_trk1 = "trk1_ncluters_EM_EMLike_" + radiusCut;
-	  std::string key_EM_HADLike_trk1 = "trk1_ncluters_EM_HADLike_" + radiusCut;
-	  std::string key_HAD_EMLike_trk1 = "trk1_ncluters_HAD_EMLike_" + radiusCut;
-	  std::string key_HAD_HADLike_trk1 = "trk1_ncluters_HAD_HADLike_" + radiusCut;
-       
-	  m_clusterVariablesForTree[key_EM_trk1] = trk1_numberOfClusterMap["EM"][radiusCut]["NClusters"];
-	  m_clusterVariablesForTree[key_HAD_trk1] = trk1_numberOfClusterMap["HAD"][radiusCut]["NClusters"];
-	  m_clusterVariablesForTree[key_EM_EMLike_trk1] = trk1_numberOfClusterMap["EM"][radiusCut]["NClusters_EMLike"];
-	  m_clusterVariablesForTree[key_EM_HADLike_trk1] = trk1_numberOfClusterMap["EM"][radiusCut]["NClusters_HADLike"];
-	  m_clusterVariablesForTree[key_HAD_EMLike_trk1] = trk1_numberOfClusterMap["HAD"][radiusCut]["NClusters_EMLike"];
-	  m_clusterVariablesForTree[key_HAD_HADLike_trk1] = trk1_numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];      
+	  {
+	    std::string key_EM_trk1 = "trk1_ncluters_EM_" + radiusCut;
+	    std::string key_HAD_trk1 = "trk1_ncluters_HAD_" + radiusCut;
+	    std::string key_EM_EMLike_trk1 = "trk1_ncluters_EM_EMLike_" + radiusCut;
+	    std::string key_EM_HADLike_trk1 = "trk1_ncluters_EM_HADLike_" + radiusCut;
+	    std::string key_HAD_EMLike_trk1 = "trk1_ncluters_HAD_EMLike_" + radiusCut;
+	    std::string key_HAD_HADLike_trk1 = "trk1_ncluters_HAD_HADLike_" + radiusCut;
+         
+	    m_clusterVariablesForTree[key_EM_trk1] = trk1_numberOfClusterMap["EM"][radiusCut]["NClusters"];
+	    m_clusterVariablesForTree[key_HAD_trk1] = trk1_numberOfClusterMap["HAD"][radiusCut]["NClusters"];
+	    m_clusterVariablesForTree[key_EM_EMLike_trk1] = trk1_numberOfClusterMap["EM"][radiusCut]["NClusters_EMLike"];
+	    m_clusterVariablesForTree[key_EM_HADLike_trk1] = trk1_numberOfClusterMap["EM"][radiusCut]["NClusters_HADLike"];
+	    m_clusterVariablesForTree[key_HAD_EMLike_trk1] = trk1_numberOfClusterMap["HAD"][radiusCut]["NClusters_EMLike"];
+	    m_clusterVariablesForTree[key_HAD_HADLike_trk1] = trk1_numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];      
 
-	  std::string key_EM_trk2 = "trk2_ncluters_EM_" + radiusCut;
-	  std::string key_HAD_trk2 = "trk2_ncluters_HAD_" + radiusCut;
-	  std::string key_EM_EMLike_trk2 = "trk2_ncluters_EM_EMLike_" + radiusCut;
-	  std::string key_EM_HADLike_trk2 = "trk2_ncluters_EM_HADLike_" + radiusCut;
-	  std::string key_HAD_EMLike_trk2 = "trk2_ncluters_HAD_EMLike_" + radiusCut;
-	  std::string key_HAD_HADLike_trk2 = "trk2_ncluters_HAD_HADLike_" + radiusCut;
+	    std::string key_EM_trk2 = "trk2_ncluters_EM_" + radiusCut;
+	    std::string key_HAD_trk2 = "trk2_ncluters_HAD_" + radiusCut;
+	    std::string key_EM_EMLike_trk2 = "trk2_ncluters_EM_EMLike_" + radiusCut;
+	    std::string key_EM_HADLike_trk2 = "trk2_ncluters_EM_HADLike_" + radiusCut;
+	    std::string key_HAD_EMLike_trk2 = "trk2_ncluters_HAD_EMLike_" + radiusCut;
+	    std::string key_HAD_HADLike_trk2 = "trk2_ncluters_HAD_HADLike_" + radiusCut;
 
-	  m_clusterVariablesForTree[key_EM_trk2] = trk2_numberOfClusterMap["EM"][radiusCut]["NClusters"];
-	  m_clusterVariablesForTree[key_HAD_trk2] = trk2_numberOfClusterMap["HAD"][radiusCut]["NClusters"];
-	  m_clusterVariablesForTree[key_EM_EMLike_trk2] = trk2_numberOfClusterMap["EM"][radiusCut]["NClusters_EMLike"];
-	  m_clusterVariablesForTree[key_EM_HADLike_trk2] = trk2_numberOfClusterMap["EM"][radiusCut]["NClusters_HADLike"];
-	  m_clusterVariablesForTree[key_HAD_EMLike_trk2] = trk2_numberOfClusterMap["HAD"][radiusCut]["NClusters_EMLike"];
-	  m_clusterVariablesForTree[key_HAD_HADLike_trk2] = trk2_numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];
-	}
+	    m_clusterVariablesForTree[key_EM_trk2] = trk2_numberOfClusterMap["EM"][radiusCut]["NClusters"];
+	    m_clusterVariablesForTree[key_HAD_trk2] = trk2_numberOfClusterMap["HAD"][radiusCut]["NClusters"];
+	    m_clusterVariablesForTree[key_EM_EMLike_trk2] = trk2_numberOfClusterMap["EM"][radiusCut]["NClusters_EMLike"];
+	    m_clusterVariablesForTree[key_EM_HADLike_trk2] = trk2_numberOfClusterMap["EM"][radiusCut]["NClusters_HADLike"];
+	    m_clusterVariablesForTree[key_HAD_EMLike_trk2] = trk2_numberOfClusterMap["HAD"][radiusCut]["NClusters_EMLike"];
+	    m_clusterVariablesForTree[key_HAD_HADLike_trk2] = trk2_numberOfClusterMap["HAD"][radiusCut]["NClusters_HADLike"];
+	  }
 	
       // Fill for every vertex
       tree (TString("Tree_"+m_label).Data())->Fill ();

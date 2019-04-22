@@ -28,6 +28,7 @@ EL::StatusCode TrackSorter :: setupJob (EL::Job& job)
 {
   job.useXAOD();
   xAOD::Init("TrackSorter").ignore();
+  ANA_CHECK(xAH::Algorithm::algInitialize());
   return EL::StatusCode::SUCCESS;
 }
 
