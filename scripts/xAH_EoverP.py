@@ -43,12 +43,6 @@ c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
                                  "m_checkDuplicatesMC": False
 				 })
 
-# Fill histograms with tracking details, passing only basic event selection
-c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
-                            "m_inContainerName": trks,
-                            "m_detailStr": "2D IPDetails HitCounts Chi2Details",
-                            "m_msgLevel": "info"
-			               })
 
 '''Sort the tracks by pt first'''
 c.setalg("TrackSorter", {"m_name" : "TrackSorting",\
@@ -57,6 +51,12 @@ c.setalg("TrackSorter", {"m_name" : "TrackSorting",\
                          "m_sortedTrackContainerName" : trks,\
                          })
 
+# Fill histograms with tracking details, passing only basic event selection
+c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
+                            "m_inContainerName": trks,
+                            "m_detailStr": "2D IPDetails HitCounts Chi2Details",
+                            "m_msgLevel": "info"
+			               })
 
 # track selection algorithm
 c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_loose,
@@ -170,7 +170,7 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex]:#, trks
 for sv in ['Lambda','Ks','Phi']:
 	c.algorithm("SecondariesTrees", {"m_name": "MLB_EoverP_" + sv,
 					 "label": sv,
-					 "isData": True,
+					 "isData": args.isData,
 					 "MessageFrequency": 10000,
     				 "VertexContainer" : sv+"Candidates",
 				     "radiusCutCommaList": radiusCuts,
