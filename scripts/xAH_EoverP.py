@@ -51,6 +51,30 @@ c.setalg("TrackSorter", {"m_name" : "TrackSorting",\
                          "m_sortedTrackContainerName" : trks,\
                          })
 
+# Create new energy sum decorations for the tracks
+c.setalg("TrackEnergyDecorator", {"m_name": "TrackEnergyDecoratorAlgoUno",
+				  "m_energySumName":"TotalCalibHitEnergy",
+                                  "m_inTrackContainerName": trks,
+                                  "m_radiusCutCommaList":radiusCuts,
+                                  "m_energyCalibCommaList":"ClusterEMActiveCalibHitEnergy,ClusterNonEMActiveCalibHitEnergy,ClusterEscapedActiveCalibHitEnergy,ClusterInvisibleActiveCalibHitEnergy,ClusterEMInactiveCalibHitEnergy,ClusterNonEMInactiveCalibHitEnergy,ClusterEscapedInactiveCalibHitEnergy,ClusterInvisibleInactiveCalibHitEnergy",
+				  })
+
+# Create new energy sum decorations for the tracks
+c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoDos",
+				   "m_energySumName":"TotalPhotonBackgroundCalibHitEnergy",
+                                  "m_inTrackContainerName": trks,
+				   "m_radiusCutCommaList":radiusCuts,
+				   "m_energyCalibCommaList":"ClusterPhotonBackgroundEMActiveCalibHitEnergy,ClusterPhotonBackgroundNonEMActiveCalibHitEnergy,ClusterPhotonBackgroundEscapedActiveCalibHitEnergy,ClusterPhotonBackgroundInvisibleActiveCalibHitEnergy,ClusterPhotonBackgroundEMInactiveCalibHitEnergy,ClusterPhotonBackgroundNonEMInactiveCalibHitEnergy,ClusterPhotonBackgroundEscapedInactiveCalibHitEnergy,ClusterPhotonBackgroundInvisibleInactiveCalibHitEnergy",
+				  })
+
+# Create new energy sum decorations for the tracks
+c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoTres",
+				   "m_energySumName":"TotalHadronicBackgroundCalibHitEnergy",
+				   "m_inTrackContainerName": trks,
+				   "m_radiusCutCommaList":radiusCuts,
+				   "m_energyCalibCommaList":"ClusterHadronicBackgroundEMActiveCalibHitEnergy,ClusterHadronicBackgroundNonEMActiveCalibHitEnergy,ClusterHadronicBackgroundEscapedActiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleActiveCalibHitEnergy,ClusterHadronicBackgroundEMInactiveCalibHitEnergy,ClusterHadronicBackgroundNonEMInactiveCalibHitEnergy,ClusterHadronicBackgroundEscapedInactiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleInactiveCalibHitEnergy",
+				  })
+
 # Fill histograms with tracking details, passing only basic event selection
 c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
                             "m_inContainerName": trks,
@@ -67,29 +91,6 @@ c.setalg("InDetTrackSelectionToolAlgo", {"m_name": "Sel_" + trks_loose,
 					 "m_msgLevel": "info"
 					 })
 
-# Create new energy sum decorations for the tracks
-c.setalg("TrackEnergyDecorator", {"m_name": "TrackEnergyDecoratorAlgoUno",
-				  "m_energySumName":"TotalCalibHitEnergy",
-                                  "m_inTrackContainerName": trks_loose,
-                                  "m_radiusCutCommaList":radiusCuts,
-                                  "m_energyCalibCommaList":"ClusterEMActiveCalibHitEnergy,ClusterNonEMActiveCalibHitEnergy,ClusterEscapedActiveCalibHitEnergy,ClusterInvisibleActiveCalibHitEnergy,ClusterEMInactiveCalibHitEnergy,ClusterNonEMInactiveCalibHitEnergy,ClusterEscapedInactiveCalibHitEnergy,ClusterInvisibleInactiveCalibHitEnergy",
-				  })
-
-# Create new energy sum decorations for the tracks
-c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoDos",
-				   "m_energySumName":"TotalPhotonBackgroundCalibHitEnergy",
-                                  "m_inTrackContainerName": trks_loose,
-				   "m_radiusCutCommaList":radiusCuts,
-				   "m_energyCalibCommaList":"ClusterPhotonBackgroundEMActiveCalibHitEnergy,ClusterPhotonBackgroundNonEMActiveCalibHitEnergy,ClusterPhotonBackgroundEscapedActiveCalibHitEnergy,ClusterPhotonBackgroundInvisibleActiveCalibHitEnergy,ClusterPhotonBackgroundEMInactiveCalibHitEnergy,ClusterPhotonBackgroundNonEMInactiveCalibHitEnergy,ClusterPhotonBackgroundEscapedInactiveCalibHitEnergy,ClusterPhotonBackgroundInvisibleInactiveCalibHitEnergy",
-				  })
-
-# Create new energy sum decorations for the tracks
-c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoTres",
-				   "m_energySumName":"TotalHadronicBackgroundCalibHitEnergy",
-				   "m_inTrackContainerName": trks_loose,
-				   "m_radiusCutCommaList":radiusCuts,
-				   "m_energyCalibCommaList":"ClusterHadronicBackgroundEMActiveCalibHitEnergy,ClusterHadronicBackgroundNonEMActiveCalibHitEnergy,ClusterHadronicBackgroundEscapedActiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleActiveCalibHitEnergy,ClusterHadronicBackgroundEMInactiveCalibHitEnergy,ClusterHadronicBackgroundNonEMInactiveCalibHitEnergy,ClusterHadronicBackgroundEscapedInactiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleInactiveCalibHitEnergy",
-				  })
 
 # Fill histograms with tracking details, after LoosePrimary selection
 c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose,
