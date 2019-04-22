@@ -8,7 +8,7 @@ import shlex,argparse
 
 # Parser for options passed through xAH_run.py --extraOptions="(...)"
 parser = argparse.ArgumentParser("MLBJESJER")
-parser.add_argument('--isData', action='store_true', default=True)
+parser.add_argument('--isData', action='store_true', default=False)
 args = parser.parse_args(shlex.split(args.extra_options))
 
 c.output("ANALYSIS")
