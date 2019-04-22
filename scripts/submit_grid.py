@@ -39,14 +39,20 @@ for sample in samples:
   config = os.path.expandvars(args.config)
 
   command = 'xAH_run.py --files={0:s}  --inputRucio --config={1:s} --submitDir={2:s}'.format(sample, config, args.submitDir)
+  if "data" in sample:
+      command += " --extraOptions='--isData' "
+
   if args.overwrite:
      command += ' --force '
+
   command += " prun "
   command += ' --optSubmitFlags="--excludeFile=src/EoverPAnalysis/root_numpy_plotting/"'
+
   if "data" in sample:
-      command += ' --optGridNFilesPerJob=3 --extraOptions="--isData"'
+      command += " --optGridNFilesPerJob=3"
   else:
       command += ' --optGridNFilesPerJob=2 '
+
   command += ' --optGridNGBPerJob=2 '
   command += "--optGridOutputSampleName={}".format(optGridOutputSampleName) + "_"+ args.descriptor
 
