@@ -7,9 +7,9 @@ class HistogramManager:
     def __init__(self, fileName):
        self.filename = fileName
        tFile = ROOT.TFile(self.filename, "READ")
-       self.channels = [key.GetName() for key in tFile.GetListOfKeys()]
+       self.channels = [key.GetName() for key in tFile.GetListOfKeys() if not "Binning" in  key.GetName()]
        dir = tFile.Get(self.channels[0])
-       self.histograms = [key.GetName() for key in dir.GetListOfKeys()]
+       self.histograms = [key.GetName() for key in dir.GetListOfKeys() if not "Binning" in key.GetName()]
        for channel in self.channels:
            self.histograms = [key.replace(channel, "") for key in self.histograms]
        self.histograms = list(set(self.histograms))

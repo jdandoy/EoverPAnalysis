@@ -29,24 +29,24 @@ branches = []
 calc_trkCount = calculation(trkCount, branches)
 
 def trkNClusters(trk):
-    return trk["trk_nclusters"]
-calc_trkNClusters = calculation(trkNClusters, ["trk_nclusters"])
+    return trk["trk_nclusters_EM_200"] + trk["trk_nclusters_HAD_200"]
+calc_trkNClusters = calculation(trkNClusters, ["trk_nclusters_EM_200", "trk_nclusters_HAD_200"])
 
 def trkNClusters_EM(trk):
-    return trk["trk_nclusters_EM"]
-calc_trkNClusters_EM = calculation(trkNClusters_EM, ["trk_nclusters_EM"])
+    return trk["trk_nclusters_EM_200"]
+calc_trkNClusters_EM = calculation(trkNClusters_EM, ["trk_nclusters_EM_200"])
 
 def trkNClusters_emlike(trk):
-    return trk["trk_nclusters_emlike"]
-calc_trkNClusters_emlike = calculation(trkNClusters_emlike, ["trk_nclusters_emlike"])
+    return trk["trk_nclusters_EM_emlike_200"] + trk["trk_nclusters_HAD_emlike_200"]
+calc_trkNClusters_emlike = calculation(trkNClusters_emlike, ["trk_nclusters_EM_emlike_200","trk_nclusters_HAD_emlike_200"])
 
 def trkNClusters_HAD(trk):
-    return trk["trk_nclusters_HAD"]
-calc_trkNClusters_HAD = calculation(trkNClusters_HAD, ["trk_nclusters_HAD"])
+    return trk["trk_nclusters_HAD_200"]
+calc_trkNClusters_HAD = calculation(trkNClusters_HAD, ["trk_nclusters_HAD_200"])
 
 def trkNClusters_hadlike(trk):
-    return trk["trk_nclusters_hadlike"]
-calc_trkNClusters_hadlike = calculation(trkNClusters_hadlike, ["trk_nclusters_hadlike"])
+    return trk["trk_nclusters_EM_hadlike_200"] + trk["trk_nclusters_HAD_hadlike_200"]
+calc_trkNClusters_hadlike = calculation(trkNClusters_hadlike, ["trk_nclusters_EM_hadlike_200", "trk_nclusters_HAD_hadlike_200"])
 
 def trkHADFraction(trk):
     trk_total_nonzero = NonZeroEnergy(trk)

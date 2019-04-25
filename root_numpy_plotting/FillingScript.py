@@ -351,6 +351,17 @@ def FillingScript(plotter, outputRootFileName):
                                                          xlabel ='Always 0',\
                                                          ylabel = 'Number of Tracks')
 
+    ##just count the number of events 
+    histogram_name = "EventCount"
+    selections = [sel_Event]
+    trkCountHist = plotter.BookHistograms(histogram_name,\
+                                                         calc_trkCount,\
+                                                         list_selections = selections,\
+                                                         bins = 1,\
+                                                         range_low = -0.5,\
+                                                         range_high = +0.5,\
+                                                         xlabel ='Always 0',\
+                                                         ylabel = 'Number Events')
     ################################################################################
     #plot the first set of variables that we're interested in
     #plot the trk avaerage mu histogram

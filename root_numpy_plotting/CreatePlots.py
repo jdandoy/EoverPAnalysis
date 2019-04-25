@@ -5,14 +5,12 @@ from array import array
 import os
 import time
 
-#ROOT.gROOT.SetBatch(ROOT.kTRUE)
-
 def CloseCanvas(canv):
     canv.Close()
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "testing.root"
+filename = "TestApr25_80.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
@@ -30,41 +28,278 @@ if not os.path.exists("Plots/" + plotter_directory):
 
 plotter_directory = "Plots/" + plotter_directory
 
-if False:
-        eta_ranges = [(0.0, 0.4), (0.4, 0.8), (0.8, 1.2), (1.2, 1.6), (1.6, 2.0), (2.0, 2.4)]
-        for histogramName in ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]:
-            hist = HM.getHistograms(histogramName)
-            description = base_description + ["Inclusive Selection"]
+def fitHistograms(histograms, fit_function):
+    '''
+    Fit function fit_function to the histograms
+    fit_function can be gaus, landau or convolution
+    '''
+
+
+    print "Getting histogram " + histogramName
+    histograms = HM.getHistograms(histogramName, rebin = 2)
+    data = histograms["LowMuData"]
+    MC = histograms["PythiaJetJet"]
+    #loop through the bins with low edges above 0.0 and find the first one with more than 10 entries. Start fitting above that bin
+    low_data = 0.0
+    high_data = data.GetMean() + 1.5 * data.GetRMS()
+    for binx in range(1, data.GetNbinsX() + 1):
+        if (data.GetBinContent(binx) > 60 and data.GetBinLowEdge(binx) > 0.15):
+            low_data = data.GetBinLowEdge(binx + 1)
+            break
+
+    low_MC = 0.0
+    high_MC = MC.GetMean() + 1.5 * MC.GetRMS()
+    for binx in range(1, MC.GetNbinsX() + 1):
+        if (MC.GetBinContent(binx) > 60 and MC.GetBinLowEdge(binx) > 0.15):
+            low_MC = MC.GetBinLowEdge(binx + 1)
+            break
+
+    for binx in range(data.GetNbinsX(), -1, -1):
+        if (data.GetBinContent(binx) > 80):
+            high_data = data.GetBinLowEdge(binx)
+            break
+
+    for binx in range(MC.GetNbinsX(), -1, -1):
+        if (MC.GetBinContent(binx) > 80):
+            high_MC = MC.GetBinLowEdge(binx)
+            break
+
+    #find the most probable bin and data and MC and use it for the mean of the gaussian distributions
+    mpv_data = 0.0
+    mpv_value_data= 0.0
+    for binx in range(1, data.GetNbinsX() + 1):
+        if data.GetBinContent(binx) > mpv_value_data:
+            mpv_value_data = data.GetBinContent(binx)
+            mpv_data = data.GetBinCenter(binx)
+
+    mpv_MC = 0.0
+    mpv_value_MC = 0.0
+    for binx in range(1, MC.GetNbinsX() + 1):
+        if MC.GetBinContent(binx) > mpv_value_MC:
+            mpv_value_MC = MC.GetBinContent(binx)
+            mpv_MC = MC.GetBinCenter(binx)
+
+    #this is the landau distribution that will be fit to the histograms
+    landau_data = ROOT.TF1("landau_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+    landau_data.SetParName(0, "mpv")
+    landau_data.SetParameter(0, mpv_data)
+    landau_data.SetParLimits(0, 0.3, 1.1)
+    landau_data.SetParName(1, "sigma")
+    landau_data.SetParameter(1, data.GetRMS()/4.0)
+    landau_data.SetParLimits(1, data.GetRMS()/100.0, data.GetRMS()*2.0)
+    landau_data.SetParName(2, "Norm")
+    landau_data.SetParameter(2, data.Integral())
+
+    landau_MC = ROOT.TF1("landau_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+    landau_MC.SetParName(0, "mpv")
+    landau_MC.SetParameter(0, mpv_MC)
+    landau_MC.SetParLimits(0, 0.3, 1.1)
+    landau_MC.SetParName(1, "sigma")
+    landau_MC.SetParameter(1, MC.GetRMS()/4.0)
+    landau_MC.SetParLimits(1, MC.GetRMS()/100.0, MC.GetRMS()*2.0)
+    landau_MC.SetParName(2, "Norm")
+    landau_MC.SetParameter(2, MC.Integral())
+
+    #this is the gaus distribution that will be fit to the histograms
+    gaus_data = ROOT.TF1("gaus_data" + histogramName, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
+    gaus_data.SetParName(0, "mu")
+    gaus_data.SetParameter(0, mpv_data)
+    gaus_data.SetParLimits(0, 0.45, 0.95)
+    gaus_data.SetParName(1, "sigma")
+    gaus_data.SetParameter(1, data.GetRMS()*0.8)
+    gaus_data.SetParLimits(1, data.GetRMS()/3.0, 1.2*data.GetRMS())
+    gaus_data.SetParName(2, "Norm")
+    gaus_data.SetParameter(2, data.Integral())
+
+    gaus_MC = ROOT.TF1("gaus_MC" + histogramName, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
+    gaus_MC.SetParName(0, "mu")
+    gaus_MC.SetParameter(0, mpv_MC)
+    gaus_MC.SetParLimits(0, 0.45, 0.95)
+    gaus_MC.SetParName(1, "sigma")
+    gaus_MC.SetParameter(1, data.GetRMS() * 0.8)
+    gaus_MC.SetParLimits(1, data.GetRMS()/3.0, data.GetRMS()*1.2)
+    gaus_MC.SetParName(2, "Norm")
+    gaus_MC.SetParameter(2, MC.Integral())
+
+    #Create a gaussian convoluted with a landau histogram
+    gaus_forconvolution_MC = ROOT.TF1("gaus_forconvolution_MC" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
+
+    landau_forconvolution_MC = ROOT.TF1("landau_forconvolution_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+
+    convolution_MC = ROOT.TF1Convolution(gaus_forconvolution_MC, landau_forconvolution_MC,-1,6,True)
+    convolution_MC.SetRange(-1.,5.)
+    convolution_MC.SetNofPointsFFT(10000)
+    convolution_tofit_MC = ROOT.TF1("f",convolution_MC, -1.0, 5., convolution_MC.GetNpar())
+    convolution_tofit_MC.SetName("convolution_MC" + histogramName)
+
+    convolution_tofit_MC.SetParName(0, "SigmaSmear")
+    convolution_tofit_MC.SetParLimits(0, -100.0, 100.0)
+    convolution_tofit_MC.SetParameter(0, 1.0)
+
+    convolution_tofit_MC.SetParName(1, "mpv")
+    convolution_tofit_MC.SetParameter(1, mpv_MC)
+    convolution_tofit_MC.SetParLimits(1, 0.3, 1.1)
+    convolution_tofit_MC.SetParName(2, "sigma")
+    convolution_tofit_MC.SetParameter(2, MC.GetRMS()/4.0)
+    convolution_tofit_MC.SetParLimits(2, MC.GetRMS()/100.0, MC.GetRMS()*2.0)
+    convolution_tofit_MC.SetParName(3, "Norm")
+    convolution_tofit_MC.SetParameter(3, MC.Integral())
+    print("Created convolution function")
+    convolution_tofit_MC.Print()
+
+    #Create a gaussian convoluted with a landau histogram
+    gaus_forconvolution_data = ROOT.TF1("gaus_forconvolution_data" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
+    landau_forconvolution_data = ROOT.TF1("landau_forconvolution_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+
+    convolution_data = ROOT.TF1Convolution(gaus_forconvolution_data, landau_forconvolution_data,-1,6,True)
+    convolution_data.SetRange(-1.,5.)
+    convolution_data.SetNofPointsFFT(10000)
+    convolution_tofit_data = ROOT.TF1("f",convolution_data, -1.0, 5., convolution_data.GetNpar())
+    convolution_tofit_data.SetName("convolution_data" + histogramName)
+    convolution_tofit_data.SetParName(0, "SigmaSmear")
+    convolution_tofit_data.SetParLimits(0, -100.0, 100.0)
+    convolution_tofit_data.SetParameter(0, 1.0)
+
+    convolution_tofit_data.SetParName(1, "mpv")
+    convolution_tofit_data.SetParameter(1, mpv_data)
+    convolution_tofit_data.SetParLimits(1, 0.3, 1.1)
+    convolution_tofit_data.SetParName(2, "sigma")
+    convolution_tofit_data.SetParameter(2, data.GetRMS()/4.0)
+    convolution_tofit_data.SetParLimits(2, data.GetRMS()/100.0, data.GetRMS()*2.0)
+    convolution_tofit_data.SetParName(3, "Norm")
+    convolution_tofit_data.SetParameter(3, data.Integral())
+
+    convolution_tofit_data.Print()
+
+    #choose the fit funciton that you want to use
+    fit_function_data_string = fit_function + "_data"
+    fit_function_MC_string = fit_function + "_MC"
+
+    #Good settings for a landau x gaus
+    data.GetXaxis().SetRange(data.FindBin(0.15), data.FindBin(1.3))
+    MC.GetXaxis().SetRange(MC.FindBin(0.15), MC.FindBin(1.3))
+
+    mean_data = data.GetMean()
+    sigma_data = data.GetRMS()
+    mean_MC = MC.GetMean()
+    sigma_MC = MC.GetRMS()
+
+    data.GetXaxis().SetRange()
+    MC.GetXaxis().SetRange()
+
+    #good setting for a landau x gaus
+    low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
+    high = max(mean_data + 1.0*sigma_data, mean_MC + 1.0*sigma_MC)
+
+    #good settings for a gaus
+    #low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
+    #high = max(mean_data + 0.5*sigma_data, mean_MC + 0.5*sigma_MC)
+
+    #re-do the fit in the +- 1 sigma window
+    data.Fit(fit_function_data_string + histogramName, "", "", low, high)
+    MC.Fit(fit_function_MC_string + histogramName, "", "", low, high)
+
+    fit_function_data = data.GetFunction(fit_function_data_string + histogramName)
+    fit_function_data.SetLineColor(ROOT.kBlack)
+
+    fit_function_data = data.GetFunction(fit_function_data_string + histogramName)
+    fit_function_data.SetLineColor(ROOT.kBlack)
+
+    fit_function_MC = MC.GetFunction(fit_function_MC_string + histogramName)
+    fit_function_MC.SetLineColor(ROOT.kRed)
+    input("Does the fit look OK?")
+
+def CreatePlotsFromSelection(selection_name, filename, base_description = [], doFit = False):
+    #get the binning vectors
+    f = ROOT.TFile(filename, "READ")
+
+    tree = f.Get(selection_name + "BinningTree")
+    for bins in tree:
+        break
+
+    eta_bins_low = getattr(bins, selection_name+"EtaBinsLow")
+    eta_bins_high = getattr(bins, selection_name+"EtaBinsHigh")
+    p_bins_low_for_eta_bin = []
+    p_bins_high_for_eta_bin = []
+
+    #get all of the binning information that we need
+    for i in range(0, eta_bins_low.size()):
+        p_bins_low_for_eta_bin.append(getattr(bins, selection_name+"PBinsLow_Eta"+str(i)))
+        p_bins_high_for_eta_bin.append(getattr(bins, selection_name+"PBinsHigh_Eta"+str(i)))
+
+    histograms_in_eta_bins = ["trkMultiplicityVsPt",\
+                                   "UnweightedTrkMultiplicityVsP",\
+                                   "EOPProfileVsMomentum",\
+                                   "EnergyAnulusProfileVsMomentum",\
+                                   "EnergyBkgProfileVsMomentum"]
+
+    histograms_in_momentum_bins = ["EOPDistribution",\
+                                   "EOPBkgDistribution",\
+                                   "trkTRTHits",\
+                                   "trkEMDR100",\
+                                   "MomentumHadFrac",\
+                                   "HadFrac",\
+                                   "NClusters",\
+                                   "NClusters_EM",\
+                                   "NClusters_HAD",\
+                                   "NClusters_emlike",\
+                                   "NClusters_hadlike",\
+                                   ]
+
+    #OK now lets make all of the plots in all of the bins!
+
+    for i, eta_low, eta_high in zip(list(range(0, eta_bins_low.size())), eta_bins_low, eta_bins_high):
+        #the plots binned in eta
+        for histogram in histograms_in_eta_bins:
+
+            histogram_name = histogram + "__" + selection_name + "_Eta_" + str(i)
+            hist = HM.getHistograms(histogram_name)
+            description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+
             DataVsMC1 = DrawDataVsMC(hist,\
                                     channelLabels,\
                                     MCKey='PythiaJetJet',\
                                     DataKey='LowMuData',\
                                     extra_description = description)
+
             DataVsMC1[0].Draw()
-            DataVsMC1[0].Print(plotter_directory + "/" + histogramName + ".png")
-            for eta_range in eta_ranges:
-                histogram_name = histogramName
-                histogram_name = histogram_name + "_NonZeroE_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
+            DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + ".png")
+            DataVsMC1[0].Close()
+        p_bins_low = p_bins_low_for_eta_bin[i]
+        p_bins_high = p_bins_high_for_eta_bin[i]
+
+        #the plots binned in eta and momentum
+        for j, p_low, p_high in zip(list(range(0, p_bins_low.size())), p_bins_low, p_bins_high):
+            for histogram in histograms_in_momentum_bins:
+                histogram_name = histogram + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
                 hist = HM.getHistograms(histogram_name)
-                description = base_description + ["E_{TOTAL} != 0"]
+                description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+                description += [str(round(p_low, 3)) + " < P/GeV < " + str(round(p_high, 3))]
+
+                if doFit and histogram == "EOPDistribution":
+                    fitHistograms(hist, "LandauConvGaus")
+
                 DataVsMC1 = DrawDataVsMC(hist,\
                                         channelLabels,\
                                         MCKey='PythiaJetJet',\
                                         DataKey='LowMuData',\
                                         extra_description = description)
+
                 DataVsMC1[0].Draw()
-                DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + "    .png")
+                DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + ".png")
                 DataVsMC1[0].Close()
 
+#test the plot creation
+CreatePlotsFromSelection("20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
 
 
-        histogramName = "TwoDTrackPtVsEtaHistogram_HasExtrapolation"
-        hist = HM.getHistograms(histogramName)
-        description = base_description + ["Inclusive Selection"]
-        DataVsMC = Draw2DHistogramOnCanvas(hist["LowMuData"], doLogx = False, doLogy = True)
-        DataVsMC.Print(plotter_directory + "/LowMuData" + histogramName + ".png")
-        DataVsMC.Close()
 
+            
+
+
+
+
+if False:
         histogramName = "TwoDTrackPtVsEtaHistogram_HasExtrapolation"
         hist = HM.getHistograms(histogramName)
         description = base_description + ["Inclusive Selection"]
@@ -621,41 +856,6 @@ if False:
         for eta_range, eta_descriptor in zip(eta_ranges, eta_descriptors):
             print eta_range
             print eta_descriptor
-#TrkMultiplicityVsP_InBin_12_16
-#TrkMultiplicityVsP_InBin_16_20
-#TrkMultiplicityVsP_InBin_20_24
-#TrkMultiplicityVsP_InBin_4_8
-#TrkMultiplicityVsP_InBin_8_12
-#TrkMultiplicityVsP_Inclusive_InBin_0_4
-#TrkMultiplicityVsP_Inclusive_InBin_12_16
-#TrkMultiplicityVsP_Inclusive_InBin_16_20
-#TrkMultiplicityVsP_Inclusive_InBin_20_24
-#TrkMultiplicityVsP_Inclusive_InBin_4_8
-#TrkMultiplicityVsP_Inclusive_InBin_8_12
-#TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_0_4
-#TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_12_16
-#TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_16_20
-#TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_20_24
-#TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_4_8
-#TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_8_12
-#TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_0_4
-#TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_12_16
-#TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_16_20
-#TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_20_24
-#TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_4_8
-#TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_8_12
-#TrkMultiplicityVsP_NonZeroE_20TRT_InBin_0_4
-#TrkMultiplicityVsP_NonZeroE_20TRT_InBin_12_16
-#TrkMultiplicityVsP_NonZeroE_20TRT_InBin_16_20
-#TrkMultiplicityVsP_NonZeroE_20TRT_InBin_20_24
-#TrkMultiplicityVsP_NonZeroE_20TRT_InBin_4_8
-#TrkMultiplicityVsP_NonZeroE_20TRT_InBin_8_12
-#TrkMultiplicityVsP_NonZeroE_InBin_0_4
-#TrkMultiplicityVsP_NonZeroE_InBin_12_16
-#TrkMultiplicityVsP_NonZeroE_InBin_16_20
-#TrkMultiplicityVsP_NonZeroE_InBin_20_24
-#TrkMultiplicityVsP_NonZeroE_InBin_4_8
-#TrkMultiplicityVsP_NonZeroE_InBin_8_12
             histogramName = "TrkMultiplicityVsP_NonZeroE" + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
             hist_NonZero = HM.getHistograms(histogramName, rebin = 100)
             histogramName = "TrkMultiplicityVsP" + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
@@ -908,20 +1108,7 @@ for eta_range in eta_ranges:
         histogramName = None
         found = False
 
-        #find the histograms
-        distFromZero = -1
-        while not found:
-            distFromZero += 1
-            print distFromZero
-            for i in range(-1 * distFromZero, distFromZero):
-                if found: break
-                for j in range(-1 * distFromZero, distFromZero):
-                    histogramName = "EOPDistribution_MIPSelection_HadFracAbove70_InEtaBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1])) + "_InPBin_" + str(int(100*(p_range[0]+ (i * 0.01)))) + "_" + str(int(100*(p_range[1] + (j * 0.01))))
-                    if HM.hasHistogram(histogramName):
-                       found = True
-                       break
         print "Getting histogram " + histogramName
-
         histograms = HM.getHistograms(histogramName, rebin = 2)
         data = histograms["LowMuData"]
         MC = histograms["PythiaJetJet"]

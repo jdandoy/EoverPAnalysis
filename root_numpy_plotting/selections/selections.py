@@ -159,8 +159,8 @@ def EM2AcceptanceCalculator(trk, min_cut, max_cut):
     return (upper_in_acceptance_EMB | upper_in_acceptance_EME) & (lower_in_acceptance_EMB | lower_in_acceptance_EME)
 
 def NonZeroEnergy(trk):
-    return (trk["trk_nclusters_EM"] + trk["trk_nclusters_HAD"]) > 0.5 #there was at least one cluster assocated with the track
-branches = ["trk_nclusters_EM", "trk_nclusters_HAD"]
+    return (trk["trk_nclusters_EM_200"] + trk["trk_nclusters_HAD_200"]) > 0.5 #there was at least one cluster assocated with the track
+branches = ["trk_nclusters_EM_200", "trk_nclusters_HAD_200"]
 sel_NonZeroEnergy = calculation(NonZeroEnergy, branches)
 
 def ELessEqual0(trk):
