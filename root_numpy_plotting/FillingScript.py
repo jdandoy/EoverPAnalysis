@@ -28,9 +28,10 @@ def PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, descripti
 
     VectorForPBinsLowList = []
     VectorForPBinsHighList = []
+
     for i in range(0, len(eta_ranges)):
-        VectorForPBinsLowList.append(ROOT.std.vector("float")())
-        VectorForPBinsHighList.append(ROOT.std.vector("float")())
+        VectorForPBinsLowList.append(0)
+        VectorForPBinsHighList.append(0)
 
     if not outFile.GetListOfKeys().Contains(description + "BinningTree"):
         outFile.cd()
@@ -38,12 +39,20 @@ def PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, descripti
 
         binningTree.Branch(description + "EtaBinsLow", VectorForEtaLow)
         binningTree.Branch(description + "EtaBinsHigh", VectorForEtaHigh)
+
         eta_count = -1
 
         for eta_range in eta_ranges:
             eta_count += 1
-            binningTree.Branch(description + "PBinsLow_Eta" + str(eta_count), VectorForPBinsLowList[i])
-            binningTree.Branch(description + "PBinsHigh_Eta" + str(eta_count), VectorForPBinsHighList[i])
+
+            vlow = ROOT.std.vector("float")()
+            vhigh = ROOT.std.vector("float")()
+
+            VectorForPBinsLowList[eta_count] = vlow
+            VectorForPBinsHighList[eta_count] = vhigh
+
+            binningTree.Branch(description + "PBinsLow_Eta" + str(eta_count), vlow)
+            binningTree.Branch(description + "PBinsHigh_Eta" + str(eta_count), vhigh)
 
         for eta_range, p_bins, VectorForPBinsLow, VectorForPBinsHigh in zip(eta_ranges, p_bins_for_eta_range, VectorForPBinsLowList, VectorForPBinsHighList):
             p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
@@ -1107,7 +1116,9 @@ def FillingScript(plotter, outputRootFileName):
     for eta_range in eta_ranges:
         p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
         p_bins = getLogBins(p_bins_min, 15.05, 20)
+        raw_input(p_bins)
         p_bins_for_eta_range.append(p_bins)
+   
     description = "MIPSelectionHadFracAbove70"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
     CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
