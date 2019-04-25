@@ -19,6 +19,13 @@ def Event(trk):
 branches = ["trkIndex"]
 sel_Event = calculation(Event, branches)
 
+def SubleadingTrack(trk):
+    '''get only the variables associated with the first track in the event.
+    This is so that we can reweight variables with an event, and not with individual tracks'''
+    return (trk["trkIndex"] < 1.5) & (trk["trkIndex"] > 0.5)
+branches = ["trkIndex"]
+sel_SubleadingTrack = calculation(SubleadingTrack, branches)
+
 #These are the definitions of the different types of track classifications according to tracking CP
 def TruthLink(trk):
     return trk["trk_hasTruthParticle"] == 1

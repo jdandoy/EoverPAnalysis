@@ -100,18 +100,18 @@ cwd = os.getcwd()
 
 #Create a plotter for each partition, and also a submission script:
 #get the reweighting histograms
-from variables.variables import calc_trkCount, calc_trkNPV2, calc_trkPt
-trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight_LoosePrimary_VertexAssociated.root", "READ")
-trkCount_histogram = trkCount_histogram_file.Get("trkCountLowMuData")
-calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
+#from variables.variables import calc_trkCount, calc_trkNPV2, calc_trkPt
+#trkCount_histogram_file = ROOT.TFile("reweightHistograms/TrkCountReweight_LoosePrimary_VertexAssociated.root", "READ")
+#trkCount_histogram = trkCount_histogram_file.Get("trkCountLowMuData")
+#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, trkCount_histogram)
 
 #eventNPV2_histogram_file = ROOT.TFile("reweightHistograms/EventNPV2Reweight_LoosePrimary_VertexAssociated.root", "READ")
 #eventNPV2_histogram = eventNPV2_histogram_file.Get("eventNPV2HistLowMuDatadividedeventNPV2HistLowMuData")
 #calc_weight.addReweightHistogram("PythiaJetJet", calc_trkNPV2, eventNPV2_histogram)
 
-trkPtReweight_file = ROOT.TFile("reweightHistograms/PTReweight.root", "READ")
-trkPtReweight_histogram = trkPtReweight_file.Get("DataMCRatioPTSpectrium")
-calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
+#trkPtReweight_file = ROOT.TFile("reweightHistograms/PTReweight.root", "READ")
+#trkPtReweight_histogram = trkPtReweight_file.Get("DataMCRatioPTSpectrium")
+#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
 
 #get the histograms used for detemining the bin sizes:
 #histogramList = [\

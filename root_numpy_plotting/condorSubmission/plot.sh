@@ -4,12 +4,8 @@
 export HOME=$(pwd)
 export PROOFANADIR=$(pwd)
 #ROOT STUFF
-export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
-source $ATLAS_LOCAL_ROOT_BASE/user/atlasLocalSetup.sh
-asetup AnalysisBase,21.2.23
-
-export PYTHONPATH=$HOME/CondorPythonLocal/lib/python2.7/site-packages:$PYTHONPATH
 export EOPPlottingDir=$(pwd)
+export PYTHONPATH=$PWD/CondorPythonLocal/lib64/python2.7/site-packages:$PYTHONPATH
 
 printf "Start time: "; /bin/date
 printf "Job is running on node: "; /bin/hostname

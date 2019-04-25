@@ -9,7 +9,7 @@ from math import pi
 import pickle
 import numpy as np
 from calculation.calculation import calculation
-from selections.selections import EtaBin, PBin
+from selections.selections import EtaBin, PBin, sel_SubleadingTrack
 
 def WriteToFile(histogram_dictionary, outFile):
     outFile.cd()
@@ -399,13 +399,14 @@ def FillingScript(plotter, outputRootFileName):
                                           range_high = 10.0,\
                                           xlabel ='<#mu>',\
                                           ylabel = 'Number of Events')
+
 #    ################################################################################
     #prepare the momentum bins
     binMax = 30.0
     binMin = 0.5
     nBins = 100
     p_bins = getLogBins(binMin, binMax, nBins)
-    p_bins_reference = p_bins # a set of bins to use later to measure the efficiency of certain selections
+    p_bins_reference = p_bins 
     histogram_name = "trkPtHist"
     trkPtHistZoom = plotter.BookHistograms(histogram_name,\
                                        calc_trkPt,\
@@ -420,6 +421,37 @@ def FillingScript(plotter, outputRootFileName):
                                        bins = p_bins,\
                                        xlabel ="Track P_{T} [GeV]",\
                                        ylabel = "Number of Tracks")
+
+#    ################################################################################
+    #prepare the momentum bins
+    binMax = 30.0
+    binMin = 0.5
+    nBins = 50
+    p_bins = getLogBins(binMin, binMax, nBins)
+    p_bins_reference = p_bins
+    histogram_name = "LeadingPtTrkHist"
+    trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                       calc_trkPt,\
+                                       list_selections = [sel_Event],\
+                                       bins = p_bins,\
+                                       xlabel ="Track P_{T} [GeV]",\
+                                       ylabel = "Number of Tracks")
+
+#    ################################################################################
+    #prepare the momentum bins
+    binMax = 30.0
+    binMin = 0.5
+    nBins = 50
+    p_bins = getLogBins(binMin, binMax, nBins)
+    p_bins_reference = p_bins
+    histogram_name = "SubleadingPtTrkHist"
+    trkPtHistZoom = plotter.BookHistograms(histogram_name,\
+                                       calc_trkPt,\
+                                       list_selections = [sel_SubleadingTrack],\
+                                       bins = p_bins,\
+                                       xlabel ="Track P_{T} [GeV]",\
+                                       ylabel = "Number of Tracks")
+
 #           ################################################################################
 #           ## Look in different bins of pseudorapidity
     base_description = []
