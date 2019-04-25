@@ -291,6 +291,16 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
 
 #test the plot creation
 CreatePlotsFromSelection("20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
+CreatePlotsFromSelection("MIPSelectionHadFracAbove70", filename, base_description = ["MIP Selection"],doFit=False)
+CreatePlotsFromSelection("NonZeroEnergy", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
+CreatePlotsFromSelection("Inclusive", filename, base_description = [],doFit=False)
+
+#KEY:TTreeMIPSelectionBetween30and90OfMomentumBinningTree;1MIPSelectionBetween30and90OfMomentumBinningTree
+#KEY:TTreeMIPSelectionHadFracAbove70BinningTree;1MIPSelectionHadFracAbove70BinningTree
+#KEY:TTree20TRTHitsNonZeroEnergyBinningTree;120TRTHitsNonZeroEnergyBinningTree
+#KEY:TTreeNonZeroEnergyBinningTree;1NonZeroEnergyBinningTree
+#KEY:TTreeInclusiveBinningTree;1InclusiveBinningTree
+
 
 
 
