@@ -39,8 +39,14 @@ for sample in samples:
   config = os.path.expandvars(args.config)
 
   command = 'xAH_run.py --files={0:s}  --inputRucio --config={1:s} --submitDir={2:s}'.format(sample, config, args.submitDir)
+
+  if "data" in sample or "ParticleGun" in sample:
+      command += " --extraOptions="
+
   if "data" in sample:
-      command += " --extraOptions='--isData' "
+      command += "'--isData'"
+  if "ParticleGun" in sample:
+      command += "'--isSingleParticle'"
 
   if args.overwrite:
      command += ' --force '

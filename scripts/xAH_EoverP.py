@@ -9,6 +9,7 @@ import shlex,argparse
 # Parser for options passed through xAH_run.py --extraOptions="(...)"
 parser = argparse.ArgumentParser("MLBJESJER")
 parser.add_argument('--isData', action='store_true', default=False)
+parser.add_argument('--isSingleParticle', action='store_true', default=False)
 args = parser.parse_args(shlex.split(args.extra_options))
 
 c.output("ANALYSIS")
@@ -36,7 +37,7 @@ c.setalg("BasicEventSelection", {"m_name": "BasicEventSelection",
                                  "m_lumiCalcFileNames": "EoverPAnalysis/ilumicalc_histograms_HLT_mb_sptrk_341294_OflLumi-13TeV-010.root",
                                  "m_PRWFileNames": "EoverPAnalysis/ntup_prw_36102_JZ012.root",
                                  "m_triggerSelection": "HLT_mb_sptrk",
-                                 "m_applyPrimaryVertexCut": True,
+                                 "m_applyPrimaryVertexCut": (not args.isSingleParticle),
                                  "m_PVNTrack": 2,
                                  "m_useMetaData": False,
                                  "m_checkDuplicatesData": False,
