@@ -16,4 +16,8 @@ TOP_DIRECTORY + "user.luadamek.data17_13TeV.00341419.physics_MinBias.calibhits_v
 TOP_DIRECTORY + "user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_hist",\
 TOP_DIRECTORY + "user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_hist",\
 TOP_DIRECTORY + "user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_hist",\
+]),\
+"SinglePion":("Single #pi",[\
+TOP_DIRECTORY + "user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist",\
+TOP_DIRECTORY + "user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist",\
 ])}
