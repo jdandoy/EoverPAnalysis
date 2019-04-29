@@ -128,13 +128,20 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated,
                             "m_msgLevel": "info"
 			               })
 
-c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociationTool",
+if not args.isSingleParticle:
+    c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociationTool",
 						 "m_inputTrackContainer": trks_loose_isolated,
 						 "m_outputTrackContainer": trks_loose_isolated_vertex,
 						 "m_dzSinTheta_cut": 1.5,
 						 "m_d0_cut": 1.5,
 						 "m_msgLevel": "info",
 						 })
+else:
+    c.setalg("TrackSorter", {"m_name" : "TrackSortingRenameOne",\
+                         "m_inTrackContainerName":trks_loose_isolated,\
+                         "m_sort":"Pt",\
+                         "m_sortedTrackContainerName" : trks_loose_isolated_vertex,\
+                         })
 
 # Fill histograms with tracking details, after LoosePrimary + Isolation + vertex association cut
 c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated_vertex,
@@ -143,13 +150,20 @@ c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_loose_isolated_vertex,
                             "m_msgLevel": "info"
 			               })
 
-c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociatedTool",
+if not args.isSingleParticle:
+    c.setalg("TightTrackVertexAssociationToolAlgo", {"m_name":"TrackVertexAssociationTool",
 						 "m_inputTrackContainer": trks_tight_isolated,
 						 "m_outputTrackContainer": trks_tight_isolated_vertex,
-						 "m_dzSinTheta_cut":1.5,
-						 "m_d0_cut":1.5,
+						 "m_dzSinTheta_cut": 1.5,
+						 "m_d0_cut": 1.5,
 						 "m_msgLevel": "info",
 						 })
+else:
+    c.setalg("TrackSorter", {"m_name" : "TrackSortingRenameOne",\
+                         "m_inTrackContainerName":trks_tight_isolated,\
+                         "m_sort":"Pt",\
+                         "m_sortedTrackContainerName" : trks_tight_isolated_vertex,\
+                         })
 
 # Fill histograms with tracking details, after LoosePrimary + Isolation + Tight Primary + vertex association cut
 c.setalg("TrackHistsAlgo", {"m_name": "TrackHist_" + trks_tight_isolated_vertex,
