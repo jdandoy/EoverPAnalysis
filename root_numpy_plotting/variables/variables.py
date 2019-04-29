@@ -3,6 +3,73 @@ from selections.selections import NonZeroEnergy
 import numpy as np
 from math import pi
 
+#trk_TotalPhotonBackgroundCalibHitEnergy_EM_200
+#trk_TotalHadronicBackgroundCalibHitEnergy_EM_275
+#trk_TotalCalibHitEnergy_EM_200
+
+def TotalCalibHitEnergyEM(trk):
+    return trk["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalCalibHitEnergy_EM_200"]
+
+def TotalCalibHitEnergyHAD(trk):
+    return trk["trk_TotalPhotonBackgroundCalibHitEnergy_HAD_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200"] + trk["trk_TotalCalibHitEnergy_HAD_200"]
+
+def TotalCalibHitEnergy(trk):
+    return TotalCalibHitEnergyEM(trk) + TotalCalibHitEnergyHAD(trk)
+
+CalibHitBranches = ["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200", "trk_TotalHadronicBackgroundCalibHitEnergy_EM_200", "trk_TotalCalibHitEnergy_EM_200","trk_TotalPhotonBackgroundCalibHitEnergy_HAD_200", "trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200", "trk_TotalCalibHitEnergy_HAD_200"]
+
+def HasCalibHit(trk):
+    return TotalCalibHitEnergy(trk) > 0.0
+sel_HasCalibHit = calculation(HasCalibHit, CalibHitBranches)
+
+def HasEMCalibHit(trk):
+    return TotalCalibHitEnergyEM(trk) > 0.0
+sel_HasEMCalibHit = calculation(HasCalibHit, CalibHitBranches)
+
+def HasHADCalibHit(trk):
+    return TotalCalibHitEnergyHAD(trk) > 0.0
+sel_HasHADCalibHit = calculation(HasHADCalibHit, CalibHitBranches)
+
+def CalibHitFrac(trk):
+    return (trk["trk_TotalCalibHitEnergy_EM_200"] + trk["trk_TotalCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
+calc_CalibHitFrac = calculation(CalibHitFrac, CalibHitBranches)
+
+def PhotonCalibHitFrac(trk):
+    return (trk["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalPhotonBackgroundCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
+calc_PhotonCalibHitFrac = calculation(PhotonCalibHitFrac, CalibHitBranches)
+
+def HadronCalibHitFrac(trk):
+    return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
+calc_HadronCalibHitFrac = calculation(HadronCalibHitFrac, CalibHitBranches)
+
+def EMCalibHitFrac(trk):
+    return (trk["trk_TotalCalibHitEnergy_EM_200"]) / TotalCalibHitEnergyEM(trk)
+calc_EMCalibHitFrac = calculation(EMCalibHitFrac, CalibHitBranches)
+
+def HADCalibHitFrac(trk):
+    return (trk["trk_TotalCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergyHAD(trk)
+calc_HADCalibHitFrac = calculation(HADCalibHitFrac, CalibHitBranches)
+
+def PhotonEMCalibHitFrac(trk):
+    return (trk["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200"] ) / TotalCalibHitEnergyEM(trk)
+calc_PhotonEMCalibHitFrac = calculation(PhotonEMCalibHitFrac, CalibHitBranches)
+
+def PhotonHADCalibHitFrac(trk):
+    return (trk["trk_TotalPhotonBackgroundCalibHitEnergy_HAD_200"] ) / TotalCalibHitEnergyHAD(trk)
+calc_PhotonHADCalibHitFrac = calculation(PhotonHADCalibHitFrac, CalibHitBranches)
+
+def HadronCalibHitFrac(trk):
+    return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
+calc_HadronCalibHitFrac = calculation(HadronCalibHitFrac, CalibHitBranches)
+
+def HadronEMCalibHitFrac(trk):
+    return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] )/ TotalCalibHitEnergyEM(trk)
+calc_HadronEMCalibHitFrac = calculation(HadronEMCalibHitFrac, CalibHitBranches)
+
+def HadronHADCalibHitFrac(trk):
+    return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200"] )/ TotalCalibHitEnergyHAD(trk)
+calc_HadronHADCalibHitFrac = calculation(HadronHADCalibHitFrac, CalibHitBranches)
+
 def HadFrac(trk):
     return (trk["trk_ClusterEnergy_HAD_200"]) / (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]

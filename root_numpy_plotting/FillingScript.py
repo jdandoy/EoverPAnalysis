@@ -208,6 +208,126 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                       bins = eop_bins,\
                                                       xlabel ="E/p",\
                                                       )
+            from variables.variables import calc_CalibHitFrac, calc_PhotonCalibHitFrac, calc_HadronCalibHitFrac, sel_HasCalibHit
+            from variables.variables import calc_EMCalibHitFrac, calc_PhotonEMCalibHitFrac, calc_HadronEMCalibHitFrac, sel_HasEMCalibHit
+            from variables.variables import calc_HADCalibHitFrac, calc_PhotonHADCalibHitFrac, calc_HadronHADCalibHitFrac, sel_HasHADCalibHit
+
+            histogramName = "CalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_CalibHitFrac,\
+                                                  list_selections = selections + [sel_HasCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "PhotonCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_PhotonCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "HadronicCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_HadronCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "EMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_EMCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasEMCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "PhotonEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_PhotonEMCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasEMCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "HadronicEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_HadronEMCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasEMCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "HADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_HADCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasHADCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "PhotonHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_PhotonHADCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasHADCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
+
+            histogramName = "HadronicHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+            plotter.Book2DHistograms(histogramName,
+                                                  calc_EOP,\
+                                                  calc_HadronHADCalibHitFrac,\
+                                                  list_selections = selections + [sel_HasHADCalibHit],\
+                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                  bins_y = 20,
+                                                  range_low_y = 0.0,\
+                                                  range_high_y = 1.0,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>",\
+                                                  )
 
             histogramName = "EOPBkgDistribution" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
             EOPBkgDist  =  plotter.BookHistograms(histogramName,
