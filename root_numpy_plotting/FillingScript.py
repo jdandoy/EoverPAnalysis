@@ -1116,7 +1116,6 @@ def FillingScript(plotter, outputRootFileName):
     for eta_range in eta_ranges:
         p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
         p_bins = getLogBins(p_bins_min, 15.05, 20)
-        raw_input(p_bins)
         p_bins_for_eta_range.append(p_bins)
    
     description = "MIPSelectionHadFracAbove70"

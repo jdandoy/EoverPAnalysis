@@ -5,12 +5,14 @@ from array import array
 import os
 import time
 
+ROOT.gROOT.SetBatch(ROOT.kFALSE)
+
 def CloseCanvas(canv):
     canv.Close()
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "TestApr25_80.root"
+filename = "TestApr25EventReweight.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
