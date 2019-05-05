@@ -218,11 +218,11 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_CalibHitFrac,\
                                                   list_selections = selections + [sel_HasCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
                                                   range_low_y = 0.0,\
                                                   range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{Calib}_{Track}/E^{Calib}_{Total}",\
                                                   )
 
             histogramName = "PhotonCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -231,11 +231,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_PhotonCalibHitFrac,\
                                                   list_selections = selections + [sel_HasCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{Calib}_{Photons}/E^{Calib}_{Total}",\
                                                   )
 
             histogramName = "HadronicCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -244,11 +242,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_HadronCalibHitFrac,\
                                                   list_selections = selections + [sel_HasCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{Calib}_{Neutral Hadrons}/E^{Calib}_{Total}",\
                                                   )
 
             histogramName = "EMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -257,11 +253,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_EMCalibHitFrac,\
                                                   list_selections = selections + [sel_HasEMCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{EM Calib}_{Track}/E^{EM Calib}_{Total}",\
                                                   )
 
             histogramName = "PhotonEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -270,11 +264,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_PhotonEMCalibHitFrac,\
                                                   list_selections = selections + [sel_HasEMCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{EM Calib}_{Photons}/E^{EM Calib}_{Total}",\
                                                   )
 
             histogramName = "HadronicEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -283,11 +275,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_HadronEMCalibHitFrac,\
                                                   list_selections = selections + [sel_HasEMCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{HAD Calib}_{Neutral Hadrons}/E^{HAD Calib}_{Total}",\
                                                   )
 
             histogramName = "HADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -296,11 +286,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_HADCalibHitFrac,\
                                                   list_selections = selections + [sel_HasHADCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{HAD Calib}_{Track}/E^{HAD Calib}_{Total}",\
                                                   )
 
             histogramName = "PhotonHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -309,11 +297,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_PhotonHADCalibHitFrac,\
                                                   list_selections = selections + [sel_HasHADCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{HAD Calib}_{Photons}/E^{HAD Calib}_{Total}",\
                                                   )
 
             histogramName = "HadronicHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -322,11 +308,9 @@ def CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_et
                                                   calc_HadronHADCalibHitFrac,\
                                                   list_selections = selections + [sel_HasHADCalibHit],\
                                                   bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y = 20,
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "<E/p>",\
+                                                  bins_y =list( np.linspace(0.0,1.0,20)),
+                                                  xlabel ="E/p",\
+                                                  ylabel = "E^{HAD Calib}_{Neutral Hadrons}/E^{HAD Calib}_{Neutral Hadrons}",\
                                                   )
 
             histogramName = "EOPBkgDistribution" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
@@ -1216,7 +1200,9 @@ def FillingScript(plotter, outputRootFileName):
     from calculation.calculation import calculation
     from selections.selections import EtaBin, PBin
     from variables.variables import calc_EOPBkg, calc_EnergyAnulus
+    from selections.selections import sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter, sel_AnyPion
 
+    ##select inclusive distributions
     ##Create a set of binned EOP response histograms 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
@@ -1243,7 +1229,6 @@ def FillingScript(plotter, outputRootFileName):
     CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
-    from selections.selections import sel_NTRT20, sel_NonZeroEnergy
     base_selection = [sel_NTRT20, sel_NonZeroEnergy]
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
@@ -1273,6 +1258,108 @@ def FillingScript(plotter, outputRootFileName):
         p_bins = getLogBins(p_bins_min, 15.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "Inclusive"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    # Crete histograms for the hard scatter histograms
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    base_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_HardScatter]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "MIPSelectionBetween30and90OfMomentumHardScatter"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    from selections.selections import sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV
+    base_selection = [sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV, sel_HardScatter]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+   
+    description = "MIPSelectionHadFracAbove70HardScatter"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    base_selection = [sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "20TRTHitsNonZeroEnergyHardScatter"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    base_selection = [sel_NonZeroEnergy, sel_HardScatter]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "NonZeroEnergyHardScatter"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    base_selection = [sel_HardScatter]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "InclusiveHardScatter"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    #create plots for only pions
+    from selections.selections import sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV
+    base_selection = [sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV, sel_HardScatter, sel_AnyPion]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+   
+    description = "MIPSelectionHadFracAbove70HardScatterOnlyPion"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    base_selection = [sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter, sel_AnyPion]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "20TRTHitsNonZeroEnergyHardScatterOnlyPion"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    base_selection = [sel_NonZeroEnergy, sel_HardScatter, sel_AnyPion]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "NonZeroEnergyHardScatterOnlyPion"
+    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
+    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+
+    eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
+    base_selection = [sel_HardScatter, sel_AnyPion]
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = getP(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = getLogBins(p_bins_min, 15.05, 20)
+        p_bins_for_eta_range.append(p_bins)
+    description = "InclusiveHardScatterOnlyPion"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
     CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 

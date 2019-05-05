@@ -101,10 +101,10 @@ cwd = os.getcwd()
 #Create a plotter for each partition, and also a submission script:
 #get the reweighting histograms
 
-from variables.variables import calc_trkCount, calc_trkNPV2, calc_trkPt
-eventCount_histogram_file = ROOT.TFile("reweightHistograms/TrackCountReweight.root", "READ")
-eventCount_histogram = eventCount_histogram_file.Get("LowMuDataOverPythiaJetJetEventCount")
-calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, eventCount_histogram)
+#from variables.variables import calc_trkCount, calc_trkNPV2, calc_trkPt
+#eventCount_histogram_file = ROOT.TFile("reweightHistograms/TrackCountReweight.root", "READ")
+#eventCount_histogram = eventCount_histogram_file.Get("LowMuDataOverPythiaJetJetEventCount")
+#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, eventCount_histogram)
 
 #eventNPV2_histogram_file = ROOT.TFile("reweightHistograms/EventNPV2Reweight_LoosePrimary_VertexAssociated.root", "READ")
 #eventNPV2_histogram = eventNPV2_histogram_file.Get("eventNPV2HistLowMuDatadividedeventNPV2HistLowMuData")
@@ -166,7 +166,7 @@ leading_script.write("Error = " +jobName + "/Error/job.$(Process)\n")
 leading_script.write("Output = " +jobName + "/Output/job.$(Process)\n")
 leading_script.write("Log = "+jobName+"/Log/job.$(Process)\n")
 leading_script.write("+ProjectName='atlas-eopplotting'\n")
-leading_script.write('+JobFlavour = "tomorrow"\n')
+leading_script.write('+JobFlavour = "longlunch"\n')
 leading_script.write("should_transfer_files = YES\n")
 leading_script.write("when_to_transfer_output = ON_Exit\n")
 leading_script.write("transfer_output         = True\n")

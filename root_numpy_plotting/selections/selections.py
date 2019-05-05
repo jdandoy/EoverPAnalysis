@@ -31,7 +31,7 @@ def TruthLink(trk):
     return trk["trk_hasTruthParticle"] == 1
 
 def TruthMatched(trk):
-    return trk["trk_truthProb"] > 0.5
+    return (trk["trk_truthProb"] > 0.5) 
 
 def Fake(trk):
     return np.logical_not(TruthMatched(trk))
@@ -49,12 +49,12 @@ branches = ["trk_truthProb", "trk_hasTruthParticle"]
 sel_HardScatter = calculation(HardScatter, branches)
 
 def Pion(trk):
-    return  (np.abs(trk["trk_truthPdgId"] - 211.0) < 0.1)
+    return  (np.abs(trk["trk_truthPdgId"] - 211.0) < 0.1) 
 branches = ["trk_truthPdgId"]
 sel_Pion = calculation(Pion, branches)
 
 def AntiPion(trk):
-    return ( np.abs(trk["trk_truthPdgId"] + 211.0) < 0.1)
+    return ( np.abs(trk["trk_truthPdgId"] + 211.0) < 0.1) 
 branches = ["trk_truthPdgId"]
 sel_AntiPion = calculation(AntiPion, branches)
 
@@ -63,12 +63,12 @@ def AnyPion(trk):
 sel_AnyPion = calculation(AnyPion, branches)
 
 def Proton(trk):
-    return (np.abs(trk["trk_truthPdgId"] - 2212.0) < 0.1)
+    return (np.abs(trk["trk_truthPdgId"] - 2212.0) < 0.1) 
 branches = ["trk_truthPdgId"]
 sel_Proton = calculation(Proton, branches)
 
 def AntiProton(trk):
-    return (np.abs(trk["trk_truthPdgId"] + 2212.0) < 0.1)
+    return (np.abs(trk["trk_truthPdgId"] + 2212.0) < 0.1) 
 branches = ["trk_truthPdgId"]
 sel_AntiProton = calculation(AntiProton, branches)
 

@@ -534,7 +534,7 @@ class Plotter:
             partition = (0, total_entries)
         else:
             partition = self.partition_dictionary[filename]
-            print("Found a partition")
+            if self.verbose: print("Found a partition")
 
         tree = self.tree_dict[filename]
 
@@ -546,12 +546,12 @@ class Plotter:
         variable_dict = result["variable_dict"]
         weights = result["weights"]
 
-        print "The following selections have been evaluated "
+        if self.verbose: print "The following selections have been evaluated "
         for selection in selection_dict:
-            print selection
-        print "The following variables have be evaluated " 
+            if self.verbose: print selection
+        if self.verbose: print "The following variables have be evaluated " 
         for variable in variable_dict:
-            print variable
+            if self.verbose: print variable
 
         #prepare to loop through the selections and apply all of them
         #if self.verbose: print("\n\n\n\n\n===============\nPreselections are being applied")
@@ -682,9 +682,9 @@ class Plotter:
                 if self.verbose: print to_fill
                 if self.verbose: print to_weight
                 if self.verbose: print("Filling Variable " + variable.name)
-                print("Filling Histogram")
+                if self.verbose: print("Filling Histogram")
                 fill_profile(histogram_dictionary[channel], to_fill, to_weight)
-                print("Finished filling histogram")
+                if self.verbose: print("Finished filling histogram")
 
             histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
