@@ -1,8 +1,8 @@
 from ROOT import TFile, TH1D, TTree, TChain
-from root_numpy import tree2array
 import time
 import os
 import glob
+import imp
 
 #These are python JZW samples. I normalize to the number of generated events, the cross section and the filter efficiency
 weight_dictionary = {\
@@ -13,8 +13,17 @@ weight_dictionary = {\
 "428002" : 1.0,
 }
 
-#particle_labels_dictionary = {\
-#""#pi^+"
+try:
+    imp.find_module('root_numpy')
+    foundRootNumpy=True
+    print "Found root_numpy"
+except ImportError:
+    foundRootNumpy=False
+    print "Didn't find root_numpy module. Did NOT set atlas style. Continuing"
+
+if foundRootNumpy:
+    from root_numpy import fill_hist, fill_profile
+    from root_numpy import tree2array
 
 import os
 import psutil

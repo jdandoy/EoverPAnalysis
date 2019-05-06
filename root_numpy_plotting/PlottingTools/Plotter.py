@@ -1,6 +1,5 @@
 import numpy as np
 from array import array
-from root_numpy import fill_hist, fill_profile
 import ROOT
 from DataPrep import GetData
 import imp
@@ -12,6 +11,17 @@ try:
 except ImportError:
     foundAtlasPlots = False
     print "Didn't find atlas plots module. Did NOT set atlas style. Continuing"
+
+try:
+    imp.find_module('root_numpy')
+    foundRootNumpy=True
+    print "Found root_numpy"
+except ImportError:
+    foundRootNumpy=False
+    print "Didn't find root_numpy module. Did NOT set atlas style. Continuing"
+
+if foundRootNumpy:
+    from root_numpy import fill_hist, fill_profile
 
 if foundAtlasPlots:
     from atlasplots import atlas_style as astyle

@@ -12,7 +12,7 @@ def CloseCanvas(canv):
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "TestApr25EventReweight.root"
+filename = "PlotSinglePart_0.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
@@ -30,15 +30,13 @@ if not os.path.exists("Plots/" + plotter_directory):
 
 plotter_directory = "Plots/" + plotter_directory
 
-def fitHistograms(histograms, fit_function):
+def fitHistograms(histograms, fit_function, histogramName):
     '''
     Fit function fit_function to the histograms
     fit_function can be gaus, landau or convolution
     '''
 
 
-    print "Getting histogram " + histogramName
-    histograms = HM.getHistograms(histogramName, rebin = 2)
     data = histograms["LowMuData"]
     MC = histograms["PythiaJetJet"]
     #loop through the bins with low edges above 0.0 and find the first one with more than 10 entries. Start fitting above that bin
@@ -190,14 +188,20 @@ def fitHistograms(histograms, fit_function):
     MC.GetXaxis().SetRange()
 
     #good setting for a landau x gaus
-    low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
-    high = max(mean_data + 1.0*sigma_data, mean_MC + 1.0*sigma_MC)
+    sigma_data = 0.5
+    sigma_MC = 0.5
+    mean_MC = 0.6
+    mean_data = 0.6
+    low = min(mean_data - 1.0*sigma_data, mean_MC - 1.0*sigma_MC)
+    high = max(mean_data + 1.5*sigma_data, mean_MC + 1.5*sigma_MC)
 
     #good settings for a gaus
     #low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
     #high = max(mean_data + 0.5*sigma_data, mean_MC + 0.5*sigma_MC)
 
     #re-do the fit in the +- 1 sigma window
+    low=0.05
+    high=1.2
     data.Fit(fit_function_data_string + histogramName, "", "", low, high)
     MC.Fit(fit_function_MC_string + histogramName, "", "", low, high)
 
@@ -209,9 +213,9 @@ def fitHistograms(histograms, fit_function):
 
     fit_function_MC = MC.GetFunction(fit_function_MC_string + histogramName)
     fit_function_MC.SetLineColor(ROOT.kRed)
-    input("Does the fit look OK?")
+    raw_input("Does the fit look OK?")
 
-def CreatePlotsFromSelection(selection_name, filename, base_description = [], doFit = False):
+def CreatePlotsFromSelection(selection_name, filename, base_description = [], doFit = False, fitfunction="convolution"):
     #get the binning vectors
     f = ROOT.TFile(filename, "READ")
 
@@ -279,7 +283,7 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
                 description += [str(round(p_low, 3)) + " < P/GeV < " + str(round(p_high, 3))]
 
                 if doFit and histogram == "EOPDistribution":
-                    fitHistograms(hist, "LandauConvGaus")
+                    fitHistograms(hist, fitfunction, histogram_name)
 
                 DataVsMC1 = DrawDataVsMC(hist,\
                                         channelLabels,\
@@ -292,21 +296,26 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
                 DataVsMC1[0].Close()
 
 #test the plot creation
-CreatePlotsFromSelection("20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
-CreatePlotsFromSelection("MIPSelectionHadFracAbove70", filename, base_description = ["MIP Selection"],doFit=False)
+CreatePlotsFromSelection("20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, fitfunction="convolution")
+#CreatePlotsFromSelection("MIPSelectionHadFracAbove70", filename, base_description = ["MIP Selection"],doFit=True)
 CreatePlotsFromSelection("NonZeroEnergy", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
 CreatePlotsFromSelection("Inclusive", filename, base_description = [],doFit=False)
 
+CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
+CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatter", filename, base_description = ["MIP Selection"],doFit=False)
+CreatePlotsFromSelection("NonZeroEnergyHardScatter", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
+CreatePlotsFromSelection("InclusiveHardScatter", filename, base_description = [],doFit=False)
+
+CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatterOnlyPion", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
+CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatterOnlyPion", filename, base_description = ["MIP Selection"],doFit=False)
+CreatePlotsFromSelection("NonZeroEnergyHardScatterOnlyPion", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
+CreatePlotsFromSelection("InclusiveHardScatterOnlyPion", filename, base_description = [],doFit=False)
 #KEY:TTreeMIPSelectionBetween30and90OfMomentumBinningTree;1MIPSelectionBetween30and90OfMomentumBinningTree
 #KEY:TTreeMIPSelectionHadFracAbove70BinningTree;1MIPSelectionHadFracAbove70BinningTree
 #KEY:TTree20TRTHitsNonZeroEnergyBinningTree;120TRTHitsNonZeroEnergyBinningTree
 #KEY:TTreeNonZeroEnergyBinningTree;1NonZeroEnergyBinningTree
 #KEY:TTreeInclusiveBinningTree;1InclusiveBinningTree
 
-
-
-
-            
 
 
 
@@ -1212,7 +1221,7 @@ for eta_range in eta_ranges:
         landau_forconvolution_MC = ROOT.TF1("landau_forconvolution_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
 
         convolution_MC = ROOT.TF1Convolution(gaus_forconvolution_MC, landau_forconvolution_MC,-1,6,True)
-        convolution_MC.SetRange(-1.,5.)
+        convolution_MC.SetRange(-5.,10.)
         convolution_MC.SetNofPointsFFT(10000)
         convolution_tofit_MC = ROOT.TF1("f",convolution_MC, -1.0, 5., convolution_MC.GetNpar())
         convolution_tofit_MC.SetName("convolution_MC" + histogramName)
