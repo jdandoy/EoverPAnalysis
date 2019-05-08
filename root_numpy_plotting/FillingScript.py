@@ -17,7 +17,6 @@ def WriteToFile(histogram_dictionary, outFile):
         if not outFile.cd(key):
             outFile.mkdir(key)
         outFile.cd(key)
-        print("Writing histogram " + histogram_dictionary[key].GetName())
         histogram_dictionary[key].Write()
 
 
@@ -1213,7 +1212,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionBetween30and90OfMomentum"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     from selections.selections import sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV
@@ -1226,7 +1225,7 @@ def FillingScript(plotter, outputRootFileName):
    
     description = "MIPSelectionHadFracAbove70"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = [sel_NTRT20, sel_NonZeroEnergy]
@@ -1237,7 +1236,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHitsNonZeroEnergy"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = [sel_NonZeroEnergy]
@@ -1248,7 +1247,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "NonZeroEnergy"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = []
@@ -1271,7 +1270,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionBetween30and90OfMomentumHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     from selections.selections import sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV
@@ -1284,7 +1283,7 @@ def FillingScript(plotter, outputRootFileName):
    
     description = "MIPSelectionHadFracAbove70HardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     base_selection = [sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter]
     p_bins_for_eta_range = []
@@ -1294,7 +1293,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHitsNonZeroEnergyHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = [sel_NonZeroEnergy, sel_HardScatter]
@@ -1305,7 +1304,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "NonZeroEnergyHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = [sel_HardScatter]
@@ -1316,7 +1315,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "InclusiveHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     #create plots for only pions
     from selections.selections import sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV
@@ -1329,7 +1328,7 @@ def FillingScript(plotter, outputRootFileName):
    
     description = "MIPSelectionHadFracAbove70HardScatterOnlyPion"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     base_selection = [sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter, sel_AnyPion]
     p_bins_for_eta_range = []
@@ -1339,7 +1338,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHitsNonZeroEnergyHardScatterOnlyPion"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = [sel_NonZeroEnergy, sel_HardScatter, sel_AnyPion]
@@ -1350,7 +1349,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "NonZeroEnergyHardScatterOnlyPion"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = [(0.0, 0.4),(0.4,0.8),(0.8,1.2),(1.2,1.6),(1.6,2.0),(2.0,2.4)]
     base_selection = [sel_HardScatter, sel_AnyPion]
@@ -1361,7 +1360,7 @@ def FillingScript(plotter, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "InclusiveHardScatterOnlyPion"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    #CreateEOPBinnedHistograms(plotter, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     histograms = plotter.DumpHistograms()
     for histogram_name in histograms:
