@@ -163,9 +163,6 @@ def cleanUpHistograms(h):
     h.SetMarkerSize(0)
     return h
 
-MCColor = ROOT.kRed
-DataColor = ROOT.kBlack
-
 def GetHistogramOfErrors(hist_dict):
     '''Given an input dictionary of histograms, return a dictionary of histograms with the bin content set to the error of the bin'''
     dict_keys = hist_dict.keys()
@@ -194,7 +191,10 @@ def ProjectProfiles(hist_dict):
         hist_dict[channel] = hist_dict[channel].ProjectionX()
     return hist_dict
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None):
+colors = [ROOT.kRed, ROOT.kBlue]
+DataColor = ROOT.kBlack
+
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -216,28 +216,31 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     yTicksNumber: set the number of ticks on the y-axis
     -----------------------------------------------------------------------------------------------------
     '''
+
     title_offset = 1.2
-    MCHist = histogram_dict[MCKey]
+    MCHists = [histogram_dict[MCKey] for MCKey in MCKeys]
     DataHist = histogram_dict[DataKey]
-    MCHist = cleanUpHistograms(MCHist)
-    MCHist.SetLineColor(MCColor)
+    MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
+    [MCHist.SetLineColor(color) for color, MCHist in zip(colors, MCHists)]
     DataHist.SetLineColor(DataColor)
 
     if rebin != None:
-        MCHist.Rebin(rebin)
+        [MCHist.Rebin(rebin) for MCHist in MCHists]
         DataHist.Rebin(rebin)
 
     if xAxis_range != None:
         #find the bin to use to set the range
         x_low = None
         x_high = None
-        for bin in range(0, MCHist.GetNbinsX() + 1):
-            cent = MCHist.GetBinCenter(bin)
-            if cent >= xAxis_range[0] and x_low == None:
-                x_low = bin
-            elif cent > xAxis_range[1] and x_high == None:
-                x_high = bin -1
-        MCHist.GetXaxis().SetRange(x_low, x_high)
+        for MCHist in MCHists:
+            for bin in range(0, MCHist.GetNbinsX() + 1):
+                cent = MCHist.GetBinCenter(bin)
+                if cent >= xAxis_range[0] and x_low == None:
+                    x_low = bin
+                elif cent > xAxis_range[1] and x_high == None:
+                    x_high = bin -1
+
+        [MCHist.GetXaxis().SetRange(x_low, x_high) for MCHist in MCHists]
         DataHist.GetXaxis().SetRange(x_low, x_high)
 
     legend = ROOT.TLegend(0.60, 0.65, 0.92, 0.89)
@@ -254,26 +257,27 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     top_pad.cd()
     top_pad.SetBottomMargin(0)
 
-    filename = MCHist.GetTitle() + "histogram"
+    filename = MCHists[0].GetTitle() + "histogram"
 
     if (type(extra_description) == list and len(extra_description) > 3):
         scale_factor *= 10.0
 
     maximum_bin = 0.0
     minimum_bin = 10000000000000000.0
-    for bin in range(1, MCHist.GetNbinsX() + 1):
-        content = MCHist.GetBinContent(bin)
-        if content > maximum_bin:
-            maximum_bin = content
-        if content < minimum_bin and content > 0.0:
-            minimum_bin = content
+    for MCHist in MCHists:
+        for bin in range(1, MCHist.GetNbinsX() + 1):
+            content = MCHist.GetBinContent(bin)
+            if content > maximum_bin:
+                maximum_bin = content
+            if content < minimum_bin and content > 0.0:
+                minimum_bin = content
 
-    for bin in range(1, DataHist.GetNbinsX() + 1):
-        content = DataHist.GetBinContent(bin)
-        if content > maximum_bin:
-            maximum_bin = content
-        if content < minimum_bin and content > 0.0:
-            minimum_bin = content
+        for bin in range(1, DataHist.GetNbinsX() + 1):
+            content = DataHist.GetBinContent(bin)
+            if content > maximum_bin:
+                maximum_bin = content
+            if content < minimum_bin and content > 0.0:
+                minimum_bin = content
 
     if doLogy:
         filename += "logy"
@@ -281,26 +285,33 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     if doLogy:
         if minimum_bin <= 0.0:
             minimum_bin = 1
-        MCHist.SetMaximum(maximum_bin * scale_factor)
-        MCHist.SetMinimum(minimum_bin * 0.5)
+        for MCHist in MCHists:
+            MCHist.SetMaximum(maximum_bin * scale_factor)
+            MCHist.SetMinimum(minimum_bin * 0.5)
         DataHist.SetMaximum(maximum_bin * scale_factor)
         DataHist.SetMinimum(minimum_bin * 0.5)
 
     else:
-        MCHist.SetMaximum(maximum_bin * 1.5)
-        MCHist.SetMinimum(minimum_bin * 0.5)
+        for MCHist in MCHists:
+            MCHist.SetMaximum(maximum_bin * 1.5)
+            MCHist.SetMinimum(minimum_bin * 0.5)
         DataHist.SetMaximum(maximum_bin * 1.5)
         DataHist.SetMinimum(minimum_bin * 0.5)
 
-    MCHist.GetYaxis().SetTitleOffset(1.3)
+    [MCHist.GetYaxis().SetTitleOffset(1.3) for MCHist in MCHists]
+
     if ylabel:
-        MCHist.GetYaxis().SetTitle(ylabel)
-    MCHist.Draw("HIST")
+        [MCHist.GetYaxis().SetTitle(ylabel) for MCHist in MCHists]
+
+    MCHists[0].Draw("HIST")
+    for MCHist in MCHists[1:]:
+        MCHist.Draw("SAME HIST")
     DataHist.Draw("SAME")
 
-    legend.AddEntry(MCHist, LegendLabels[MCKey])
-    legend.AddEntry(DataHist, LegendLabels[DataKey])
     legend.SetTextSize(0.04)
+    for MCHist, MCKey in zip(MCHists, MCKeys):
+        legend.AddEntry(MCHist, LegendLabels[MCKey])
+    legend.AddEntry(DataHist, LegendLabels[DataKey])
     legend.Draw()
 
     if extra_description:
@@ -332,32 +343,47 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     bottom_pad.cd()
     toGlobalScope(bottom_pad)
 
-    data_ratio = DataHist.Clone("data_histogram")
-    data_ratio.Divide(MCHist)
-    data_ratio = cleanUpHistograms(data_ratio)
-    data_ratio.SetLineColor(ROOT.kBlack)
-    data_ratio.Draw("HIST E")
+    counter = 0
+    for MCHist, color in zip(MCHists, colors):
+        counter += 1
+        data_ratio = DataHist.Clone("data_histogram" + str(counter))
+        data_ratio.Divide(MCHist)
+        data_ratio = cleanUpHistograms(data_ratio)
+        data_ratio.SetLineColor(color)
 
-    MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
-    variableLabel = MCHist.GetXaxis().GetTitle()
+        if counter == 1:
+            data_ratio.Draw("HIST E")
+        else:
+            data_ratio.Draw("SAME E")
 
-    data_ratio.GetYaxis().SetNdivisions(yTicksNumber)
+        MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
+        variableLabel = MCHist.GetXaxis().GetTitle()
 
-    data_ratio.GetYaxis().SetTitle("Data/MC")
-    scale_ratio = (top_pad.GetWh()*top_pad.GetAbsHNDC())/(bottom_pad.GetWh() * bottom_pad.GetAbsHNDC())
-    data_ratio.GetXaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
-    data_ratio.GetYaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
-    data_ratio.GetXaxis().SetTitle(variableLabel)
-    data_ratio.GetXaxis().SetTitleOffset(1.2)
-    data_ratio.SetMaximum(ratio_max - 0.0001)
-    data_ratio.SetMinimum(ratio_min + 0.0001)
-    data_ratio.GetXaxis().SetTitleSize(MCHist_label_size*scale_ratio)
-    data_ratio.GetYaxis().SetTitleSize(MCHist_label_size*scale_ratio)
-    data_ratio.GetYaxis().SetTitleOffset(title_offset/scale_ratio)
-    data_ratio.SetMaximum(ratio_max - 0.0001)
-    data_ratio.SetMinimum(ratio_min + 0.0001)
-    data_ratio.Draw("HIST E")
-    toGlobalScope(data_ratio)
+        data_ratio.GetYaxis().SetNdivisions(yTicksNumber)
+
+        data_ratio.GetYaxis().SetTitle("Data/MC")
+        scale_ratio = (top_pad.GetWh()*top_pad.GetAbsHNDC())/(bottom_pad.GetWh() * bottom_pad.GetAbsHNDC())
+        data_ratio.GetXaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
+        data_ratio.GetYaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
+        data_ratio.GetXaxis().SetTitle(variableLabel)
+        data_ratio.GetXaxis().SetTitleOffset(1.2)
+        data_ratio.SetMaximum(ratio_max - 0.0001)
+        data_ratio.SetMinimum(ratio_min + 0.0001)
+        data_ratio.GetXaxis().SetTitleSize(MCHist_label_size*scale_ratio)
+        data_ratio.GetYaxis().SetTitleSize(MCHist_label_size*scale_ratio)
+        data_ratio.GetYaxis().SetTitleOffset(title_offset/scale_ratio)
+        data_ratio.SetMaximum(ratio_max - 0.0001)
+        data_ratio.SetMinimum(ratio_min + 0.0001)
+
+        if counter == 1:
+            data_ratio.Draw("HIST E")
+        else:
+            data_ratio.Draw("SAME HIST E")
+
+        toGlobalScope(data_ratio)
+
+        if xTicksNumber != None:
+            data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
 
     ##Draw a set of solid and dotted lines on the ratio plot to guide the reader's eyes
     straight_line = ROOT.TF1("line1", str(1.0) , -10e6, + 10e6)
@@ -408,9 +434,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKey = "", DataKey = "", do
     bottom_pad.cd()
     bottom_pad.SetTopMargin(0)
     bottom_pad.SetBottomMargin(0.45)
-
-    if xTicksNumber != None:
-        data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
 
     bottom_pad.Modified()
     bottom_pad.Update()
@@ -559,7 +582,7 @@ class Plotter:
         if self.verbose: print "The following selections have been evaluated "
         for selection in selection_dict:
             if self.verbose: print selection
-        if self.verbose: print "The following variables have be evaluated " 
+        if self.verbose: print "The following variables have be evaluated "
         for variable in variable_dict:
             if self.verbose: print variable
 

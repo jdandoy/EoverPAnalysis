@@ -5,21 +5,21 @@ from array import array
 import os
 import time
 
-ROOT.gROOT.SetBatch(ROOT.kFALSE)
+ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 def CloseCanvas(canv):
     canv.Close()
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "PlotSinglePart_0.root"
+filename = "PlotSinglePart.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
 
-base_description = ["P_{T} Reweighted"]
-#base_description = []
-channelLabels = {"PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Low-<#mu> Data"}
+#base_description = ["P_{T} Reweighted"]
+base_description = []
+channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Low-<#mu> Data"}
 plotter_directory = (filename.split("/")[-1]).replace(".root","") + "plots"
 
 if not os.path.exists("Plots"):
@@ -30,7 +30,7 @@ if not os.path.exists("Plots/" + plotter_directory):
 
 plotter_directory = "Plots/" + plotter_directory
 
-def fitHistograms(histograms, fit_function, histogramName):
+def fitHistograms(histograms, fit_function, histogramName, eta_low=-1,eta_high=-1,p_low=-1,p_high=-1):
     '''
     Fit function fit_function to the histograms
     fit_function can be gaus, landau or convolution
@@ -187,18 +187,6 @@ def fitHistograms(histograms, fit_function, histogramName):
     data.GetXaxis().SetRange()
     MC.GetXaxis().SetRange()
 
-    #good setting for a landau x gaus
-    sigma_data = 0.5
-    sigma_MC = 0.5
-    mean_MC = 0.6
-    mean_data = 0.6
-    low = min(mean_data - 1.0*sigma_data, mean_MC - 1.0*sigma_MC)
-    high = max(mean_data + 1.5*sigma_data, mean_MC + 1.5*sigma_MC)
-
-    #good settings for a gaus
-    #low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
-    #high = max(mean_data + 0.5*sigma_data, mean_MC + 0.5*sigma_MC)
-
     #re-do the fit in the +- 1 sigma window
     low=0.05
     high=1.2
@@ -213,7 +201,27 @@ def fitHistograms(histograms, fit_function, histogramName):
 
     fit_function_MC = MC.GetFunction(fit_function_MC_string + histogramName)
     fit_function_MC.SetLineColor(ROOT.kRed)
-    raw_input("Does the fit look OK?")
+
+    max_x_data, max_val_data = FindMostProbableValue(fit_function_data, low, high, ndivisions=10000)
+    max_x_MC, max_val_MC = FindMostProbableValue(fit_function_MC, low, high, ndivisions=10000)
+
+    print "The maximum value in data was at eop " + str(max_x_data)
+    print "The maximum value in MC was at eop " + str(max_x_MC)
+
+    return max_x_data, max_x_MC
+
+def FindMostProbableValue(fit_function, low, high, ndivisions=10000):
+    x = np.linspace(low, high, ndivisions)
+    vals = np.zeros(len(x))
+    max_val = 0
+    max_x = -999999.0
+    for i in range(0, len(x)):
+        vals[i] = fit_function.Eval(x[i])
+        if vals[i] > max_val:
+            max_val = vals[i]
+            max_x = x[i]
+
+    return max_x, max_val
 
 def CreatePlotsFromSelection(selection_name, filename, base_description = [], doFit = False, fitfunction="convolution"):
     #get the binning vectors
@@ -264,7 +272,7 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
 
             DataVsMC1 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     extra_description = description)
 
@@ -275,6 +283,9 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
         p_bins_high = p_bins_high_for_eta_bin[i]
 
         #the plots binned in eta and momentum
+        mpv_eop_data = []
+        mpv_eop_MC = []
+        p_centers = []
         for j, p_low, p_high in zip(list(range(0, p_bins_low.size())), p_bins_low, p_bins_high):
             for histogram in histograms_in_momentum_bins:
                 histogram_name = histogram + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
@@ -283,11 +294,14 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
                 description += [str(round(p_low, 3)) + " < P/GeV < " + str(round(p_high, 3))]
 
                 if doFit and histogram == "EOPDistribution":
-                    fitHistograms(hist, fitfunction, histogram_name)
+                    max_eop_data, max_eop_MC = fitHistograms(hist, fitfunction, histogram_name, eta_low=eta_low, eta_high=eta_high, p_low=p_low, p_high=p_high)
+                    mpv_eop_data.append(max_eop_data)
+                    mpv_eop_MC.append(max_eop_MC)
+                    p_centers.append((p_low + p_high)/2.0)
 
                 DataVsMC1 = DrawDataVsMC(hist,\
                                         channelLabels,\
-                                        MCKey='PythiaJetJet',\
+                                        MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                         DataKey='LowMuData',\
                                         extra_description = description)
 
@@ -295,32 +309,61 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
                 DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + ".png")
                 DataVsMC1[0].Close()
 
+        p_bins_list = []
+        p_bins_list.append(p_bins_low[0])
+        for p_high in p_bins_high:
+            p_bins_list.append(p_high)
+        p_bins_array = array('d', p_bins_list)
+
+        data_hist = ROOT.TH1D("DataFitResults" + str(eta_low) + "_" + str(eta_high),"DataFitResults" + str(eta_low) + "_" + str(eta_high), len(p_bins_array[1:])-1, p_bins_array)
+        MC_hist = ROOT.TH1D("MCFitResults" + str(eta_low) + "_" + str(eta_high),"MCFitResults" + str(eta_low) + "_" + str(eta_high), len(p_bins_array[1:])-1, p_bins_array)
+
+        for i in range(1, data_hist.GetNbinsX() + 1):
+            data_hist.SetBinContent(i, mpv_eop_data[i-1])
+            #data_hist.SetBinError(i, bin_mpv_error_MC[i-1])
+            MC_hist.SetBinContent(i, mpv_eop_MC[i-1])
+            #MC_hist.SetBinError(i, bin_mpv_error_MC[i-1])
+
+        histograms = {"PythiaJetJet":MC_hist, "LowMuData":data_hist}
+
+        ROOT.gROOT.SetBatch(ROOT.kFALSE)
+        eta_low_str = str(eta_low)
+        eta_high_str = str(eta_high)
+        description = ["P_{T} Reweighted", "MIP Selection", eta_low_str + " < |#eta| < " + eta_high_str]
+        DataVsMC = DrawDataVsMC(histograms,\
+                              channelLabels,\
+                              MCKeys = ['PythiaJetJet', 'SinglePion'],\
+                              DataKey = "LowMuData",\
+                              doLogx = True,\
+                              doLogy = False,
+                              ratio_min = 0.9,\
+                              ratio_max = 1.1,\
+                              extra_description = description)
+
+        DataVsMC[0].Draw()
+        DataVsMC[0].Print("DataFitResults" + eta_low_str + "_" + eta_high_str + ".png")
+        raw_input("How do the fits look?")
+        ROOT.gROOT.SetBatch(ROOT.kTRUE)
+
+
 #test the plot creation
-CreatePlotsFromSelection("20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, fitfunction="convolution")
+#CreatePlotsFromSelection("20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, fitfunction="convolution")
 #CreatePlotsFromSelection("MIPSelectionHadFracAbove70", filename, base_description = ["MIP Selection"],doFit=True)
-CreatePlotsFromSelection("NonZeroEnergy", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
-CreatePlotsFromSelection("Inclusive", filename, base_description = [],doFit=False)
+#CreatePlotsFromSelection("NonZeroEnergy", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False, fitfunction="convolution")
+#CreatePlotsFromSelection("Inclusive", filename, base_description = [],doFit=False)
 
-CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
-CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatter", filename, base_description = ["MIP Selection"],doFit=False)
-CreatePlotsFromSelection("NonZeroEnergyHardScatter", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
-CreatePlotsFromSelection("InclusiveHardScatter", filename, base_description = [],doFit=False)
+#CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
+#CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatter", filename, base_description = ["MIP Selection"],doFit=False)
+#CreatePlotsFromSelection("NonZeroEnergyHardScatter", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
+#CreatePlotsFromSelection("InclusiveHardScatter", filename, base_description = [],doFit=False)
 
-CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatterOnlyPion", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
-CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatterOnlyPion", filename, base_description = ["MIP Selection"],doFit=False)
-CreatePlotsFromSelection("NonZeroEnergyHardScatterOnlyPion", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
-CreatePlotsFromSelection("InclusiveHardScatterOnlyPion", filename, base_description = [],doFit=False)
-#KEY:TTreeMIPSelectionBetween30and90OfMomentumBinningTree;1MIPSelectionBetween30and90OfMomentumBinningTree
-#KEY:TTreeMIPSelectionHadFracAbove70BinningTree;1MIPSelectionHadFracAbove70BinningTree
-#KEY:TTree20TRTHitsNonZeroEnergyBinningTree;120TRTHitsNonZeroEnergyBinningTree
-#KEY:TTreeNonZeroEnergyBinningTree;1NonZeroEnergyBinningTree
-#KEY:TTreeInclusiveBinningTree;1InclusiveBinningTree
+#CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatterOnlyPion", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
+#CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatterOnlyPion", filename, base_description = ["MIP Selection"],doFit=False)
+#CreatePlotsFromSelection("NonZeroEnergyHardScatterOnlyPion", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
+#CreatePlotsFromSelection("InclusiveHardScatterOnlyPion", filename, base_description = [],doFit=False)
 
 
-
-
-
-if False:
+if True:
         histogramName = "TwoDTrackPtVsEtaHistogram_HasExtrapolation"
         hist = HM.getHistograms(histogramName)
         description = base_description + ["Inclusive Selection"]
@@ -368,7 +411,7 @@ if False:
         description = base_description + ["Inclusive Selection"]
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC1[0].Draw()
@@ -381,7 +424,7 @@ if False:
         description = base_description + ["Inclusive Selection"]
         DataVsMC2 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC2[0].Draw()
@@ -393,7 +436,7 @@ if False:
         description = base_description + ["Inclusive Selection"]
         DataVsMC3 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC3[0].Draw()
@@ -405,7 +448,7 @@ if False:
         description = base_description + ["Inclusive Selection"]
         DataVsMC5 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC5[0].Draw()
@@ -416,7 +459,7 @@ if False:
         description = base_description + ["Inclusive Selection"]
         DataVsMC6 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC6[0].Draw()
@@ -427,7 +470,7 @@ if False:
         description = base_description + ["Inclusive Selection"]
         DataVsMC7 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC7[0].Draw()
@@ -440,7 +483,7 @@ if False:
             description = base_description + ["Inclusive Selection"]
             DataVsMC4 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     doLogx = True,\
                                     doLogy = True,\
@@ -456,7 +499,7 @@ if False:
             description = base_description + ["|#eta_{ID}|<0.6"]
             DataVsMC8 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     doLogx=True,
                                     ratio_min = 0.6,\
@@ -470,7 +513,7 @@ if False:
             description = base_description + ["0.6<|#eta_{ID}|<1.1"]
             DataVsMC8 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     doLogx=True,
                                     ratio_min = 0.6,\
@@ -484,7 +527,7 @@ if False:
             description = base_description + ["1.1<|#eta_{ID}|<1.4"]
             DataVsMC8 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     doLogx=True,
                                     ratio_min = 0.6,\
@@ -498,7 +541,7 @@ if False:
             description = base_description + ["1.4<|#eta_{ID}|<1.5"]
             DataVsMC8 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     doLogx=True,
                                     ratio_min = 0.6,\
@@ -512,7 +555,7 @@ if False:
             description = base_description + ["1.5<|#eta_{ID}|<1.8"]
             DataVsMC9 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     doLogx=True,
                                     ratio_min = 0.6,\
@@ -526,7 +569,7 @@ if False:
             description = base_description + ["1.8<|#eta_{ID}|<2.3"]
             DataVsMC9 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKey='PythiaJetJet',\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
                                     doLogx=True,
                                     ratio_min = 0.6,\
@@ -545,7 +588,7 @@ if False:
         description = base_description + ["Inclusive Selection"]
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 doLogx=True,
                                 doLogy=False,
@@ -564,7 +607,7 @@ if False:
 
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 doLogx=True,
                                 doLogy=False,
@@ -584,7 +627,7 @@ if False:
 
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 doLogx=True,
                                 doLogy=False,
@@ -604,7 +647,7 @@ if False:
 
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 doLogx=True,
                                 doLogy=False,
@@ -632,7 +675,7 @@ if False:
         hist = HM.getHistograms(histogramName)
         DataVsMC9 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 doLogx=True,
                                 doLogy=False,
@@ -653,7 +696,7 @@ if False:
 
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
-                                MCKey='PythiaJetJet',\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
                                 doLogx=True,
                                 doLogy=False,
@@ -671,7 +714,7 @@ if False:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -689,7 +732,7 @@ if False:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -708,7 +751,7 @@ if False:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -727,7 +770,7 @@ if False:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -745,7 +788,7 @@ if False:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -763,7 +806,7 @@ if False:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -858,7 +901,7 @@ if False:
         #
         #    DataVSMC10 = DrawDataVsMC(histograms,\
         #                          channelLabels,\
-        #                          MCKey = "PythiaJetJet",\
+        #                          MCKeys = ['PythiaJetJet', 'SinglePion'],\
         #                          DataKey = "LowMuData",\
         #                          doLogx = True,\
         #                          doLogy = False,
@@ -889,7 +932,7 @@ if False:
 
             DataVSMC10 = DrawDataVsMC(frac_MIP_of_NonZero,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -903,7 +946,7 @@ if False:
 
             DataVSMC10 = DrawDataVsMC(frac_MIP_of_Inclusive,\
                                   channelLabels,\
-                                  MCKey = "PythiaJetJet",\
+                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -927,7 +970,7 @@ if False:
                 histogram_num = histograms
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
-                                      MCKey = "PythiaJetJet",\
+                                      MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
@@ -944,7 +987,7 @@ if False:
                 histogram_den = histograms
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
-                                      MCKey = "PythiaJetJet",\
+                                      MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
@@ -959,7 +1002,7 @@ if False:
                 histogramName = "EOPCorrHistogram_" + bkgProfileName + "_"  + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
                 DataVSMC10 = DrawDataVsMC(EOPCorrHistograms,\
                                       channelLabels,\
-                                      MCKey = "PythiaJetJet",\
+                                      MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,\
@@ -984,7 +1027,7 @@ if False:
             histograms = HM.getHistograms(histogram_name)
             DataVsMC = DrawDataVsMC(histograms,\
                                     channelLabels,\
-                                    MCKey="PythiaJetJet",\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey="LowMuData",\
                                     ratio_min=0.6,\
                                     ratio_max=1.4,\
@@ -1012,7 +1055,7 @@ if False:
                 histograms = ProjectProfiles(histograms)
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
-                                      MCKey = "PythiaJetJet",\
+                                      MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
@@ -1050,7 +1093,7 @@ if False:
                             histograms = HM.getHistograms(histogramName)
                             DataVSMC = DrawDataVsMC(histograms,\
                                            channelLabels,\
-                                           MCKey = "PythiaJetJet",\
+                                           MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                            DataKey = "LowMuData",\
                                            doLogx = False,\
                                            doLogy = False,
@@ -1066,7 +1109,7 @@ if False:
                             hist = HM.getHistograms(histogram_name)
                             DataVsMC1 = DrawDataVsMC(hist,\
                                                     channelLabels,\
-                                                    MCKey='PythiaJetJet',\
+                                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                                     DataKey='LowMuData',\
                                                     extra_description =  ["P_{T} Reweighted", eta_descriptor, p_low_str + " < |P/GeV| < " + p_high_str] + extra_stuff)
                             DataVsMC1[0].Draw()
@@ -1116,199 +1159,13 @@ for eta_range in eta_ranges:
     count = 0
     p_ranges = [ (p_bins[i], p_bins[i+1])  for i in range(0, len(p_bins)-1) ]
 
-    for p_range in p_ranges:
-        count += 1
-
-        p_high_str = "{:.2f}".format(p_range[1])
-        p_low_str = "{:.2f}".format(p_range[0])
-
-        print "Considering the following range for EOP distributions"
-        print p_range[0]
-        print p_range[1]
-
-        histogramName = None
-        found = False
-
-        print "Getting histogram " + histogramName
-        histograms = HM.getHistograms(histogramName, rebin = 2)
-        data = histograms["LowMuData"]
-        MC = histograms["PythiaJetJet"]
-        #loop through the bins with low edges above 0.0 and find the first one with more than 10 entries. Start fitting above that bin
-        low_data = 0.0
-        high_data = data.GetMean() + 1.5 * data.GetRMS()
-        for binx in range(1, data.GetNbinsX() + 1):
-            if (data.GetBinContent(binx) > 60 and data.GetBinLowEdge(binx) > 0.15):
-                low_data = data.GetBinLowEdge(binx + 1)
-                break
-
-        low_MC = 0.0
-        high_MC = MC.GetMean() + 1.5 * MC.GetRMS()
-        for binx in range(1, MC.GetNbinsX() + 1):
-            if (MC.GetBinContent(binx) > 60 and MC.GetBinLowEdge(binx) > 0.15):
-                low_MC = MC.GetBinLowEdge(binx + 1)
-                break
-
-        for binx in range(data.GetNbinsX(), -1, -1):
-            if (data.GetBinContent(binx) > 80):
-                high_data = data.GetBinLowEdge(binx)
-                break
-
-        for binx in range(MC.GetNbinsX(), -1, -1):
-            if (MC.GetBinContent(binx) > 80):
-                high_MC = MC.GetBinLowEdge(binx)
-                break
-
-        #find the most probable bin and data and MC and use it for the mean of the gaussian distributions
-        mpv_data = 0.0
-        mpv_value_data= 0.0
-        for binx in range(1, data.GetNbinsX() + 1):
-            if data.GetBinContent(binx) > mpv_value_data:
-                mpv_value_data = data.GetBinContent(binx)
-                mpv_data = data.GetBinCenter(binx)
-
-        mpv_MC = 0.0
-        mpv_value_MC = 0.0
-        for binx in range(1, MC.GetNbinsX() + 1):
-            if MC.GetBinContent(binx) > mpv_value_MC:
-                mpv_value_MC = MC.GetBinContent(binx)
-                mpv_MC = MC.GetBinCenter(binx)
-
-        #this is the landau distribution that will be fit to the histograms
-        landau_data = ROOT.TF1("landau_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-        landau_data.SetParName(0, "mpv")
-        landau_data.SetParameter(0, mpv_data)
-        landau_data.SetParLimits(0, 0.3, 1.1)
-        landau_data.SetParName(1, "sigma")
-        landau_data.SetParameter(1, data.GetRMS()/4.0)
-        landau_data.SetParLimits(1, data.GetRMS()/100.0, data.GetRMS()*2.0)
-        landau_data.SetParName(2, "Norm")
-        landau_data.SetParameter(2, data.Integral())
-
-        landau_MC = ROOT.TF1("landau_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-        landau_MC.SetParName(0, "mpv")
-        landau_MC.SetParameter(0, mpv_MC)
-        landau_MC.SetParLimits(0, 0.3, 1.1)
-        landau_MC.SetParName(1, "sigma")
-        landau_MC.SetParameter(1, MC.GetRMS()/4.0)
-        landau_MC.SetParLimits(1, MC.GetRMS()/100.0, MC.GetRMS()*2.0)
-        landau_MC.SetParName(2, "Norm")
-        landau_MC.SetParameter(2, MC.Integral())
-
-        #this is the gaus distribution that will be fit to the histograms
-        gaus_data = ROOT.TF1("gaus_data" + histogramName, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
-        gaus_data.SetParName(0, "mu")
-        gaus_data.SetParameter(0, mpv_data)
-        gaus_data.SetParLimits(0, 0.45, 0.95)
-        gaus_data.SetParName(1, "sigma")
-        gaus_data.SetParameter(1, data.GetRMS()*0.8)
-        gaus_data.SetParLimits(1, data.GetRMS()/3.0, 1.2*data.GetRMS())
-        gaus_data.SetParName(2, "Norm")
-        gaus_data.SetParameter(2, data.Integral())
-
-        gaus_MC = ROOT.TF1("gaus_MC" + histogramName, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
-        gaus_MC.SetParName(0, "mu")
-        gaus_MC.SetParameter(0, mpv_MC)
-        gaus_MC.SetParLimits(0, 0.45, 0.95)
-        gaus_MC.SetParName(1, "sigma")
-        gaus_MC.SetParameter(1, data.GetRMS() * 0.8)
-        gaus_MC.SetParLimits(1, data.GetRMS()/3.0, data.GetRMS()*1.2)
-        gaus_MC.SetParName(2, "Norm")
-        gaus_MC.SetParameter(2, MC.Integral())
-
-        #Create a gaussian convoluted with a landau histogram
-        gaus_forconvolution_MC = ROOT.TF1("gaus_forconvolution_MC" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
-
-        landau_forconvolution_MC = ROOT.TF1("landau_forconvolution_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-
-        convolution_MC = ROOT.TF1Convolution(gaus_forconvolution_MC, landau_forconvolution_MC,-1,6,True)
-        convolution_MC.SetRange(-5.,10.)
-        convolution_MC.SetNofPointsFFT(10000)
-        convolution_tofit_MC = ROOT.TF1("f",convolution_MC, -1.0, 5., convolution_MC.GetNpar())
-        convolution_tofit_MC.SetName("convolution_MC" + histogramName)
-
-        convolution_tofit_MC.SetParName(0, "SigmaSmear")
-        convolution_tofit_MC.SetParLimits(0, -100.0, 100.0)
-        convolution_tofit_MC.SetParameter(0, 1.0)
-
-        convolution_tofit_MC.SetParName(1, "mpv")
-        convolution_tofit_MC.SetParameter(1, mpv_MC)
-        convolution_tofit_MC.SetParLimits(1, 0.3, 1.1)
-        convolution_tofit_MC.SetParName(2, "sigma")
-        convolution_tofit_MC.SetParameter(2, MC.GetRMS()/4.0)
-        convolution_tofit_MC.SetParLimits(2, MC.GetRMS()/100.0, MC.GetRMS()*2.0)
-        convolution_tofit_MC.SetParName(3, "Norm")
-        convolution_tofit_MC.SetParameter(3, MC.Integral())
-        print "Created convolution function"
-        convolution_tofit_MC.Print()
-
-        #Create a gaussian convoluted with a landau histogram
-        gaus_forconvolution_data = ROOT.TF1("gaus_forconvolution_data" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
-        landau_forconvolution_data = ROOT.TF1("landau_forconvolution_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-
-        convolution_data = ROOT.TF1Convolution(gaus_forconvolution_data, landau_forconvolution_data,-1,6,True)
-        convolution_data.SetRange(-1.,5.)
-        convolution_data.SetNofPointsFFT(10000)
-        convolution_tofit_data = ROOT.TF1("f",convolution_data, -1.0, 5., convolution_data.GetNpar())
-        convolution_tofit_data.SetName("convolution_data" + histogramName)
-        convolution_tofit_data.SetParName(0, "SigmaSmear")
-        convolution_tofit_data.SetParLimits(0, -100.0, 100.0)
-        convolution_tofit_data.SetParameter(0, 1.0)
-
-        convolution_tofit_data.SetParName(1, "mpv")
-        convolution_tofit_data.SetParameter(1, mpv_data)
-        convolution_tofit_data.SetParLimits(1, 0.3, 1.1)
-        convolution_tofit_data.SetParName(2, "sigma")
-        convolution_tofit_data.SetParameter(2, data.GetRMS()/4.0)
-        convolution_tofit_data.SetParLimits(2, data.GetRMS()/100.0, data.GetRMS()*2.0)
-        convolution_tofit_data.SetParName(3, "Norm")
-        convolution_tofit_data.SetParameter(3, data.Integral())
-        print "Created convolution function"
-        convolution_tofit_data.Print()
-
-        #choose the fit funciton that you want to use
-        fit_function = "convolution"
-        fit_function_data_string = fit_function + "_data"
-        fit_function_MC_string = fit_function + "_MC"
-
-        #Good settings for a landau x gaus
-        data.GetXaxis().SetRange(data.FindBin(0.15), data.FindBin(1.3))
-        MC.GetXaxis().SetRange(MC.FindBin(0.15), MC.FindBin(1.3))
-
-        #good settings for a gaus
-        #data.GetXaxis().SetRange(data.FindBin(0.3), data.FindBin(1.0))
-        #MC.GetXaxis().SetRange(MC.FindBin(0.3), MC.FindBin(1.0))
-
-        mean_data = data.GetMean()
-        sigma_data = data.GetRMS()
-        mean_MC = MC.GetMean()
-        sigma_MC = MC.GetRMS()
-
-        data.GetXaxis().SetRange()
-        MC.GetXaxis().SetRange()
-
-        #good setting for a landau x gaus
-        low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
-        high = max(mean_data + 1.0*sigma_data, mean_MC + 1.0*sigma_MC)
-
-        #good settings for a gaus
-        #low = min(mean_data - 1.2*sigma_data, mean_MC - 1.2*sigma_MC)
-        #high = max(mean_data + 0.5*sigma_data, mean_MC + 0.5*sigma_MC)
-
-        #re-do the fit in the +- 1 sigma window
-        data.Fit(fit_function_data_string + histogramName, "", "", low, high)
-        MC.Fit(fit_function_MC_string + histogramName, "", "", low, high)
-
-        fit_function_data = data.GetFunction(fit_function_data_string + histogramName)
-        fit_function_data.SetLineColor(ROOT.kBlack)
-
-        fit_function_MC = MC.GetFunction(fit_function_MC_string + histogramName)
-        fit_function_MC.SetLineColor(ROOT.kRed)
+    if False:
 
         description = ["P_{T} Reweighted", "MIP Selection", eta_low_str + " < |#eta| < " + eta_high_str , p_low_str + " < P/GeV < " + p_high_str]
 
         DataVsMC = DrawDataVsMC(histograms,\
                               channelLabels,\
-                              MCKey = "PythiaJetJet",\
+                              MCKeys = ['PythiaJetJet', 'SinglePion'],\
                               DataKey = "LowMuData",\
                               doLogx = False,\
                               doLogy = False,
@@ -1405,7 +1262,7 @@ for eta_range in eta_ranges:
     description = ["P_{T} Reweighted", "MIP Selection", eta_low_str + " < |#eta| < " + eta_high_str]
     DataVsMC = DrawDataVsMC(histograms,\
                           channelLabels,\
-                          MCKey = "PythiaJetJet",\
+                          MCKeys = ['PythiaJetJet', 'SinglePion'],\
                           DataKey = "LowMuData",\
                           doLogx = True,\
                           doLogy = False,
