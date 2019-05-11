@@ -53,31 +53,48 @@ class weightCalculation:
     def eval(self, data, isData, channel):
         weights = self.function(data, isData)
         if channel in self.reweightDictionary:
-            for variable, histogram in zip(self.reweightDictionary[channel]["variables"], self.reweightDictionary[channel]["histograms"]):
+            for variable, histogram, selection in zip(self.reweightDictionary[channel]["variables"], self.reweightDictionary[channel]["histograms"], self.reweightDictionary[channel]["selections"]):
                 print("Reweighting variable " + variable.name + " in channel " + channel)
+                total_selection = np.ones(len(data)) > 0.5
+
+                for s in selection:
+                    total_selection &= s.eval(data)
+
                 extra_weight = WeightsToNormalizeToHistogram(variable.eval(data), histogram)
-                weights *= extra_weight
+                weights[total_selection] *= extra_weight[total_selection]
         return weights
 
-    def addReweightHistogram(self, channel, variable, histogram):
+    def addReweightHistogram(self, channel, variable, histogram, selection=[]):
         histogram.SetDirectory(0)
         if channel not in self.reweightDictionary:
             self.reweightDictionary[channel] = {}
             self.reweightDictionary[channel]["variables"] = []
             self.reweightDictionary[channel]["histograms"] = []
+            self.reweightDictionary[channel]["selections"] = []
+
             self.reweightDictionary[channel]["variables"].append(variable)
             self.reweightDictionary[channel]["histograms"].append(histogram)
+            self.reweightDictionary[channel]["selections"].append(selection)
             ##make sure that we always read the variable that we need for the histogram reweighting
             for branch_name in variable.branches:
                 if branch_name not in self.branches:
                     self.branches.append(branch_name)
+            for s in selection:
+                for branch_name in s.branches:
+                    if branch_name not in self.branches:
+                        self.branches.append(branch_name)
         else:
             self.reweightDictionary[channel]["variables"].append(variable)
             self.reweightDictionary[channel]["histograms"].append(histogram)
+            self.reweightDictionary[channel]["selections"].append(selection)
             ##make sure that we always read the variable that we need for the histogram reweighting
             for branch_name in variable.branches:
                 if branch_name not in self.branches:
                     self.branches.append(branch_name)
+            for s in selection:
+                for branch_name in s.branches:
+                    if branch_name not in self.branches:
+                        self.branches.append(branch_name)
 
 
 

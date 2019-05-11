@@ -3,7 +3,7 @@ from os import path as os_path
 Curr_DIR = os_path.expandvars('$EOPPlottingDir')
 sys_path.insert(1, Curr_DIR)
 
-from PlottingTools.Plotter import Plotter
+from HistogramFillingTools.HistogramFiller import HistogramFiller
 from FillingScript import FillingScript
 import pickle
 import ROOT

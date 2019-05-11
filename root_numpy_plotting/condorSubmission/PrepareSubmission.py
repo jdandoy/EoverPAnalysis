@@ -5,7 +5,7 @@ Curr_DIR = os_path.expandvars('$EOPPlottingDir')
 sys_path.insert(1, Curr_DIR)
 import os
 from inputs.samples import INPUT
-from PlottingTools.Plotter import Plotter
+from HistogramFillingTools.HistogramFiller import HistogramFiller
 from variables.variables import calc_weight
 import ROOT
 import pickle
@@ -16,13 +16,15 @@ parser = argparse.ArgumentParser(description='Submit plotting batch jobs for the
 parser.add_argument('--treeName', '-tn', dest="treeName", type=str, required=True, help='the name of the tree to read from')
 parser.add_argument('--NPartitions', '-np', dest="NPartitions", type=int, default='0', help='the number of plotting jobs to submit')
 parser.add_argument('--jobName', '-jobName', dest="jobName", type=str, default='""', help='the name of the job to be submitted')
+parser.add_argument('--jobFlavour', '-jobFlavour', dest="jobFlavour", type=str, default='tomorrow', help='What condor queue should the jobs run on?')
 
 args = parser.parse_args()
 
 #Create a pickle file and list for each submission
 treeName = args.treeName
-jobName = args.jobName
+job_name = args.jobName
 NPartitions = args.NPartitions
+flavour = args.jobFlavour
 
 submission_list = []
 EntriesPerFile = {}
@@ -95,100 +97,43 @@ def GenerateListOfPartitions(EntriesPerFile, NPartitions):
     return return_list
 
 partitions = GenerateListOfPartitions(EntriesPerFile, NPartitions)
-leading_script = file("condor_" + jobName + ".sub", "w")
+leading_script = file("condor_" + job_name + ".sub", "w")
 cwd = os.getcwd()
-
-#Create a plotter for each partition, and also a submission script:
-#get the reweighting histograms
-
-from variables.variables import calc_trkCount, calc_trkNPV2, calc_trkPt
-eventCount_histogram_file = ROOT.TFile("reweightHistograms/DataOverPythiaEventCount.root", "READ")
-eventCount_histogram = eventCount_histogram_file.Get("DataOverPythiaEventCount")
-calc_weight.addReweightHistogram("PythiaJetJet", calc_trkCount, eventCount_histogram)
-
-from variables.variables import calc_trkCount, calc_trkNPV2, calc_trkPt
-trkCount_histogram_file = ROOT.TFile("reweightHistograms/DataOverSinglePionTrkCount.root", "READ")
-trkCount_histogram = trkCount_histogram_file.Get("DataOverSinglePionTrkCount")
-calc_weight.addReweightHistogram("SinglePion", calc_trkCount, trkCount_histogram)
-
-#eventNPV2_histogram_file = ROOT.TFile("reweightHistograms/EventNPV2Reweight_LoosePrimary_VertexAssociated.root", "READ")
-#eventNPV2_histogram = eventNPV2_histogram_file.Get("eventNPV2HistLowMuDatadividedeventNPV2HistLowMuData")
-#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkNPV2, eventNPV2_histogram)
-
-#trkPtReweight_file = ROOT.TFile("reweightHistograms/PTReweight.root", "READ")
-#trkPtReweight_histogram = trkPtReweight_file.Get("DataMCRatioPTSpectrium")
-#calc_weight.addReweightHistogram("PythiaJetJet", calc_trkPt, trkPtReweight_histogram)
-
-#get the histograms used for detemining the bin sizes:
-#histogramList = [\
-#"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_20_24LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_16_20LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_12_16LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_8_12LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_4_8LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_NonZeroE_InBin_0_4LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_20_24LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_16_20LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_12_16LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_8_12LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_4_8LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadFracAbove70_InBin_0_4LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_20_24LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_16_20LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_12_16LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_8_12LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_4_8LowMuData",\
-#"LowMuData/TrkMultiplicityVsP_MIPSelection_HadBetween30And90OfMomentum_InBin_0_4LowMuData",\
-#]
-#
-#f = ROOT.TFile("binningHistograms/binning.root", "READ")
-#binningHistogramDictionary = {}
-#for histogramNameInFile in histogramList:
-#    hist = f.Get(histogramNameInFile)
-#    histogramName = histogramNameInFile.replace("LowMuData/","").replace("LowMuData","")
-#    binningHistogramDictionary[histogramName] = hist
-#    hist.GetBinContent(1) #test that the histogram was retrieved 
-#    hist.SetDirectory(0)
-#f.Close()
 
 leading_script.write("Universe = vanilla\n")
 leading_script.write("Executable = condorSubmission/plot.sh\n")
 
 #create the output directories for then job
-if not os.path.exists(jobName):
-    os.makedirs(jobName)
-if not os.path.exists(jobName+"/Output"):
-    os.makedirs(jobName+"/Output")
-if not os.path.exists(jobName+"/Error"):
-    os.makedirs(jobName+"/Error")
-if not os.path.exists(jobName+"/Log"):
-    os.makedirs(jobName+"/Log")
-if not os.path.exists(jobName+"/Submission"):
-    os.makedirs(jobName+"/Submission")
-submission_pickle_file = jobName + "/Submission/" + jobName + ".pickle"
+if not os.path.exists(job_name):
+    os.makedirs(job_name)
+if not os.path.exists(job_name+"/Output"):
+    os.makedirs(job_name+"/Output")
+if not os.path.exists(job_name+"/Error"):
+    os.makedirs(job_name+"/Error")
+if not os.path.exists(job_name+"/Log"):
+    os.makedirs(job_name+"/Log")
+if not os.path.exists(job_name+"/Submission"):
+    os.makedirs(job_name+"/Submission")
+submission_pickle_file = job_name + "/Submission/" + job_name + ".pickle"
 
-leading_script.write("Error = " +jobName + "/Error/job.$(Process)\n")
-leading_script.write("Output = " +jobName + "/Output/job.$(Process)\n")
-leading_script.write("Log = "+jobName+"/Log/job.$(Process)\n")
+leading_script.write("Error = " +job_name + "/Error/job.$(Process)\n")
+leading_script.write("Output = " +job_name + "/Output/job.$(Process)\n")
+leading_script.write("Log = "+job_name+"/Log/job.$(Process)\n")
 leading_script.write("+ProjectName='atlas-eopplotting'\n")
-leading_script.write('+JobFlavour = "tomorrow"\n')
+leading_script.write('+JobFlavour = ' + flavour + '\n')
 leading_script.write("should_transfer_files = YES\n")
 leading_script.write("when_to_transfer_output = ON_Exit\n")
 leading_script.write("transfer_output         = True\n")
-leading_script.write("transfer_input_files    = CondorPythonLocal, variables, PlottingTools, selections, condorSubmission/submit.py ,calculation, FillingScript.py, " + submission_pickle_file + "\n")
-leading_script.write("transfer_output_files   = " + jobName + "_$(Process).root\n")
+leading_script.write("transfer_input_files    = CondorPythonLocal, variables, HistorgamFillingTools, selections, condorSubmission/submit.py ,calculation, FillingScript.py, " + submission_pickle_file + "\n")
+leading_script.write("transfer_output_files   = " + job_name + "_$(Process).root\n")
 leading_script.write("\n")
 
 for i in range(0, len(partitions)):
     partition = partitions[i]
-    plots = Plotter(INPUT, treeName, calc_weight, base_selections = "", partition_dictionary = partition)
-    plots.tree_dict = tree_dict
-
-#    for histogramName in binningHistogramDictionary:
-#        plots.BookHistogramForBinning(binningHistogramDictionary[histogramName], histogramName)
-
-    submission_list.append(plots)
-    leading_script.write("Arguments = $(Process) "  +  submission_pickle_file.split("/")[-1] + " " + jobName + "\n")
+    hist_filler = HistogramFiller(INPUT, treeName, calc_weight, base_selections = "", partition_dictionary = partition)
+    hist_filler.tree_dict = tree_dict
+    submission_list.append(hist_filler)
+    leading_script.write("Arguments = $(Process) "  +  submission_pickle_file.split("/")[-1] + " " + job_name + "\n")
     leading_script.write("Queue 1\n")
     leading_script.write("\n")
 
