@@ -1,5 +1,4 @@
 from calculation.calculation import calculation, calculationDataMC, weightCalculation
-from selections.selections import NonZeroEnergy
 import numpy as np
 from math import pi
 
@@ -116,17 +115,15 @@ def trkNClusters_hadlike(trk):
 calc_trkNClusters_hadlike = calculation(trkNClusters_hadlike, ["trk_nclusters_EM_hadlike_200", "trk_nclusters_HAD_hadlike_200"])
 
 def trkHADFraction(trk):
-    trk_total_nonzero = NonZeroEnergy(trk)
     return_value = np.zeros(len(trk))
-    return_value[trk_total_nonzero] = ((trk["trk_ClusterEnergy_HAD_200"])[trk_total_nonzero])/((trk["trk_ClusterEnergy_HAD_200"] + trk["trk_ClusterEnergy_EM_200"])[trk_total_nonzero])
+    return_value = (trk["trk_ClusterEnergy_HAD_200"])/(trk["trk_ClusterEnergy_HAD_200"] + trk["trk_ClusterEnergy_EM_200"])
     return return_value
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 calc_trkHADFraction = calculation(trkHADFraction, branches)
 
 def trkEMFraction(trk):
-    trk_total_nonzero = NonZeroEnergy(trk)
     return_value = np.zeros(len(trk))
-    return_value[trk_total_nonzero] = trk["trk_ClusterEnergy_EM_200"]/(trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])[trk_total_nonzero]
+    return_value = trk["trk_ClusterEnergy_EM_200"]/(trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])
     return return_value
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
 calc_trkEMFraction = calculation(trkEMFraction, branches)
@@ -146,50 +143,41 @@ def trkEtaID_ABS(trk):
 branches = ["trk_etaID"]
 calc_trkEta_ABS = calculation(trkEtaID_ABS, branches)
 
-def hasExtrapolationEMCal(trk):
+def trkEtaPhiECAL(trk):
     trk_etaEMB = np.abs(trk["trk_etaEMB2"])
+    trk_phiEMB = np.abs(trk["trk_phiEMB2"])
     trk_etaEME = np.abs(trk["trk_etaEME2"])
-    hasEMB = trk_etaEMB < 100.0
-    hasEME = trk_etaEME < 100.0
-    return hasEMB, hasEME
+    trk_phiEME = np.abs(trk["trk_phiEME2"])
+
+    has_barrel_extrap = trk_etaEMB < 1000.0
+    has_endcap_extrap = trk_etaEMB < 1000.0
+
+    has_both = has_barrel_extrap & has_endcap_extrap
+    has_one = np.logical_not(has_both) & (has_endcap_extrap | has_barrel_extrap)
+
+    #this will be the eta coordinates used to calculate the acceptance
+    trk_eta = np.ones(len(trk)) * 99999999.0
+    trk_phi = np.ones(len(trk)) * 99999999.0
+
+    #if there is only one extrapolated coordinate, then it is easy
+    trk_eta[has_one & has_barrel_extrap] = trk_etaEMB[has_one & has_barrel_extrap] 
+    trk_phi[has_one & has_barrel_extrap] = trk_phiEMB[has_one & has_barrel_extrap] 
+    trk_eta[has_one & has_endcap_extrap] = trk_etaEME[has_one & has_endcap_extrap] 
+    trk_phi[has_one & has_endcap_extrap] = trk_phiEME[has_one & has_endcap_extrap] 
+
+    #if there are two extrapolated coordinates, take the one in the barrel
+    trk_eta[has_both] = trk_etaEMB[has_both]
+    trk_phi[has_both] = trk_phiEMB[has_both]
+
+    return trk_eta, trk_phi
 
 def trkEtaECAL(trk):
-    hasEMB, hasEME = hasExtrapolationEMCal(trk)
-    hasEME = np.logical_not(hasEMB) & (hasEME)
-    print "This many tracks had extensions to both the barrel and the emec " + str(np.sum(1*(hasEMB & hasEME)))
-    trkEtaECAL = np.ones(len(hasEMB)) * 100000.0
-    trkEtaECAL[hasEMB] = trk["trk_etaEMB2"][hasEMB]
-    trkEtaECAL[hasEME] = trk["trk_etaEME2"][hasEME]
-
-    print(np.logical_not(hasEMB | hasEME))
-
-    if (np.sum(1.0*np.logical_not(hasEMB | hasEME) > 1.5)):
-        print(trk_etaEMB[np.logical_not(hasEMB | hasEME)])
-        print(np.sum( 1 * np.logical_not(hasEMB | hasEME)))
-        raise ValueError("one of the trakc did not have an extrapolation to the electromagnetic calorimeter")
-
-    return trkEtaECAL
-
-branches = ["trk_etaEMB2","trk_etaEME2"]
+    return trkEtaPhiECAL(trk)[0]
+branches = ["trk_etaEMB2","trk_etaEME2", "trk_phiEMB2", "trk_phiEME2"]
 calc_trkEtaECAL = calculation(trkEtaECAL, branches)
 
 def trkPhiECAL(trk):
-    hasEMB, hasEME = hasExtrapolationEMCal(trk)
-    hasEME = np.logical_not(hasEMB) & (hasEME)
-    print "This many tracks had extensions to both the barrel and the emec " + str(np.sum(1*(hasEMB & hasEME)))
-
-    trkPhiECAL = np.ones(len(hasEMB)) * 100000.0
-    trkPhiECAL[hasEMB] = trk["trk_phiEMB2"][hasEMB]
-    trkPhiECAL[hasEME] = trk["trk_phiEME2"][hasEME]
-
-    print(np.logical_not(hasEMB | hasEME))
-
-    if (np.sum(1.0*np.logical_not(hasEMB | hasEME) > 1.5)):
-        print(trk_phiEMB[np.logical_not(hasEMB | hasEME)])
-        print(np.sum( 1 * np.logical_not(hasEMB | hasEME)))
-        raise ValueError("one of the trakc did not have an extrapolation to the electromagnetic calorimeter")
-
-    return trkPhiECAL
+    return trkEtaPhiECAL(trk)[1]
 branches = ["trk_phiEMB2","trk_phiEME2", "trk_etaEMB2","trk_etaEME2"]
 calc_trkPhiECAL = calculation(trkPhiECAL, branches)
 
@@ -252,8 +240,7 @@ def DPhi(trk):
     dphi = np.ones(len(trk)) * 100000000.0
     hasEMB2 = np.abs(trk["trk_phiEMB2"]) < 40
     hasEME2 = np.abs(trk["trk_phiEME2"]) < 40
-    if np.any(hasEMB2 & hasEME2):
-        print("This many tracks had an extrapolation to both EME and EMB " + str(np.sum(1.0 * (hasEMB2 & hasEME2))))
+
     dphi[hasEME2] = np.abs(trk["trk_phiID"] - trk["trk_phiEME2"])[hasEME2]
     dphi[hasEMB2] = np.abs(trk["trk_phiID"] - trk["trk_phiEMB2"])[hasEMB2]
     greater_than_pi = dphi > pi
@@ -267,8 +254,7 @@ def DEta(trk):
     deta = np.ones(len(trk)) * 100000000.0
     hasEMB2 = np.abs(trk["trk_etaEMB2"]) < 40
     hasEME2 = np.abs(trk["trk_etaEME2"]) < 40
-    if np.any(hasEMB2 & hasEME2):
-        print("This many tracks had an extrapolation to both EME and EMB " + str(np.sum(1.0 * (hasEMB2 & hasEME2))))
+
     deta[hasEME2] = np.abs(trk["trk_etaID"] - trk["trk_etaEME2"])[hasEME2]
     deta[hasEMB2] = np.abs(trk["trk_etaID"] - trk["trk_etaEMB2"])[hasEMB2]
     return deta

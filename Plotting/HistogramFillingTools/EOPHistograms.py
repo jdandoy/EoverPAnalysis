@@ -1,5 +1,5 @@
 
-from HistogramFillingTools.HistogramFiller import HistogramFiller, getP, getBins, getLogBins
+from HistogramFillingTools.HistogramFiller import HistogramFiller, get_p, get_bins, get_log_bins, create_selection_function
 import ROOT
 
 import os
@@ -62,17 +62,15 @@ def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_fo
     for eta_range, p_bins in zip(eta_ranges, p_bins_for_eta_range):
         eta_count += 1
         #get the function that selects tracks in that bin
-        EtaBinFunction = lambda x, y = eta_range[0], z=eta_range[1]: EtaBin(x, y,z)
-        EtaBinFunction.__name__ = "EtaRangeSelection"+str(eta_range[0]) + "_" + str(eta_range[1])
-        eta_binSelection = calculation(EtaBinFunction, ["trk_etaID"])
+        eta_bin_selection = create_selection_function(EtaBin, ["trk_etaEMB2","trk_etaEME2","trk_phiEME2", "trk_phiEMB2"], eta_range[0], eta_range[1])
 
-        selections = base_selection + [eta_binSelection]
+        selections = base_selection + [eta_bin_selection]
 
         NPtBins = len(p_bins)
         Pt_low = 0.5
         Pt_high = max(p_bins)
-        ptbins = getLogBins(Pt_low, Pt_high, NPtBins)
-        eop_bins = getBins(-1.0, +5.0, 100)
+        ptbins = get_log_bins(Pt_low, Pt_high, NPtBins)
+        eop_bins = get_bins(-1.0, +5.0, 100)
 
         from variables.variables import calc_trkPt
         histogram_name = "trkMultiplicityVsPt"
@@ -185,10 +183,8 @@ def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_fo
         for p_range in p_ranges:
             p_count += 1
             print("The prange is " + str(p_range))
-            PBinFunction = lambda x, y=p_range[0], z=p_range[1]: PBin(x, y,z)
-            PBinFunction.__name__ = "SelMomentumRange"+str(p_range[0]) + "_" + str(p_range[1])
-            sel_PBin = calculation(PBinFunction, ["trk_p"])
-            selections = base_selection + [eta_binSelection] + [sel_PBin]
+            p_bin_selection = create_selection_function(PBin, ["trk_p"], p_range[0], p_range[1])
+            selections = base_selection + [eta_bin_selection] + [p_bin_selection]
 
             histogramName = "EOPDistribution" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
             EOPDist  =  hist_filler.BookHistograms(histogramName,

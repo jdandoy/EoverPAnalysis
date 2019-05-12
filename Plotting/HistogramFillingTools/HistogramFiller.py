@@ -1,5 +1,6 @@
 import numpy as np
 from array import array
+from calculation.calculation import calculation
 import ROOT
 import imp
 import time
@@ -7,7 +8,7 @@ import os
 import glob
 import imp
 
-def getLogBins(minBin, maxBin, nBins):
+def get_log_bins(minBin, maxBin, nBins):
     '''Get nBins logarithmically-evenly spaced bins ranging from minBin to maxBin'''
     bins = []
     base = (float(maxBin)/float(minBin)) ** (1.0/float(nBins))
@@ -15,7 +16,7 @@ def getLogBins(minBin, maxBin, nBins):
         bins.append(minBin * (base) ** i)
     return bins
 
-def getBins(minBin, maxBin, nBins):
+def get_bins(minBin, maxBin, nBins):
     '''Get nBins evenly spaced bins ranging from minBin to maxBin'''
     bins = []
     step = float(maxBin - minBin)/float(nBins)
@@ -23,9 +24,26 @@ def getBins(minBin, maxBin, nBins):
         bins.append(minBin + (i*step))
     return bins
 
-def getP(Pt, eta):
+def get_p(Pt, eta):
     '''Given a value of pT and eta, return the momentum'''
     return Pt*np.cosh(eta)
+
+def create_selection_function(template, branches, *args):
+    if len(args) > 3:
+        raise ValueError("Only up to three variables supported for the template function")
+    if len(args) == 0:
+        raise ValueError("You need to pass at least one argument")
+
+    if len(args) == 1:
+        function = lambda x, y=args[0]: template(x,y)
+    if len(args) == 2:
+        function = lambda x, y=args[0], z=args[1]: template(x,y,z)
+    if len(args) == 3:
+        function = lambda x, y=args[0], z=args[1], w=args[2]: template(x,y,z,w)
+                
+    function.__name__ = template.__name__ + "_".join([str(arg) for arg in args])
+    selection_function = calculation(function, branches)
+    return selection_function
 
 class HistogramFiller:
     '''
@@ -62,7 +80,9 @@ class HistogramFiller:
             self.channelLabels[channel] = dictionary[channel][0]
 
     def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
-        '''Given a string channel, string filename, a list of calculation variables and a list of calculations list_selections, return a dictionary keys selection_dict, variable_dict and weights. selection_dict is a dictionary of key selection name to numpy array of bool. variable_dict is a dictionary of string variable name to numpy array variable. weights is a numpy array of floats'''
+        '''
+        Given a string channel, string filename, a list of calculation variables and a list of calculations list_selections, return a dictionary keys selection_dict, variable_dict and weights. selection_dict is a dictionary of key selection name to numpy array of bool. variable_dict is a dictionary of string variable name to numpy array variable. weights is a numpy array of floats
+        '''
         branches = GetListOfNeededBranches(variables, list_selections)
 
         #get the parition of the ttree to be read
@@ -94,7 +114,9 @@ class HistogramFiller:
 
 
     def GetHistograms(self, histogram_name, data_dictionary, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
-        '''Get the histogram for variable after list_selections is applied.'''
+        '''
+        Get the histogram for variable after list_selections is applied.
+        '''
 
         variableNameToFill = variable.name
         variables = [variable]
@@ -259,6 +281,7 @@ class HistogramFiller:
             data_dictionary[channel] = {}
             for filename in self.channelFiles[channel]:
                 data_dictionary[channel][filename] = self.GetVariablesAndWeights(channel,filename, self.total_variables, self.total_selections)
+
 
         histogram_dictionary = {}
         for histogram_name in self.HistogramCallDictionary:

@@ -124,7 +124,7 @@ leading_script.write('+JobFlavour = ' + flavour + '\n')
 leading_script.write("should_transfer_files = YES\n")
 leading_script.write("when_to_transfer_output = ON_Exit\n")
 leading_script.write("transfer_output         = True\n")
-leading_script.write("transfer_input_files    = CondorPythonLocal, variables, HistorgamFillingTools, selections, condorSubmission/submit.py ,calculation, FillingScript.py, " + submission_pickle_file + "\n")
+leading_script.write("transfer_input_files    = CondorPythonLocal, PlottingTools, variables, HistorgamFillingTools, selections, condorSubmission/submit.py ,calculation, FillingScript.py, " + submission_pickle_file + "\n")
 leading_script.write("transfer_output_files   = " + job_name + "_$(Process).root\n")
 leading_script.write("\n")
 

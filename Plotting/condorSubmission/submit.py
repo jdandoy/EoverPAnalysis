@@ -4,7 +4,7 @@ Curr_DIR = os_path.expandvars('$EOPPlottingDir')
 sys_path.insert(1, Curr_DIR)
 
 from HistogramFillingTools.HistogramFiller import HistogramFiller
-from FillingScript import FillingScript
+from FillingScript import fill_histograms
 import pickle
 import ROOT
 
@@ -26,4 +26,4 @@ file = args.picklefile
 name = args.jobname
 
 plots = pickle.load(open(file, "rb"))[i]
-FillingScript(plots, name + "_" + str(i) + ".root")
+fill_histograms(plots, name + "_" + str(i) + ".root")
