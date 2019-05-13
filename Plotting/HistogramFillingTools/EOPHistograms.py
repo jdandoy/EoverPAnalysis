@@ -6,8 +6,8 @@ import os
 from math import pi
 import pickle
 import numpy as np
-from calculation.calculation import calculation
 from selections.selections import EtaBin, PBin, sel_SubleadingTrack
+from variables.variables import calc_trkP
 
 
 def PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description):
@@ -56,7 +56,7 @@ def PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, descripti
         binningTree.Write()
     
 
-def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description):
+def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta_range, description, doClusterPlots=False, doCalibHitPlots=False):
     #define a set of eta bins
     eta_count = -1
     for eta_range, p_bins in zip(eta_ranges, p_bins_for_eta_range):
@@ -71,38 +71,6 @@ def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_fo
         Pt_high = max(p_bins)
         ptbins = get_log_bins(Pt_low, Pt_high, NPtBins)
         eop_bins = get_bins(-1.0, +5.0, 100)
-
-        from variables.variables import calc_trkPt
-        histogram_name = "trkMultiplicityVsPt"
-        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
-        trkPtHistZoom = hist_filler.BookHistograms(histogram_name,\
-                                           calc_trkPt,\
-                                           list_selections = selections,\
-                                           bins = ptbins,\
-                                           xlabel ="Track P_{T} [GeV]",\
-                                           ylabel = "Number of Tracks")
-
-        from variables.variables import calc_trkP
-        histogramName = "TrkMultiplicityVsP"
-        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
-        trkMultiplicity =  hist_filler.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  )
-
-        histogramName = "UnweightedTrkMultiplicityVsP"
-        histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
-        trkMultiplicity =  hist_filler.BookHistograms(histogramName,
-                                                  calc_trkP,\
-                                                  list_selections = selections,\
-                                                  bins = p_bins,\
-                                                  xlabel ="P[GeV]",\
-                                                  ylabel = "Number of Tracks",\
-                                                  useWeights=False
-                                                  )
 
         histogramName = "EOPProfileVsMomentum"
         histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
@@ -193,110 +161,112 @@ def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_fo
                                                       bins = eop_bins,\
                                                       xlabel ="E/p",\
                                                       )
-            from variables.variables import calc_CalibHitFrac, calc_PhotonCalibHitFrac, calc_HadronCalibHitFrac, sel_HasCalibHit
-            from variables.variables import calc_EMCalibHitFrac, calc_PhotonEMCalibHitFrac, calc_HadronEMCalibHitFrac, sel_HasEMCalibHit
-            from variables.variables import calc_HADCalibHitFrac, calc_PhotonHADCalibHitFrac, calc_HadronHADCalibHitFrac, sel_HasHADCalibHit
 
-            histogramName = "CalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_CalibHitFrac,\
-                                                  list_selections = selections + [sel_HasCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  range_low_y = 0.0,\
-                                                  range_high_y = 1.0,\
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{Calib}_{Track}/E^{Calib}_{Total}",\
-                                                  )
+            if doCalibHitPlots:
+              from variables.variables import calc_CalibHitFrac, calc_PhotonCalibHitFrac, calc_HadronCalibHitFrac, sel_HasCalibHit
+              from variables.variables import calc_EMCalibHitFrac, calc_PhotonEMCalibHitFrac, calc_HadronEMCalibHitFrac, sel_HasEMCalibHit
+              from variables.variables import calc_HADCalibHitFrac, calc_PhotonHADCalibHitFrac, calc_HadronHADCalibHitFrac, sel_HasHADCalibHit
 
-            histogramName = "PhotonCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_PhotonCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{Calib}_{Photons}/E^{Calib}_{Total}",\
-                                                  )
+              histogramName = "CalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_CalibHitFrac,\
+                                                    list_selections = selections + [sel_HasCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    range_low_y = 0.0,\
+                                                    range_high_y = 1.0,\
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{Calib}_{Track}/E^{Calib}_{Total}",\
+                                                    )
 
-            histogramName = "HadronicCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_HadronCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{Calib}_{Neutral Hadrons}/E^{Calib}_{Total}",\
-                                                  )
+              histogramName = "PhotonCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_PhotonCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{Calib}_{Photons}/E^{Calib}_{Total}",\
+                                                    )
 
-            histogramName = "EMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_EMCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasEMCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{EM Calib}_{Track}/E^{EM Calib}_{Total}",\
-                                                  )
+              histogramName = "HadronicCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_HadronCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{Calib}_{Neutral Hadrons}/E^{Calib}_{Total}",\
+                                                    )
 
-            histogramName = "PhotonEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_PhotonEMCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasEMCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{EM Calib}_{Photons}/E^{EM Calib}_{Total}",\
-                                                  )
+              histogramName = "EMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_EMCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasEMCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{EM Calib}_{Track}/E^{EM Calib}_{Total}",\
+                                                    )
 
-            histogramName = "HadronicEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_HadronEMCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasEMCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{HAD Calib}_{Neutral Hadrons}/E^{HAD Calib}_{Total}",\
-                                                  )
+              histogramName = "PhotonEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_PhotonEMCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasEMCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{EM Calib}_{Photons}/E^{EM Calib}_{Total}",\
+                                                    )
 
-            histogramName = "HADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_HADCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasHADCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{HAD Calib}_{Track}/E^{HAD Calib}_{Total}",\
-                                                  )
+              histogramName = "HadronicEMCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_HadronEMCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasEMCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{HAD Calib}_{Neutral Hadrons}/E^{HAD Calib}_{Total}",\
+                                                    )
 
-            histogramName = "PhotonHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_PhotonHADCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasHADCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{HAD Calib}_{Photons}/E^{HAD Calib}_{Total}",\
-                                                  )
+              histogramName = "HADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_HADCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasHADCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{HAD Calib}_{Track}/E^{HAD Calib}_{Total}",\
+                                                    )
 
-            histogramName = "HadronicHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-            hist_filler.Book2DHistograms(histogramName,
-                                                  calc_EOP,\
-                                                  calc_HadronHADCalibHitFrac,\
-                                                  list_selections = selections + [sel_HasHADCalibHit],\
-                                                  bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
-                                                  bins_y =list( np.linspace(0.0,1.0,20)),
-                                                  xlabel ="E/p",\
-                                                  ylabel = "E^{HAD Calib}_{Neutral Hadrons}/E^{HAD Calib}_{Neutral Hadrons}",\
-                                                  )
+              histogramName = "PhotonHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_PhotonHADCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasHADCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{HAD Calib}_{Photons}/E^{HAD Calib}_{Total}",\
+                                                    )
+
+              histogramName = "HadronicHADCalibrationHitTwoDHist_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+              hist_filler.Book2DHistograms(histogramName,
+                                                    calc_EOP,\
+                                                    calc_HadronHADCalibHitFrac,\
+                                                    list_selections = selections + [sel_HasHADCalibHit],\
+                                                    bins_x = [-1.0, -0.5, 0.0, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0, 3.5, 4.0],\
+                                                    bins_y =list( np.linspace(0.0,1.0,20)),
+                                                    xlabel ="E/p",\
+                                                    ylabel = "E^{HAD Calib}_{Neutral Hadrons}/E^{HAD Calib}_{Neutral Hadrons}",\
+                                                    )
 
             histogramName = "EOPBkgDistribution" + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
             EOPBkgDist  =  hist_filler.BookHistograms(histogramName,
@@ -349,18 +319,20 @@ def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_fo
                                    xlabel = "E^{HAD}/E^{Total}",\
                                    ylabel = "Number of Tracks")
 
-            from variables.variables import calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD,  calc_trkNClusters_emlike, calc_trkNClusters_hadlike
-            histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
-            xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
-            variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+            if doClusterPlots:
 
-            for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
-                histogram_name = histogram_name + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
-                hist_filler.BookHistograms(histogram_name,\
-                                       variable,\
-                                       list_selections = selections,\
-                                       bins = 10,\
-                                       range_low = -0.5,\
-                                       range_high = 9.5,\
-                                       xlabel=xlabel,\
-                                       ylabel="Number of Tracks")
+               from variables.variables import calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD,  calc_trkNClusters_emlike, calc_trkNClusters_hadlike
+               histogram_names = ["NClusters","NClusters_EM","NClusters_HAD","NClusters_emlike","NClusters_hadlike"]
+               xlabels = ["Number of Clusters","Number of Clusters in EM Calorimeter","Number of Clusters in HAD Calorimeter","Number of Clusters with EM Prob > 0.5","Number of Clusters with EM Prob < 0.5"]
+               variables = [calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike]
+
+               for histogram_name, variable, xlabel in zip(histogram_names, variables, xlabels):
+                   histogram_name = histogram_name + "_" + description + "_Eta_" + str(eta_count) + "_Momentum_" + str(p_count)
+                   hist_filler.BookHistograms(histogram_name,\
+                                          variable,\
+                                          list_selections = selections,\
+                                          bins = 10,\
+                                          range_low = -0.5,\
+                                          range_high = 9.5,\
+                                          xlabel=xlabel,\
+                                          ylabel="Number of Tracks")
