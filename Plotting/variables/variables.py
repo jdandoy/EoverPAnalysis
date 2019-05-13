@@ -150,7 +150,7 @@ def trkEtaPhiECAL(trk):
     trk_phiEME = np.abs(trk["trk_phiEME2"])
 
     has_barrel_extrap = trk_etaEMB < 1000.0
-    has_endcap_extrap = trk_etaEMB < 1000.0
+    has_endcap_extrap = trk_etaEME < 1000.0
 
     has_both = has_barrel_extrap & has_endcap_extrap
     has_one = np.logical_not(has_both) & (has_endcap_extrap | has_barrel_extrap)
