@@ -175,7 +175,7 @@ def ProjectProfiles(hist_dict):
 colors = [ROOT.kRed, ROOT.kBlue]
 DataColor = ROOT.kBlack
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -203,6 +203,10 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     DataHist = histogram_dict[DataKey]
     MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
     [MCHist.SetLineColor(color) for color, MCHist in zip(colors, MCHists)]
+    if xlabel:
+        [MCHist.GetXaxis().SetTitle(xlabel) for MCHist in MCHists]
+    if ylabel:
+        [MCHist.GetYaxis().SetTitle(ylabel) for MCHist in MCHists]
     DataHist.SetLineColor(DataColor)
 
     if rebin != None:
