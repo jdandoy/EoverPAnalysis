@@ -1,7 +1,6 @@
 import numpy as np
 from array import array
 import ROOT
-from DataPrep import GetData
 import imp
 
 try:
@@ -433,7 +432,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     return canvas, top_pad, bottom_pad
 
 
-def DivideHistograms(hist_dict1, hist_dict2):
+def DivideHistograms(hist_dict1, hist_dict2, efficiency_error=True):
     '''take the histograms from two dictionaries hist_dict1 and hist_dict2, and divide them by matching keys. Return a dictionary with each key corresponding to the divided histogram.'''
     dict1_keys = hist_dict1.keys()
     dict2_keys = hist_dict2.keys()
@@ -451,6 +450,14 @@ def DivideHistograms(hist_dict1, hist_dict2):
         Hist_clone1.GetXaxis().SetTitle(hist_dict1[channel].GetXaxis().GetTitle())
         Hist_clone1.GetYaxis().SetTitle(hist_dict1[channel].GetYaxis().GetTitle())
         Hist_clone1.Divide(hist_dict2[channel])
+        if efficiency_error:
+            for i in range(0, Hist_clone1.GetNbinsX() + 1):
+                eff = Hist_clone1.GetBinContent(i)
+                N_o = hist_dict2[channel].GetBinContent(i)
+                if N_o > 0:
+                    Hist_clone1.SetBinError(i, ( (eff * (1 - eff)) / (float(N_o))) ** 0.5)
+                else:
+                    Hist_clone1.SetBinError(i,0.0)
         return_dict[channel] = Hist_clone1
 
     return return_dict

@@ -12,7 +12,7 @@ def CloseCanvas(canv):
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "PlotSinglePart.root"
+filename = "Plots.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
@@ -223,7 +223,53 @@ def FindMostProbableValue(fit_function, low, high, ndivisions=10000):
 
     return max_x, max_val
 
-def CreatePlotsFromSelection(selection_name, filename, base_description = [], doFit = False, fitfunction="convolution"):
+def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[]):
+    #get the binning vectors
+    f = ROOT.TFile(filename, "READ")
+    tree = f.Get(numerator_selection_name + "BinningTree")
+    for bins in tree:
+        break
+    eta_bins_low = getattr(bins, numerator_selection_name+"EtaBinsLow")
+    eta_bins_high = getattr(bins, numerator_selection_name+"EtaBinsHigh")
+    p_bins_low_for_eta_bin = []
+    p_bins_high_for_eta_bin = []
+
+    #get all of the binning information that we need
+    for i in range(0, eta_bins_low.size()):
+        p_bins_low_for_eta_bin.append(getattr(bins, numerator_selection_name+"PBinsLow_Eta"+str(i)))
+        p_bins_high_for_eta_bin.append(getattr(bins, numerator_selection_name+"PBinsHigh_Eta"+str(i)))
+
+    for i, eta_low, eta_high in zip(list(range(0, eta_bins_low.size())), eta_bins_low, eta_bins_high):
+        for histogram in ["TrackPtSpectrum", "TrackPSpectrum"]:
+            selection_name = numerator_selection_name
+            histogram_name = histogram + "__" + selection_name + "_Eta_" + str(i)
+            hist_numerator = HM.getHistograms(histogram_name)
+
+            selection_name = denomenator_selection_name
+            histogram_name = histogram + "__" + selection_name + "_Eta_" + str(i)
+            hist_denomenator = HM.getHistograms(histogram_name)
+
+            #divide the numerator by the denomenator
+            ZeroFraction = DivideHistograms(hist_numerator, hist_denomenator, efficiency_error=True)
+            description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+            histogram_name = "NonZeroFraction" +numerator_selection_name + denomenator_selection_name + histogram + "_" + str(i)
+
+            DataVsMC1 = DrawDataVsMC(ZeroFraction,\
+                                    channelLabels,\
+                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
+                                    DataKey='LowMuData',\
+                                    doLogx=True,\
+                                    doLogy=False,\
+                                    ylabel="N(E!=0)/N",\
+                                    ratio_min=0.4,\
+                                    ratio_max=1.6,\
+                                    extra_description = description)
+
+            DataVsMC1[0].Draw()
+            DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + ".png")
+            DataVsMC1[0].Close()
+
+def CreatePlotsFromSelection(HM, selection_name, filename, base_description = [], doFit = False, fitfunction="convolution"):
     #get the binning vectors
     f = ROOT.TFile(filename, "READ")
 
@@ -241,8 +287,8 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
         p_bins_low_for_eta_bin.append(getattr(bins, selection_name+"PBinsLow_Eta"+str(i)))
         p_bins_high_for_eta_bin.append(getattr(bins, selection_name+"PBinsHigh_Eta"+str(i)))
 
-    histograms_in_eta_bins = ["trkMultiplicityVsPt",\
-                                   "UnweightedTrkMultiplicityVsP",\
+    histograms_in_eta_bins = ["TrackPtSpectrum",\
+                                   "TrackPSpectrum",\
                                    "EOPProfileVsMomentum",\
                                    "EnergyAnulusProfileVsMomentum",\
                                    "EnergyBkgProfileVsMomentum"]
@@ -253,11 +299,11 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
                                    "trkEMDR100",\
                                    "MomentumHadFrac",\
                                    "HadFrac",\
-                                   "NClusters",\
-                                   "NClusters_EM",\
-                                   "NClusters_HAD",\
-                                   "NClusters_emlike",\
-                                   "NClusters_hadlike",\
+                                   #"NClusters",\
+                                   #"NClusters_EM",\
+                                   #"NClusters_HAD",\
+                                   #"NClusters_emlike",\
+                                   #"NClusters_hadlike",\
                                    ]
 
     #OK now lets make all of the plots in all of the bins!
@@ -265,15 +311,22 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
     for i, eta_low, eta_high in zip(list(range(0, eta_bins_low.size())), eta_bins_low, eta_bins_high):
         #the plots binned in eta
         for histogram in histograms_in_eta_bins:
+            print(eta_low, eta_high)
 
             histogram_name = histogram + "__" + selection_name + "_Eta_" + str(i)
             hist = HM.getHistograms(histogram_name)
+            if "Profile" in histogram_name:
+                hist = ProjectProfiles(hist)
             description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
 
             DataVsMC1 = DrawDataVsMC(hist,\
                                     channelLabels,\
                                     MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                     DataKey='LowMuData',\
+                                    doLogy=True,\
+                                    doLogx=True,\
+                                    ratio_min=0.6,\
+                                    ratio_max=1.4,\
                                     extra_description = description)
 
             DataVsMC1[0].Draw()
@@ -309,58 +362,62 @@ def CreatePlotsFromSelection(selection_name, filename, base_description = [], do
                 DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + ".png")
                 DataVsMC1[0].Close()
 
-        p_bins_list = []
-        p_bins_list.append(p_bins_low[0])
-        for p_high in p_bins_high:
-            p_bins_list.append(p_high)
-        p_bins_array = array('d', p_bins_list)
+        if doFit:
+           p_bins_list = []
+           p_bins_list.append(p_bins_low[0])
+           for p_high in p_bins_high:
+               p_bins_list.append(p_high)
+           p_bins_array = array('d', p_bins_list)
 
-        data_hist = ROOT.TH1D("DataFitResults" + str(eta_low) + "_" + str(eta_high),"DataFitResults" + str(eta_low) + "_" + str(eta_high), len(p_bins_array[1:])-1, p_bins_array)
-        MC_hist = ROOT.TH1D("MCFitResults" + str(eta_low) + "_" + str(eta_high),"MCFitResults" + str(eta_low) + "_" + str(eta_high), len(p_bins_array[1:])-1, p_bins_array)
+           data_hist = ROOT.TH1D("DataFitResults" + str(eta_low) + "_" + str(eta_high),"DataFitResults" + str(eta_low) + "_" + str(eta_high), len(p_bins_array[1:])-1, p_bins_array)
+           MC_hist = ROOT.TH1D("MCFitResults" + str(eta_low) + "_" + str(eta_high),"MCFitResults" + str(eta_low) + "_" + str(eta_high), len(p_bins_array[1:])-1, p_bins_array)
 
-        for i in range(1, data_hist.GetNbinsX() + 1):
-            data_hist.SetBinContent(i, mpv_eop_data[i-1])
-            #data_hist.SetBinError(i, bin_mpv_error_MC[i-1])
-            MC_hist.SetBinContent(i, mpv_eop_MC[i-1])
-            #MC_hist.SetBinError(i, bin_mpv_error_MC[i-1])
+           for i in range(1, data_hist.GetNbinsX() + 1):
+               data_hist.SetBinContent(i, mpv_eop_data[i-1])
+               #data_hist.SetBinError(i, bin_mpv_error_MC[i-1])
+               MC_hist.SetBinContent(i, mpv_eop_MC[i-1])
+               #MC_hist.SetBinError(i, bin_mpv_error_MC[i-1])
 
-        histograms = {"PythiaJetJet":MC_hist, "LowMuData":data_hist}
+           histograms = {"PythiaJetJet":MC_hist, "LowMuData":data_hist}
 
-        ROOT.gROOT.SetBatch(ROOT.kFALSE)
-        eta_low_str = str(eta_low)
-        eta_high_str = str(eta_high)
-        description = ["P_{T} Reweighted", "MIP Selection", eta_low_str + " < |#eta| < " + eta_high_str]
-        DataVsMC = DrawDataVsMC(histograms,\
-                              channelLabels,\
-                              MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                              DataKey = "LowMuData",\
-                              doLogx = True,\
-                              doLogy = False,
-                              ratio_min = 0.9,\
-                              ratio_max = 1.1,\
-                              extra_description = description)
+           ROOT.gROOT.SetBatch(ROOT.kFALSE)
+           eta_low_str = str(eta_low)
+           eta_high_str = str(eta_high)
+           description = ["P_{T} Reweighted", "MIP Selection", eta_low_str + " < |#eta| < " + eta_high_str]
+           DataVsMC = DrawDataVsMC(histograms,\
+                                 channelLabels,\
+                                 MCKeys = ['PythiaJetJet', 'SinglePion'],\
+                                 DataKey = "LowMuData",\
+                                 doLogx = True,\
+                                 doLogy = False,
+                                 ratio_min = 0.9,\
+                                 ratio_max = 1.1,\
+                                 extra_description = description)
 
-        DataVsMC[0].Draw()
-        DataVsMC[0].Print("DataFitResults" + eta_low_str + "_" + eta_high_str + ".png")
-        raw_input("How do the fits look?")
-        ROOT.gROOT.SetBatch(ROOT.kTRUE)
+           DataVsMC[0].Draw()
+           DataVsMC[0].Print("DataFitResults" + eta_low_str + "_" + eta_high_str + ".png")
+           raw_input("How do the fits look?")
+           ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
+
+CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description=[])
+CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description=["N_{TRT} >= 20"])
 
 #test the plot creation
-#CreatePlotsFromSelection("20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, fitfunction="convolution")
-#CreatePlotsFromSelection("MIPSelectionHadFracAbove70", filename, base_description = ["MIP Selection"],doFit=True)
-#CreatePlotsFromSelection("NonZeroEnergy", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False, fitfunction="convolution")
-#CreatePlotsFromSelection("Inclusive", filename, base_description = [],doFit=False)
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, fitfunction="convolution")
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = ["MIP Selection"],doFit=True)
+#CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False, fitfunction="convolution")
+CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = [],doFit=False)
 
-#CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
-#CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatter", filename, base_description = ["MIP Selection"],doFit=False)
-#CreatePlotsFromSelection("NonZeroEnergyHardScatter", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
-#CreatePlotsFromSelection("InclusiveHardScatter", filename, base_description = [],doFit=False)
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70HardScatter", filename, base_description = ["MIP Selection"],doFit=False)
+#CreatePlotsFromSelection(HM,"NonZeroEnergyHardScatter", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
+#CreatePlotsFromSelection(HM,"InclusiveHardScatter", filename, base_description = [],doFit=False)
 
-#CreatePlotsFromSelection("20TRTHitsNonZeroEnergyHardScatterOnlyPion", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
-#CreatePlotsFromSelection("MIPSelectionHadFracAbove70HardScatterOnlyPion", filename, base_description = ["MIP Selection"],doFit=False)
-#CreatePlotsFromSelection("NonZeroEnergyHardScatterOnlyPion", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
-#CreatePlotsFromSelection("InclusiveHardScatterOnlyPion", filename, base_description = [],doFit=False)
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatterOnlyPion", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70HardScatterOnlyPion", filename, base_description = ["MIP Selection"],doFit=False)
+#CreatePlotsFromSelection(HM,"NonZeroEnergyHardScatterOnlyPion", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False)
+#CreatePlotsFromSelection(HM,"InclusiveHardScatterOnlyPion", filename, base_description = [],doFit=False)
 
 
 if True:
@@ -413,23 +470,47 @@ if True:
                                 channelLabels,\
                                 MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
+                                ratio_min=0.6,\
+                                ratio_max=1.4,\
                                 extra_description = description)
         DataVsMC1[0].Draw()
         DataVsMC1[0].Print(plotter_directory + "/" + histogramName + ".png")
         DataVsMC1[0].Close()
 
-
-        histogramName = "trkCount"
+        histogramName = "LeadingPtTrkHist"
         hist = HM.getHistograms(histogramName)
         description = base_description + ["Inclusive Selection"]
-        DataVsMC2 = DrawDataVsMC(hist,\
+        DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
+                                ratio_min=0.6,\
+                                ratio_max=1.4,\
+                                doLogx=True,\
+                                xlabel="Leading Track P_{T} [GeV]",\
+                                ylabel="Number of Events",\
                                 extra_description = description)
-        DataVsMC2[0].Draw()
-        DataVsMC2[0].Print(plotter_directory + "/" + histogramName + ".png")
-        DataVsMC2[0].Close()
+        DataVsMC1[0].Draw()
+        DataVsMC1[0].Print(plotter_directory + "/" + histogramName + ".png")
+        DataVsMC1[0].Close()
+
+        histogramName = "SubleadingPtTrkHist"
+        hist = HM.getHistograms(histogramName)
+        description = base_description + ["Inclusive Selection"]
+        DataVsMC1 = DrawDataVsMC(hist,\
+                                channelLabels,\
+                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
+                                DataKey='LowMuData',\
+                                ratio_min=0.6,\
+                                ratio_max=1.4,\
+                                doLogx=True,\
+                                xlabel="Subleading Track P_{T} [GeV]",\
+                                ylabel="Number of Events",\
+                                extra_description = description)
+        DataVsMC1[0].Draw()
+        DataVsMC1[0].Print(plotter_directory + "/" + histogramName + ".png")
+        DataVsMC1[0].Close()
+
 
         histogramName = "trkNPV2"
         hist = HM.getHistograms(histogramName)
@@ -450,6 +531,8 @@ if True:
                                 channelLabels,\
                                 MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
+                                ratio_min=0.6,\
+                                ratio_max=1.4,\
                                 extra_description = description)
         DataVsMC5[0].Draw()
         DataVsMC5[0].Print(plotter_directory + "/" + histogramName + ".png")
@@ -461,6 +544,8 @@ if True:
                                 channelLabels,\
                                 MCKeys = ['PythiaJetJet', 'SinglePion'],\
                                 DataKey='LowMuData',\
+                                ratio_min=0.6,\
+                                ratio_max=1.4,\
                                 extra_description = description)
         DataVsMC6[0].Draw()
         DataVsMC6[0].Print(plotter_directory + "/" + histogramName + ".png")
@@ -494,89 +579,6 @@ if True:
             DataVsMC4[0].Print(plotter_directory + "/" + histogramName + ".png")
 
 
-            histogramName = "TrkPtHisteta06" + extraString
-            hist = HM.getHistograms(histogramName)
-            description = base_description + ["|#eta_{ID}|<0.6"]
-            DataVsMC8 = DrawDataVsMC(hist,\
-                                    channelLabels,\
-                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                    DataKey='LowMuData',\
-                                    doLogx=True,
-                                    ratio_min = 0.6,\
-                                    ratio_max = 1.4,\
-                                    extra_description = description)
-            DataVsMC8[0].Draw()
-            DataVsMC8[0].Print(plotter_directory + "/" + histogramName + ".png")
-
-            histogramName = "TrkPtHisteta06_11" + extraString
-            hist = HM.getHistograms(histogramName)
-            description = base_description + ["0.6<|#eta_{ID}|<1.1"]
-            DataVsMC8 = DrawDataVsMC(hist,\
-                                    channelLabels,\
-                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                    DataKey='LowMuData',\
-                                    doLogx=True,
-                                    ratio_min = 0.6,\
-                                    ratio_max = 1.4,\
-                                    extra_description = description)
-            DataVsMC8[0].Draw()
-            DataVsMC8[0].Print(plotter_directory + "/" + histogramName + ".png")
-
-            histogramName = "TrkPtHisteta11_14" + extraString
-            hist = HM.getHistograms(histogramName)
-            description = base_description + ["1.1<|#eta_{ID}|<1.4"]
-            DataVsMC8 = DrawDataVsMC(hist,\
-                                    channelLabels,\
-                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                    DataKey='LowMuData',\
-                                    doLogx=True,
-                                    ratio_min = 0.6,\
-                                    ratio_max = 1.4,\
-                                    extra_description = description)
-            DataVsMC8[0].Draw()
-            DataVsMC8[0].Print(plotter_directory + "/" + histogramName + ".png")
-
-            histogramName = "TrkPtHisteta14_15" + extraString
-            hist = HM.getHistograms(histogramName)
-            description = base_description + ["1.4<|#eta_{ID}|<1.5"]
-            DataVsMC8 = DrawDataVsMC(hist,\
-                                    channelLabels,\
-                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                    DataKey='LowMuData',\
-                                    doLogx=True,
-                                    ratio_min = 0.6,\
-                                    ratio_max = 1.4,\
-                                    extra_description = description)
-            DataVsMC8[0].Draw()
-            DataVsMC8[0].Print(plotter_directory + "/" + histogramName + ".png")
-
-            histogramName =  "TrkPtHisteta15_18" + extraString
-            hist = HM.getHistograms(histogramName)
-            description = base_description + ["1.5<|#eta_{ID}|<1.8"]
-            DataVsMC9 = DrawDataVsMC(hist,\
-                                    channelLabels,\
-                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                    DataKey='LowMuData',\
-                                    doLogx=True,
-                                    ratio_min = 0.6,\
-                                    ratio_max = 1.4,\
-                                    extra_description = description)
-            DataVsMC9[0].Draw()
-            DataVsMC9[0].Print(plotter_directory + "/" + histogramName + ".png")
-
-            histogramName =  "TrkPtHisteta18_23" + extraString
-            hist = HM.getHistograms(histogramName)
-            description = base_description + ["1.8<|#eta_{ID}|<2.3"]
-            DataVsMC9 = DrawDataVsMC(hist,\
-                                    channelLabels,\
-                                    MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                    DataKey='LowMuData',\
-                                    doLogx=True,
-                                    ratio_min = 0.6,\
-                                    ratio_max = 1.4,\
-                                    extra_description = description)
-            DataVsMC9[0].Draw()
-            DataVsMC9[0].Print(plotter_directory + "/" + histogramName + ".png")
 
         histogramName_num =  "InclusiveZeroFractionVsPNumerator"
         hist_num = HM.getHistograms(histogramName_num)
@@ -597,65 +599,6 @@ if True:
                                 extra_description = description)
         DataVsMC9[0].Draw()
         DataVsMC9[0].Print(plotter_directory + "/" + histogramName_num.replace("Numerator", "") + ".png")
-        description = base_description + ["0.2<|#eta_{ID}|<0.4"]
-        histogramName_num =  "ZeroFractionVsPetaID02_04Numerator"
-        hist_num = HM.getHistograms(histogramName_num)
-
-        histogramName_den = "ZeroFractionVsPetaID02_04Denomenator"
-        hist_den = HM.getHistograms(histogramName_den)
-        ratio_hist = DivideHistograms(hist_num, hist_den)
-
-        DataVsMC9 = DrawDataVsMC(ratio_hist,\
-                                channelLabels,\
-                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                DataKey='LowMuData',\
-                                doLogx=True,
-                                doLogy=False,
-                                ratio_min = 0.6,\
-                                ratio_max = 1.4,\
-                                extra_description = description)
-        DataVsMC9[0].Draw()
-        DataVsMC9[0].Print(plotter_directory + "/" + histogramName_num.replace("Numerator", "") + ".png")
-
-        description = base_description + ["0.0<|#eta_{ID}|<0.2"]
-        histogramName_num =  "ZeroFractionVsPetaID00_02Numerator"
-        hist_num = HM.getHistograms(histogramName_num)
-
-        histogramName_den = "ZeroFractionVsPetaID00_02Denomenator"
-        hist_den = HM.getHistograms(histogramName_den)
-        ratio_hist = DivideHistograms(hist_num, hist_den)
-
-        DataVsMC9 = DrawDataVsMC(ratio_hist,\
-                                channelLabels,\
-                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                DataKey='LowMuData',\
-                                doLogx=True,
-                                doLogy=False,
-                                ratio_min = 0.6,\
-                                ratio_max = 1.4,\
-                                extra_description = description)
-        DataVsMC9[0].Draw()
-        DataVsMC9[0].Print(plotter_directory + "/" + histogramName_num.replace("Numerator", "") + ".png")
-
-        description = base_description + ["0.4<|#eta_{ID}|<0.6"]
-        histogramName_num =  "ZeroFractionVsPetaID04_06Numerator"
-        hist_num = HM.getHistograms(histogramName_num)
-
-        histogramName_den = "ZeroFractionVsPetaID04_06Denomenator"
-        hist_den = HM.getHistograms(histogramName_den)
-        ratio_hist = DivideHistograms(hist_num, hist_den)
-
-        DataVsMC9 = DrawDataVsMC(ratio_hist,\
-                                channelLabels,\
-                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                DataKey='LowMuData',\
-                                doLogx=True,
-                                doLogy=False,
-                                ratio_min = 0.6,\
-                                ratio_max = 1.4,\
-                                extra_description = description)
-        DataVsMC9[0].Draw()
-        DataVsMC9[0].Print(plotter_directory + "/" + histogramName_num.replace("Numerator", "") + ".png")
 
         histogramName = "EtaLess08_TwoDHistTrkPvsPhiInnerToExtrapolEM2"
         description = base_description + ["|#eta_{ID}|<0.8"]
@@ -670,65 +613,6 @@ if True:
         DataVsMC10 = Draw2DHistogramOnCanvas(hist["LowMuData"], doLogx = False, doLogy = True)
         DataVsMC10.Draw()
         DataVsMC10.Print(plotter_directory + "/" + histogramName.replace("Numerator", "") + "LowMuData" + ".png")
-
-        histogramName = "EtaID0_6_PGreater2_0_EOPHist"
-        hist = HM.getHistograms(histogramName)
-        DataVsMC9 = DrawDataVsMC(hist,\
-                                channelLabels,\
-                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                DataKey='LowMuData',\
-                                doLogx=True,
-                                doLogy=False,
-                                ratio_min = 0.6,\
-                                ratio_max = 1.4,\
-                                extra_description = description)
-        DataVsMC9[0].Draw()
-        DataVsMC9[0].Print(plotter_directory + "/" + histogramName_num.replace("Numerator", "") + ".png")
-
-
-        description = base_description + ["0.0<|#eta_{ID}|<0.6"]
-        histogramName_num =  "ZeroFractionVsPetaID00_06Numerator"
-        hist_num = HM.getHistograms(histogramName_num)
-
-        histogramName_den = "ZeroFractionVsPetaID00_06Denomenator"
-        hist_den = HM.getHistograms(histogramName_den)
-        ratio_hist = DivideHistograms(hist_num, hist_den)
-
-        DataVsMC9 = DrawDataVsMC(ratio_hist,\
-                                channelLabels,\
-                                MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                DataKey='LowMuData',\
-                                doLogx=True,
-                                doLogy=False,
-                                ratio_min = 0.6,\
-                                ratio_max = 1.4,\
-                                extra_description = description)
-        DataVsMC9[0].Draw()
-        DataVsMC9[0].Print(plotter_directory + "/" + histogramName_num.replace("Numerator", "") + ".png")
-
-        description = base_description + ["0.0<|#eta_{ID}|<0.4", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_0_4"
-        histograms = HM.getHistograms(histogramName)
-        for key in histograms:
-            histograms[key] = histograms[key].ProjectionX(histogramName + "_px", "E")
-
-        DataVSMC10 = DrawDataVsMC(histograms,\
-                                  channelLabels,\
-                                  MCKeys = ['PythiaJetJet', 'SinglePion'],\
-                                  DataKey = "LowMuData",\
-                                  doLogx = True,\
-                                  doLogy = False,
-                                  ratio_min = 0.9,\
-                                  ratio_max = 1.1,\
-                                  extra_description = description)
-        DataVSMC10[0].Draw()
-        DataVSMC10[0].Print(plotter_directory + "/" + histogramName + ".png")
-
-        description = base_description + ["0.4<|#eta_{ID}|<0.8", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_4_8"
-        histograms = HM.getHistograms(histogramName)
-        for key in histograms:
-            histograms[key] = histograms[key].ProjectionX(histogramName + "_px", "E")
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
