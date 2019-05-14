@@ -5,7 +5,6 @@ from array import array
 import os
 import time
 
-ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 def CloseCanvas(canv):
     canv.Close()
@@ -17,8 +16,7 @@ filename = "Plots.root"
 HM = HistogramManager(filename)
 HM.listHistograms()
 
-#base_description = ["P_{T} Reweighted"]
-base_description = []
+base_description = ["P_{T} Reweighted"]
 channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Low-<#mu> Data"}
 plotter_directory = (filename.split("/")[-1]).replace(".root","") + "plots"
 
@@ -30,185 +28,89 @@ if not os.path.exists("Plots/" + plotter_directory):
 
 plotter_directory = "Plots/" + plotter_directory
 
-def fitHistograms(histograms, fit_function, histogramName, eta_low=-1,eta_high=-1,p_low=-1,p_high=-1):
+def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=-1,eta_high=-1,p_low=-1,p_high=-1):
     '''
     Fit function fit_function to the histograms
     fit_function can be gaus, landau or convolution
     '''
 
 
-    data = histograms["LowMuData"]
-    MC = histograms["PythiaJetJet"]
-    #loop through the bins with low edges above 0.0 and find the first one with more than 10 entries. Start fitting above that bin
-    low_data = 0.0
-    high_data = data.GetMean() + 1.5 * data.GetRMS()
-    for binx in range(1, data.GetNbinsX() + 1):
-        if (data.GetBinContent(binx) > 60 and data.GetBinLowEdge(binx) > 0.15):
-            low_data = data.GetBinLowEdge(binx + 1)
-            break
+    low_value = 0.0
+    max_x={}
+    for channel in channels:
+       histogram = histograms[channel]
+       histogram_name = histogram.GetName()
+       #this is the landau distribution that will be fit to the histogramsograms
+       landau = ROOT.TF1("landau_" + channel +histogram_name, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+       landau.SetParName(0, "mpv")
+       landau.SetParameter(0, 0.5)
+       landau.SetParLimits(0, 0.3, 1.1)
+       landau.SetParName(1, "sigma")
+       landau.SetName("landau" +  histogram_name)
+       landau.SetParameter(1, histogram.GetRMS()/4.0)
+       landau.SetParLimits(1, histogram.GetRMS()/100.0, histogram.GetRMS()*2.0)
+       landau.SetParName(2, "Norm")
+       landau.SetParameter(2, histogram.Integral())
 
-    low_MC = 0.0
-    high_MC = MC.GetMean() + 1.5 * MC.GetRMS()
-    for binx in range(1, MC.GetNbinsX() + 1):
-        if (MC.GetBinContent(binx) > 60 and MC.GetBinLowEdge(binx) > 0.15):
-            low_MC = MC.GetBinLowEdge(binx + 1)
-            break
+       #this is the gaus distribution that will be fit to the histogramsograms
+       gaus = ROOT.TF1("gaus_" + channel +histogram_name, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
+       gaus.SetParName(0, "mu")
+       gaus.SetParameter(0, 0.5)
+       gaus.SetParLimits(0, 0.45, 0.95)
+       gaus.SetParName(1, "sigma")
+       gaus.SetName("gaus" + histogram_name)
+       gaus.SetParameter(1, histogram.GetRMS()*0.8)
+       gaus.SetParLimits(1, histogram.GetRMS()/3.0, 1.2*histogram.GetRMS())
+       gaus.SetParName(2, "Norm")
+       gaus.SetParameter(2, histogram.Integral())
 
-    for binx in range(data.GetNbinsX(), -1, -1):
-        if (data.GetBinContent(binx) > 80):
-            high_data = data.GetBinLowEdge(binx)
-            break
+       #Create a gaussian convoluted with a landau histogramsogram
+       gaus_forconvolution = ROOT.TF1("gaus_forconvolution_" + channel +histogram_name, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
 
-    for binx in range(MC.GetNbinsX(), -1, -1):
-        if (MC.GetBinContent(binx) > 80):
-            high_MC = MC.GetBinLowEdge(binx)
-            break
+       landau_forconvolution = ROOT.TF1("landau_forconvolution_" + channel +histogram_name, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
 
-    #find the most probable bin and data and MC and use it for the mean of the gaussian distributions
-    mpv_data = 0.0
-    mpv_value_data= 0.0
-    for binx in range(1, data.GetNbinsX() + 1):
-        if data.GetBinContent(binx) > mpv_value_data:
-            mpv_value_data = data.GetBinContent(binx)
-            mpv_data = data.GetBinCenter(binx)
+       convolution = ROOT.TF1Convolution(gaus_forconvolution, landau_forconvolution,-1,6,True)
+       convolution.SetRange(-1.,5.)
+       convolution.SetNofPointsFFT(10000)
+       convolution_tofit = ROOT.TF1("f",convolution, -1.0, 5., convolution.GetNpar())
+       convolution_tofit.SetName("convolution" +histogram_name)
 
-    mpv_MC = 0.0
-    mpv_value_MC = 0.0
-    for binx in range(1, MC.GetNbinsX() + 1):
-        if MC.GetBinContent(binx) > mpv_value_MC:
-            mpv_value_MC = MC.GetBinContent(binx)
-            mpv_MC = MC.GetBinCenter(binx)
+       convolution_tofit.SetParName(0, "SigmaSmear")
+       convolution_tofit.SetParLimits(0, -100.0, 100.0)
+       convolution_tofit.SetParameter(0, 1.0)
 
-    #this is the landau distribution that will be fit to the histograms
-    landau_data = ROOT.TF1("landau_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-    landau_data.SetParName(0, "mpv")
-    landau_data.SetParameter(0, mpv_data)
-    landau_data.SetParLimits(0, 0.3, 1.1)
-    landau_data.SetParName(1, "sigma")
-    landau_data.SetParameter(1, data.GetRMS()/4.0)
-    landau_data.SetParLimits(1, data.GetRMS()/100.0, data.GetRMS()*2.0)
-    landau_data.SetParName(2, "Norm")
-    landau_data.SetParameter(2, data.Integral())
+       convolution_tofit.SetParName(1, "mpv")
+       convolution_tofit.SetParameter(1, 0.5)
+       convolution_tofit.SetParLimits(1, 0.3, 1.1)
+       convolution_tofit.SetParName(2, "sigma")
+       convolution_tofit.SetParameter(2, histogram.GetRMS()/4.0)
+       convolution_tofit.SetParLimits(2, histogram.GetRMS()/100.0, histogram.GetRMS()*2.0)
+       convolution_tofit.SetParName(3, "Norm")
+       convolution_tofit.SetParameter(3, histogram.Integral())
+       print("Created convolution function")
+       convolution_tofit.Print()
 
-    landau_MC = ROOT.TF1("landau_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-    landau_MC.SetParName(0, "mpv")
-    landau_MC.SetParameter(0, mpv_MC)
-    landau_MC.SetParLimits(0, 0.3, 1.1)
-    landau_MC.SetParName(1, "sigma")
-    landau_MC.SetParameter(1, MC.GetRMS()/4.0)
-    landau_MC.SetParLimits(1, MC.GetRMS()/100.0, MC.GetRMS()*2.0)
-    landau_MC.SetParName(2, "Norm")
-    landau_MC.SetParameter(2, MC.Integral())
+       #Good settings for a landau x gaus
+       fit_function_string = fit_function + histogram_name
+       histogram.GetXaxis().SetRange(histogram.FindBin(0.15), histogram.FindBin(1.3))
 
-    #this is the gaus distribution that will be fit to the histograms
-    gaus_data = ROOT.TF1("gaus_data" + histogramName, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
-    gaus_data.SetParName(0, "mu")
-    gaus_data.SetParameter(0, mpv_data)
-    gaus_data.SetParLimits(0, 0.45, 0.95)
-    gaus_data.SetParName(1, "sigma")
-    gaus_data.SetParameter(1, data.GetRMS()*0.8)
-    gaus_data.SetParLimits(1, data.GetRMS()/3.0, 1.2*data.GetRMS())
-    gaus_data.SetParName(2, "Norm")
-    gaus_data.SetParameter(2, data.Integral())
+       histogram.GetXaxis().SetRange()
 
-    gaus_MC = ROOT.TF1("gaus_MC" + histogramName, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
-    gaus_MC.SetParName(0, "mu")
-    gaus_MC.SetParameter(0, mpv_MC)
-    gaus_MC.SetParLimits(0, 0.45, 0.95)
-    gaus_MC.SetParName(1, "sigma")
-    gaus_MC.SetParameter(1, data.GetRMS() * 0.8)
-    gaus_MC.SetParLimits(1, data.GetRMS()/3.0, data.GetRMS()*1.2)
-    gaus_MC.SetParName(2, "Norm")
-    gaus_MC.SetParameter(2, MC.Integral())
+       #re-do the fit in the +- 1 sigma window
+       low=0.05
+       high=1.2
+       histogram.Fit(fit_function_string, "", "", low, high)
 
-    #Create a gaussian convoluted with a landau histogram
-    gaus_forconvolution_MC = ROOT.TF1("gaus_forconvolution_MC" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
+       fit = histogram.GetFunction(fit_function_string)
+       fit.SetLineColor(histogram.GetLineColor())
 
-    landau_forconvolution_MC = ROOT.TF1("landau_forconvolution_MC" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
+       max_x_tmp, max_val_tmp = FindMostProbableValue(fit, low, high, ndivisions=10000)
 
-    convolution_MC = ROOT.TF1Convolution(gaus_forconvolution_MC, landau_forconvolution_MC,-1,6,True)
-    convolution_MC.SetRange(-1.,5.)
-    convolution_MC.SetNofPointsFFT(10000)
-    convolution_tofit_MC = ROOT.TF1("f",convolution_MC, -1.0, 5., convolution_MC.GetNpar())
-    convolution_tofit_MC.SetName("convolution_MC" + histogramName)
+       max_x[channel] = max_x_tmp
 
-    convolution_tofit_MC.SetParName(0, "SigmaSmear")
-    convolution_tofit_MC.SetParLimits(0, -100.0, 100.0)
-    convolution_tofit_MC.SetParameter(0, 1.0)
+       print "The maximum value in data was at eop " + str(max_x_tmp)
 
-    convolution_tofit_MC.SetParName(1, "mpv")
-    convolution_tofit_MC.SetParameter(1, mpv_MC)
-    convolution_tofit_MC.SetParLimits(1, 0.3, 1.1)
-    convolution_tofit_MC.SetParName(2, "sigma")
-    convolution_tofit_MC.SetParameter(2, MC.GetRMS()/4.0)
-    convolution_tofit_MC.SetParLimits(2, MC.GetRMS()/100.0, MC.GetRMS()*2.0)
-    convolution_tofit_MC.SetParName(3, "Norm")
-    convolution_tofit_MC.SetParameter(3, MC.Integral())
-    print("Created convolution function")
-    convolution_tofit_MC.Print()
-
-    #Create a gaussian convoluted with a landau histogram
-    gaus_forconvolution_data = ROOT.TF1("gaus_forconvolution_data" + histogramName, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
-    landau_forconvolution_data = ROOT.TF1("landau_forconvolution_data" + histogramName, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-
-    convolution_data = ROOT.TF1Convolution(gaus_forconvolution_data, landau_forconvolution_data,-1,6,True)
-    convolution_data.SetRange(-1.,5.)
-    convolution_data.SetNofPointsFFT(10000)
-    convolution_tofit_data = ROOT.TF1("f",convolution_data, -1.0, 5., convolution_data.GetNpar())
-    convolution_tofit_data.SetName("convolution_data" + histogramName)
-    convolution_tofit_data.SetParName(0, "SigmaSmear")
-    convolution_tofit_data.SetParLimits(0, -100.0, 100.0)
-    convolution_tofit_data.SetParameter(0, 1.0)
-
-    convolution_tofit_data.SetParName(1, "mpv")
-    convolution_tofit_data.SetParameter(1, mpv_data)
-    convolution_tofit_data.SetParLimits(1, 0.3, 1.1)
-    convolution_tofit_data.SetParName(2, "sigma")
-    convolution_tofit_data.SetParameter(2, data.GetRMS()/4.0)
-    convolution_tofit_data.SetParLimits(2, data.GetRMS()/100.0, data.GetRMS()*2.0)
-    convolution_tofit_data.SetParName(3, "Norm")
-    convolution_tofit_data.SetParameter(3, data.Integral())
-
-    convolution_tofit_data.Print()
-
-    #choose the fit funciton that you want to use
-    fit_function_data_string = fit_function + "_data"
-    fit_function_MC_string = fit_function + "_MC"
-
-    #Good settings for a landau x gaus
-    data.GetXaxis().SetRange(data.FindBin(0.15), data.FindBin(1.3))
-    MC.GetXaxis().SetRange(MC.FindBin(0.15), MC.FindBin(1.3))
-
-    mean_data = data.GetMean()
-    sigma_data = data.GetRMS()
-    mean_MC = MC.GetMean()
-    sigma_MC = MC.GetRMS()
-
-    data.GetXaxis().SetRange()
-    MC.GetXaxis().SetRange()
-
-    #re-do the fit in the +- 1 sigma window
-    low=0.05
-    high=1.2
-    data.Fit(fit_function_data_string + histogramName, "", "", low, high)
-    MC.Fit(fit_function_MC_string + histogramName, "", "", low, high)
-
-    fit_function_data = data.GetFunction(fit_function_data_string + histogramName)
-    fit_function_data.SetLineColor(ROOT.kBlack)
-
-    fit_function_data = data.GetFunction(fit_function_data_string + histogramName)
-    fit_function_data.SetLineColor(ROOT.kBlack)
-
-    fit_function_MC = MC.GetFunction(fit_function_MC_string + histogramName)
-    fit_function_MC.SetLineColor(ROOT.kRed)
-
-    max_x_data, max_val_data = FindMostProbableValue(fit_function_data, low, high, ndivisions=10000)
-    max_x_MC, max_val_MC = FindMostProbableValue(fit_function_MC, low, high, ndivisions=10000)
-
-    print "The maximum value in data was at eop " + str(max_x_data)
-    print "The maximum value in MC was at eop " + str(max_x_MC)
-
-    return max_x_data, max_x_MC
+    return max_x
 
 def FindMostProbableValue(fit_function, low, high, ndivisions=10000):
     x = np.linspace(low, high, ndivisions)
@@ -269,7 +171,7 @@ def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenat
             DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + ".png")
             DataVsMC1[0].Close()
 
-def CreatePlotsFromSelection(HM, selection_name, filename, base_description = [], doFit = False, fitfunction="convolution"):
+def CreatePlotsFromSelection(HM, selection_name, filename, base_description = [], doFit = True, fitfunction="convolution"):
     #get the binning vectors
     f = ROOT.TFile(filename, "READ")
 
@@ -336,8 +238,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         p_bins_high = p_bins_high_for_eta_bin[i]
 
         #the plots binned in eta and momentum
-        mpv_eop_data = []
-        mpv_eop_MC = []
+        mpv_eop = []
         p_centers = []
         for j, p_low, p_high in zip(list(range(0, p_bins_low.size())), p_bins_low, p_bins_high):
             for histogram in histograms_in_momentum_bins:
@@ -347,9 +248,8 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                 description += [str(round(p_low, 3)) + " < P/GeV < " + str(round(p_high, 3))]
 
                 if doFit and histogram == "EOPDistribution":
-                    max_eop_data, max_eop_MC = fitHistograms(hist, fitfunction, histogram_name, eta_low=eta_low, eta_high=eta_high, p_low=p_low, p_high=p_high)
-                    mpv_eop_data.append(max_eop_data)
-                    mpv_eop_MC.append(max_eop_MC)
+                    max_eop = fitHistograms(hist, fitfunction, histogram_name, HM.channels, eta_low=eta_low, eta_high=eta_high, p_low=p_low, p_high=p_high)
+                    mpv_eop.append(max_eop)
                     p_centers.append((p_low + p_high)/2.0)
 
                 DataVsMC1 = DrawDataVsMC(hist,\
@@ -360,6 +260,8 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
 
                 DataVsMC1[0].Draw()
                 DataVsMC1[0].Print(plotter_directory + "/" + histogram_name + ".png")
+                if doFit and histogram == "EOPDistribution":
+                    raw_input()
                 DataVsMC1[0].Close()
 
         if doFit:
@@ -380,7 +282,6 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
 
            histograms = {"PythiaJetJet":MC_hist, "LowMuData":data_hist}
 
-           ROOT.gROOT.SetBatch(ROOT.kFALSE)
            eta_low_str = str(eta_low)
            eta_high_str = str(eta_high)
            description = ["P_{T} Reweighted", "MIP Selection", eta_low_str + " < |#eta| < " + eta_high_str]
@@ -397,7 +298,6 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
            DataVsMC[0].Draw()
            DataVsMC[0].Print("DataFitResults" + eta_low_str + "_" + eta_high_str + ".png")
            raw_input("How do the fits look?")
-           ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 
 CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description=[])
@@ -407,7 +307,7 @@ CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", 
 #CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, fitfunction="convolution")
 #CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = ["MIP Selection"],doFit=True)
 #CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False, fitfunction="convolution")
-CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = [],doFit=False)
+CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = [],doFit=True)
 
 #CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False)
 #CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70HardScatter", filename, base_description = ["MIP Selection"],doFit=False)

@@ -292,6 +292,16 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         MCHist.Draw("SAME HIST")
     DataHist.Draw("SAME")
 
+    for MCHist in MCHists:
+        for fit in MCHist.GetListOfFunctions():
+            fit.SetLineColor(MCHist.GetLineColor())
+            fit.Draw("SAME")
+    for fit in DataHist.GetListOfFunctions():
+        fit.Draw("SAME")
+        fit.SetLineColor(DataHist.GetMarkerColor())
+
+
+
     legend.SetTextSize(0.04)
     for MCHist, MCKey in zip(MCHists, MCKeys):
         legend.AddEntry(MCHist, LegendLabels[MCKey])
