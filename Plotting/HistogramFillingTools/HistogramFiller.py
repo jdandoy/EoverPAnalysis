@@ -65,6 +65,17 @@ class HistogramFiller:
         self.NormalizationWeightsDictionary = {} # A dictionary of channel to variable to the weights needed for the reweighting of this variable
         self.object_counter = 0
         self.weightCalculator = weightCalculator
+        self.selections_for_channels = {}
+
+    def ApplySelectionsForChannel(self, channel, list_selections):
+        if channel not in self.selections_for_channels:
+            self.selections_for_channels[channel] = list_selections
+        else:
+            self.selections_for_channels[channel] += list_selections
+        for selection in list_selections:
+            if selection.name not in [sel.name for sel in self.total_selections]:
+                self.total_selections.append(selection)
+
 
     def BookHistogramForBinning(self, histogram, histogramName):
         '''This saves a histogram that can be used later to determine bin sizes. This could be a track multiplicity distribution, for example'''
@@ -102,6 +113,18 @@ class HistogramFiller:
         selection_dict = result["selection_dict"]
         variable_dict = result["variable_dict"]
         weights = result["weights"]
+
+        if channel in self.selections_for_channels:
+            selections = self.selections_for_channels[channel]
+            total_selection = np.ones(len(weights)) > 0.5
+            for selection in selections:
+                total_selection &= selection_dict[selection.name]
+
+            weights = weights[total_selection]
+            for key in selection_dict:
+                selection_dict[key] = selection_dict[key][total_selection]
+            for key in variable_dict:
+                variable_dict[key] = variable_dict[key][total_selection]
 
         if self.verbose: print "The following selections have been evaluated "
         for selection in selection_dict:

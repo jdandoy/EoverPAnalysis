@@ -94,6 +94,11 @@ def trkCount(trk):
 branches = []
 calc_trkCount = calculation(trkCount, branches)
 
+def trkNClusters_template(trk, rad1, rad2):
+    nclusters_EM = trk["trk_nclusters_EM_" + rad1] - trk["trk_nclusters_EM_" + rad2]
+    nclusters_HAD = trk["trk_nclusters_HAD_" + rad1] - trk["trk_nclusters_HAD_" + rad2]
+    return nclusters_EM + nclusters_HAD
+
 def trkNClusters(trk):
     return trk["trk_nclusters_EM_200"] + trk["trk_nclusters_HAD_200"]
 calc_trkNClusters = calculation(trkNClusters, ["trk_nclusters_EM_200", "trk_nclusters_HAD_200"])

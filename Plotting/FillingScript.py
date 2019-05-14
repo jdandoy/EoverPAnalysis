@@ -27,10 +27,16 @@ eta_bin_descriptions = ["eta_extrapol00_02", "eta_extrapol02_07", "eta_extrapol0
 eta_bin_branches = ["trk_etaEMB2","trk_etaEME2","trk_phiEMB2", "trk_phiEME2"]
 eta_bin_selections = [create_selection_function(EtaBin, eta_bin_branches, eta_bin_tuple[0], eta_bin_tuple[1]) for eta_bin_tuple in eta_bin_tuples]
 
+from selections.selections import sel_HardScatter, ParticlePDGID_ABS
+sel_Pion = create_selection_function(ParticlePDGID_ABS, ["trk_truthPdgId"], 211.0)
+pion_selections = [sel_Pion, sel_HardScatter]
+
 #This is a script that fills the histograms for
 def fill_histograms(hist_filler, outputRootFileName):
     #import thje variables that we want to plot
     from variables.variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount, calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike
+
+    hist_filler.ApplySelectionsForChannel("PythiaJetJetPionsReweighted", pion_selections)
 
     #reweight the event count in MC to match the one from data
     event_count_reweight_file = ROOT.TFile("ReweightingHistograms/EventCountPythiaJetJetToData.root", "READ")
@@ -699,52 +705,6 @@ def fill_histograms(hist_filler, outputRootFileName):
         p_bins = get_log_bins(p_bins_min, 20.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "InclusiveHardScatter"
-    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    #create plots for only pions
-    from selections.selections import sel_EHadFracAbove70,sel_Lar1_1GeV, ParticlePDGID_ABS
-    sel_AnyPion = create_selection_function(ParticlePDGID_ABS, ["trk_truthPdgId"], 211)
-    base_selection = [sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV, sel_HardScatter, sel_AnyPion]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
-        p_bins_for_eta_range.append(p_bins)
-   
-    description = "MIPSelectionHadFracAbove70HardScatterOnlyPion"
-    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    base_selection = [sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter, sel_AnyPion]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
-        p_bins_for_eta_range.append(p_bins)
-    description = "20TRTHitsNonZeroEnergyHardScatterOnlyPion"
-    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    eta_ranges = eta_bin_tuples
-    base_selection = [sel_NonZeroEnergy, sel_HardScatter, sel_AnyPion]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
-        p_bins_for_eta_range.append(p_bins)
-    description = "NonZeroEnergyHardScatterOnlyPion"
-    PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    eta_ranges = eta_bin_tuples
-    base_selection = [sel_HardScatter, sel_AnyPion]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
-        p_bins_for_eta_range.append(p_bins)
-    description = "InclusiveHardScatterOnlyPion"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
     #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 

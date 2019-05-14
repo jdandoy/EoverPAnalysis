@@ -4,7 +4,13 @@ user = os.environ['USER']
 TOP_DIRECTORY="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v01_tuples/"
 
 INPUT = \
-{ "PythiaJetJet": ("Pythia8X MinBias (JZ0W) and Dijet (361021 and JZ2W)", [\
+{\
+"PythiaJetJet": ("Pythia8 MinBias (JZ0W) and Dijet (361021 and JZ2W)", [\
+TOP_DIRECTORY + "user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
+TOP_DIRECTORY + "user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
+TOP_DIRECTORY + "user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist",\
+]),\
+"PythiaJetJetPionsReweighted": ("Pythia8 Pions Only MinBias (JZ0W) and Dijet (361021 and JZ2W)", [\
 TOP_DIRECTORY + "user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
 TOP_DIRECTORY + "user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
 TOP_DIRECTORY + "user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist",\
