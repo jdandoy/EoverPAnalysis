@@ -454,8 +454,14 @@ def DivideHistograms(hist_dict1, hist_dict2, efficiency_error=True):
             for i in range(0, Hist_clone1.GetNbinsX() + 1):
                 eff = Hist_clone1.GetBinContent(i)
                 N_o = hist_dict2[channel].GetBinContent(i)
+                dP = hist_dict1[channel].GetBinError(i)
+                dN = hist_dict2[channel].GetBinError(i)
+                dF = ( (dN**2) - (dP**2))**0.5
                 if N_o > 0:
-                    Hist_clone1.SetBinError(i, ( (eff * (1 - eff)) / (float(N_o))) ** 0.5)
+                    term1 = ((1-eff)/N_o) * dP
+                    term2 = (eff/N_o) * dF
+                    err = ( ( (term1**2) + (term2**2) ) ** 0.5)
+                    Hist_clone1.SetBinError(i, err)
                 else:
                     Hist_clone1.SetBinError(i,0.0)
         return_dict[channel] = Hist_clone1
