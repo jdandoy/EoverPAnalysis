@@ -43,6 +43,10 @@ def fill_histograms(hist_filler, outputRootFileName):
     hist = event_count_reweight_file.Get("EventCountPythiaJetJetToData")
     hist_filler.weightCalculator.addReweightHistogram("PythiaJetJet", calc_trkCount, hist, selection=[]) 
 
+    trk_count_reweight_file = ROOT.TFile("ReweightingHistograms/PythiaJetJetPionsOnlyTrackCountReweightedToData.root", "READ")
+    hist = trk_count_reweight_file.Get("PythiaJetJetPionsOnlyTrackCountReweightedToData")
+    hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkCount, hist, selection=[])
+
     for i, eta_bin_selection in enumerate(eta_bin_selections):
         event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
         hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i))
@@ -51,6 +55,10 @@ def fill_histograms(hist_filler, outputRootFileName):
         event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i)+".root", "READ")
         hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i))
         hist_filler.weightCalculator.addReweightHistogram("SinglePion", calc_trkPt, hist, selection=[eta_bin_selection]) 
+
+        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i)+".root", "READ")
+        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
+        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
 
     #import the selections that we want to plot
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
@@ -508,7 +516,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     keep_histograms_alive = []
     for (eta_bin_selection, eta_bin_description, eta_bin_edge) in zip(eta_bin_selections, eta_bin_descriptions,eta_bin_tuples):
         center = (eta_bin_edge[0] + eta_bin_edge[1])/2.0
-        binMax = 20.05
+        binMax = 30.05
         binLow = get_p(0.5, center)
         nBins = 20
         bins = get_log_bins(binLow, binMax, nBins)
@@ -542,7 +550,7 @@ def fill_histograms(hist_filler, outputRootFileName):
 
     for (eta_bin_selection, eta_bin_description, eta_bin_edge) in zip(eta_bin_selections, eta_bin_descriptions, eta_bin_tuples):
         center = (eta_bin_edge[0] + eta_bin_edge[1])/2.0
-        binMax = 20.05
+        binMax = 30.05
         binLow = get_p(0.5, center)
         nBins = 20
         bins = get_log_bins(binLow, binMax, nBins)
@@ -585,7 +593,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_bin_tuples:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionBetween30and90OfMomentum"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -597,7 +605,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionHadFracAbove70"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -608,7 +616,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHitsNonZeroEnergy"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -620,7 +628,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHits"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -632,7 +640,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "NonZeroEnergy"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -644,7 +652,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "Inclusive"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -657,7 +665,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionBetween30and90OfMomentumHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -669,7 +677,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
    
     description = "MIPSelectionHadFracAbove70HardScatter"
@@ -680,7 +688,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHitsNonZeroEnergyHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -691,7 +699,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "NonZeroEnergyHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -702,7 +710,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 20.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 20)
         p_bins_for_eta_range.append(p_bins)
     description = "InclusiveHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
