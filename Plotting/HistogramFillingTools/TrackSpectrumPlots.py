@@ -18,7 +18,7 @@ def CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges,  p_bins_fo
 
         selections = base_selection + [eta_bin_selection]
 
-        NPtBins = len(p_bins)
+        NPtBins = len(p_bins) - 1
         Pt_low = 0.5
         Pt_high = max(p_bins)
         ptbins = get_log_bins(Pt_low, Pt_high, NPtBins)
