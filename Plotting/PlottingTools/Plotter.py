@@ -29,6 +29,13 @@ if foundAtlasPlots:
 global_scope = []
 CANVAS_COUNTER = 1
 
+DataColor = ROOT.kBlack
+#ColorBlindFriendlyColours
+COLOURS = {}
+COLOURS["PythiaJetJet"] = ROOT.TColor.GetColor(0,73,73)
+COLOURS["PythiaJetJetPionsReweighted"] = ROOT.TColor.GetColor(146,73,0)
+COLOURS["SinglePion"] = ROOT.TColor.GetColor(109,182,255)
+
 def GetBinsFromHistogram(hist, entriesPerBin):
     ''' Get bins with # of entries entriesPerBin inside of it'''
     bins = [] #a list of floats to store the bin edges of the new histograms
@@ -137,7 +144,7 @@ def handle_underflow_overflow(h):
 def cleanUpHistograms(h):
     '''Create a histogram with it's characteristics set to standard values.'''
     h.SetLineStyle(1)
-    h.SetLineWidth(3)
+    h.SetLineWidth(4)
     h.SetFillStyle(0)
     h.SetFillColor(0)
     h.SetMarkerSize(0)
@@ -171,10 +178,30 @@ def ProjectProfiles(hist_dict):
         hist_dict[channel] = hist_dict[channel].ProjectionX()
     return hist_dict
 
-colors = [ROOT.kRed, ROOT.kBlue]
-DataColor = ROOT.kBlack
+def GetChannelName(hist_dict, hist):
+    if len(hist_dict.keys()) < 2:
+        raise ValueError("To figure out the channel name from the histogram dictionary, there needs to be more than one channel")
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None):
+    other_channel_histogram = None
+    keys = list(hist_dict.keys())
+    for key in keys:
+       if hist_dict[key].GetName() != hist.GetName():
+           other_channel_histogram = hist_dict[key]
+
+    hist1_name = hist.GetName()
+    hist2_name = other_channel_histogram.GetName()
+    first_difference = None
+
+    for i, letter in enumerate(hist2_name):
+        if letter != hist1_name[i]:
+            first_difference = i
+            break
+
+    channel = hist1_name[first_difference:]
+    return channel
+
+
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None): 
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -198,10 +225,15 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     '''
 
     title_offset = 1.2
-    MCHists = [histogram_dict[MCKey] for MCKey in MCKeys]
+
+    MCHists_keys = [(histogram_dict[MCKey], MCKey) for MCKey in MCKeys]
+    MCHists = [MCHists_key[0] for MCHists_key in MCHists_keys]
+    MCKeys = [MCHists_key[1] for MCHists_key in MCHists_keys]
+
     DataHist = histogram_dict[DataKey]
     MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
-    [MCHist.SetLineColor(color) for color, MCHist in zip(colors, MCHists)]
+
+    [MCHist.SetLineColor(COLOURS[MCKey]) for MCKey, MCHist in zip(MCKeys, MCHists)]
     if xlabel:
         [MCHist.GetXaxis().SetTitle(xlabel) for MCHist in MCHists]
     if ylabel:
@@ -287,20 +319,34 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     if ylabel:
         [MCHist.GetYaxis().SetTitle(ylabel) for MCHist in MCHists]
 
-    MCHists[0].Draw("HIST")
+
+    MCHists[0].Draw("HIST E")
     for MCHist in MCHists[1:]:
-        MCHist.Draw("SAME HIST")
+        MCHist.Draw("SAME HIST E")
     DataHist.Draw("SAME")
 
+    hist_description = []
     for MCHist in MCHists:
-        for fit in MCHist.GetListOfFunctions():
-            fit.SetLineColor(MCHist.GetLineColor())
-            fit.Draw("SAME")
-    for fit in DataHist.GetListOfFunctions():
+        fit = MCHist.GetListOfFunctions().Last()
+        if not fit:
+            continue
+        fit.SetLineColor(MCHist.GetLineColor())
         fit.Draw("SAME")
-        fit.SetLineColor(DataHist.GetMarkerColor())
+        chisq = fit.GetChisquare()
+        ndf = fit.GetNDF()
+        prob = fit.GetProb()
+        string = "#chi^2/ndf = {:1.3f}/{}      Prob = {:1.3f}".format(chisq, ndf, prob)
+        DrawText(0.6, 0.5, string, color = fit.GetLineColor(), size = 0.035)
 
-
+    fit = DataHist.GetListOfFunctions().Last()
+    if fit:
+       fit.Draw("SAME")
+       fit.SetLineColor(DataHist.GetMarkerColor())
+       chisq = fit.GetChisquare()
+       ndf = fit.GetNDF()
+       prob = fit.GetProb()
+       string = "#chi^2/ndf = {:1.3f}/{}      Prob = {:1.3f}".format(chisq, ndf, prob)
+       DrawText(0.6, 0.6, string, color = fit.GetLineColor(), size = 0.035)
 
     legend.SetTextSize(0.04)
     for MCHist, MCKey in zip(MCHists, MCKeys):
@@ -322,8 +368,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     if doLogx:
         top_pad.SetLogx()
 
-    ROOT.gROOT.SetStyle("ATLAS")
-    #astyle.ATLASLabel(0.2, 0.87, "Internal")
+#    ROOT.gROOT.SetStyle("ATLAS")
+#    astyle.ATLASLabel(0.2, 0.87, "Internal")
     top_pad.Modified()
     top_pad.Update()
     toGlobalScope(top_pad)
@@ -338,12 +384,12 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     toGlobalScope(bottom_pad)
 
     counter = 0
-    for MCHist, color in zip(MCHists, colors):
+    for MCHist, MCKey in zip(MCHists, MCKeys):
         counter += 1
         data_ratio = DataHist.Clone("data_histogram" + str(counter))
         data_ratio.Divide(MCHist)
         data_ratio = cleanUpHistograms(data_ratio)
-        data_ratio.SetLineColor(color)
+        data_ratio.SetLineColor(COLOURS[MCKey])
 
         if counter == 1:
             data_ratio.Draw("HIST E")
