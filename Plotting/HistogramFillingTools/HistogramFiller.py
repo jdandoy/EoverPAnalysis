@@ -40,7 +40,7 @@ def create_selection_function(template, branches, *args):
         function = lambda x, y=args[0], z=args[1]: template(x,y,z)
     if len(args) == 3:
         function = lambda x, y=args[0], z=args[1], w=args[2]: template(x,y,z,w)
-                
+
     function.__name__ = template.__name__ + "_".join([str(arg) for arg in args])
     selection_function = calculation(function, branches)
     return selection_function
@@ -144,35 +144,33 @@ class HistogramFiller:
         variableNameToFill = variable.name
         variables = [variable]
         histogram_dictionary = {}
-        if not HistogramPerFile:
-            for channel in self.channels:
-                if (type(bins) == list):
-                    bins_array = array('d',bins)
-                    histogram_dictionary[channel] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, len(bins_array)-1, bins_array)
-                else:
-                    histogram_dictionary[channel] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, bins, range_low + 0.0000001, range_high - 0.000001)
-                histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
-                histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
-                histogram_dictionary[channel].Sumw2()
+        for channel in self.channels:
+            if (type(bins) == list):
+                bins_array = array('d',bins)
+                histogram_dictionary[channel] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, len(bins_array)-1, bins_array)
+            else:
+                histogram_dictionary[channel] = ROOT.TH1D(histogram_name + channel, histogram_name + channel, bins, range_low + 0.0000001, range_high - 0.000001)
+            histogram_dictionary[channel].GetXaxis().SetTitle(xlabel)
+            histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
+            histogram_dictionary[channel].Sumw2()
 
-            for channel in self.channels:
-                normalization_weight = 0.0
-                for filename in self.channelFiles[channel]:
-                    variable_dict, selection_dict, weights = data_dictionary[channel][filename]
-                    total_selection = np.ones(len(weights)) > 0.0
-                    for selection in list_selections:
-                        total_selection &= selection_dict[selection.name]
-                    to_fill = variable_dict[variableNameToFill][total_selection]
-                    to_weight = weights[total_selection]
-                    if self.verbose: print(len(to_fill))
-                    if self.verbose: print(len(to_weight))
-                    if self.verbose: print to_fill
-                    if self.verbose: print to_weight
-                    if self.verbose: print("Filling Variable " + variable.name)
-                    if useWeights:
-                        fill_hist(histogram_dictionary[channel], to_fill, to_weight)
-                    else:
-                        fill_hist(histogram_dictionary[channel], to_fill)
+        for channel in self.channels:
+            for filename in self.channelFiles[channel]:
+                variable_dict, selection_dict, weights = data_dictionary[channel][filename]
+                total_selection = np.ones(len(weights)) > 0.0
+                for selection in list_selections:
+                    total_selection &= selection_dict[selection.name]
+                to_fill = variable_dict[variableNameToFill][total_selection]
+                to_weight = weights[total_selection]
+                if self.verbose: print(len(to_fill))
+                if self.verbose: print(len(to_weight))
+                if self.verbose: print to_fill
+                if self.verbose: print to_weight
+                if self.verbose: print("Filling Variable " + variable.name)
+                if useWeights:
+                    fill_hist(histogram_dictionary[channel], to_fill, to_weight)
+                else:
+                    fill_hist(histogram_dictionary[channel], to_fill)
 
             return histogram_dictionary
 

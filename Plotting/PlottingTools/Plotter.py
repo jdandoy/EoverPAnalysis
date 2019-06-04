@@ -201,7 +201,7 @@ def GetChannelName(hist_dict, hist):
     return channel
 
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None): 
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -223,6 +223,11 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     yTicksNumber: set the number of ticks on the y-axis
     -----------------------------------------------------------------------------------------------------
     '''
+    global CANVAS_COUNTER #This is to make sure that no two canvases ever get the same name. Otherwise root complains...
+    canvas_name = "Canvas" + "".join(MCKeys) + DataKey + str(CANVAS_COUNTER)
+    CANVAS_COUNTER = CANVAS_COUNTER + 1
+    canvas = ROOT.TCanvas(canvas_name, canvas_name, 1300, 800)
+    canvas.cd()
 
     title_offset = 1.2
 
@@ -231,6 +236,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     MCKeys = [MCHists_key[1] for MCHists_key in MCHists_keys]
 
     DataHist = histogram_dict[DataKey]
+    DataHist.SetMarkerSize(0.30)
     MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
 
     [MCHist.SetLineColor(COLOURS[MCKey]) for MCKey, MCHist in zip(MCKeys, MCHists)]
@@ -263,12 +269,9 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     legend.SetBorderSize(0)
     toGlobalScope(legend)
 
-    global CANVAS_COUNTER #This is to make sure that no two canvases ever get the same name. Otherwise root complains...
-    canvas_name = "Canvas" + MCKey + DataKey + MCHist.GetTitle() + str(CANVAS_COUNTER)
-    CANVAS_COUNTER = CANVAS_COUNTER + 1
-    canvas = ROOT.TCanvas(canvas_name, canvas_name, 1300, 800)
 
-    top_pad = ROOT.TPad("pad1", "pad1", 0, 0.3, 1, 1.0)
+    top_pad = ROOT.TPad("toppad" + str(CANVAS_COUNTER), "toppad" + str(CANVAS_COUNTER), 0, 0.3, 1, 1.0)
+    canvas.cd()
     top_pad.Draw()
     top_pad.cd()
     top_pad.SetBottomMargin(0)
@@ -368,14 +371,15 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     if doLogx:
         top_pad.SetLogx()
 
-#    ROOT.gROOT.SetStyle("ATLAS")
-#    astyle.ATLASLabel(0.2, 0.87, "Internal")
+    ROOT.gROOT.SetStyle("ATLAS")
+    astyle.ATLASLabel(0.2, 0.87, "Internal")
     top_pad.Modified()
     top_pad.Update()
     toGlobalScope(top_pad)
 
     canvas.cd()
-    bottom_pad = ROOT.TPad("pad2", "pad2", 0, 0.01, 1, 0.3)
+    bottom_pad = ROOT.TPad("botpad" + str(CANVAS_COUNTER), "botpad" + str(CANVAS_COUNTER), 0, 0.01, 1, 0.3)
+    canvas.cd()
     if doLogx:
         bottom_pad.SetLogx()
     #bottom_pad.SetRightMargin(0.15)
@@ -467,6 +471,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     straight_line_down2.Draw("Same")
     toGlobalScope(straight_line_down2)
 
+    canvas.cd()
     bottom_pad.Modified()
     bottom_pad.Update()
 
