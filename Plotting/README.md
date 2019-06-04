@@ -33,6 +33,12 @@ condor_submit condor_testPlots.sub
 hadd Plots_hadded.root Plots*.root
 ```
 
+## Create TTrees to use for binning. These contain information about the total # of tracks and std deviation.
+```
+python BinningInformationTree/CreateBinningInformationTree.py -selname MIPSelectionHadFracAbove70 --file PTSpectrumReweighted.root --histogramName EOPDistribution --outputFile MIPSelectonHadFracAbove70Binning
+python BinningInformationTree/CreateBinningInformationTree.py -selname 20TRTHitsNonZeroEnergy --file PTSpectrumReweighted.root --histogramName EOPDistribution --outputFile 20TRTHitsNonZeroEnergyBinning
+```
+
 ## Draw histograms
 ```
 git clone git@github.com:joeycarter/atlas-plots.git
