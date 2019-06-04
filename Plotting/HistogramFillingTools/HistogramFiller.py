@@ -12,7 +12,7 @@ def get_log_bins(minBin, maxBin, nBins):
     '''Get nBins logarithmically-evenly spaced bins ranging from minBin to maxBin'''
     bins = []
     base = (float(maxBin)/float(minBin)) ** (1.0/float(nBins))
-    for i in range(0, nBins+1):
+    for i in range(0, nBins + 1):
         bins.append(minBin * (base) ** i)
     return bins
 
@@ -20,7 +20,7 @@ def get_bins(minBin, maxBin, nBins):
     '''Get nBins evenly spaced bins ranging from minBin to maxBin'''
     bins = []
     step = float(maxBin - minBin)/float(nBins)
-    for i in range(0, nBins+1):
+    for i in range(0, nBins + 1):
         bins.append(minBin + (i*step))
     return bins
 
@@ -171,7 +171,6 @@ class HistogramFiller:
                     fill_hist(histogram_dictionary[channel], to_fill, to_weight)
                 else:
                     fill_hist(histogram_dictionary[channel], to_fill)
-
             return histogram_dictionary
 
     def Get2DHistograms(self, histogram_name, data_dictionary, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):

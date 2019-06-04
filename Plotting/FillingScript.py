@@ -593,7 +593,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_bin_tuples:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionBetween30and90OfMomentum"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -605,22 +605,27 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionHadFracAbove70"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = eta_bin_tuples
     base_selection = [sel_NTRT20, sel_NonZeroEnergy]
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHitsNonZeroEnergy"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = eta_bin_tuples
@@ -628,11 +633,16 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHits"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = eta_bin_tuples
@@ -640,11 +650,16 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "NonZeroEnergy"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = eta_bin_tuples
@@ -652,11 +667,16 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "Inclusive"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
     CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     # Crete histograms for the hard scatter histograms
@@ -665,7 +685,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "MIPSelectionBetween30and90OfMomentumHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
@@ -677,40 +697,40 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
    
     description = "MIPSelectionHadFracAbove70HardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     base_selection = [sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter]
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "20TRTHitsNonZeroEnergyHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = eta_bin_tuples
     base_selection = [sel_NonZeroEnergy, sel_HardScatter]
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "NonZeroEnergyHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     eta_ranges = eta_bin_tuples
     base_selection = [sel_HardScatter]
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 20)
+        p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "InclusiveHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
