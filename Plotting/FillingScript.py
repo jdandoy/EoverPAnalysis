@@ -47,18 +47,18 @@ def fill_histograms(hist_filler, outputRootFileName):
     hist = trk_count_reweight_file.Get("PythiaJetJetPionsOnlyTrackCountReweightedToData")
     hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkCount, hist, selection=[])
 
-    for i, eta_bin_selection in enumerate(eta_bin_selections):
-        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
-        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i))
-        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJet", calc_trkPt, hist, selection=[eta_bin_selection]) 
-
-        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i)+".root", "READ")
-        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i))
-        hist_filler.weightCalculator.addReweightHistogram("SinglePion", calc_trkPt, hist, selection=[eta_bin_selection]) 
-
-        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i)+".root", "READ")
-        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
-        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
+#    for i, eta_bin_selection in enumerate(eta_bin_selections):
+#        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
+#        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i))
+#        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJet", calc_trkPt, hist, selection=[eta_bin_selection]) 
+#
+#        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i)+".root", "READ")
+#        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i))
+#        hist_filler.weightCalculator.addReweightHistogram("SinglePion", calc_trkPt, hist, selection=[eta_bin_selection]) 
+#
+#        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i)+".root", "READ")
+#        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
+#        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
 
     #import the selections that we want to plot
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
@@ -624,7 +624,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins = get_log_bins(p_bins_min, 40.05, 300)
         p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
@@ -641,7 +641,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins = get_log_bins(p_bins_min, 40.05, 300)
         p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
@@ -658,7 +658,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins = get_log_bins(p_bins_min, 40.05, 300)
         p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
@@ -675,7 +675,7 @@ def fill_histograms(hist_filler, outputRootFileName):
     p_bins_for_eta_range = []
     for eta_range in eta_ranges:
         p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 300)
+        p_bins = get_log_bins(p_bins_min, 40.05, 300)
         p_bins_for_eta_range.append(p_bins)
     CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
@@ -734,7 +734,13 @@ def fill_histograms(hist_filler, outputRootFileName):
         p_bins_for_eta_range.append(p_bins)
     description = "InclusiveHardScatter"
     PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
+    p_bins_for_eta_range = []
+    for eta_range in eta_ranges:
+        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+        p_bins = get_log_bins(p_bins_min, 40.05, 300)
+        p_bins_for_eta_range.append(p_bins)
+    CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     histograms = hist_filler.DumpHistograms()
     for histogram_name in histograms:

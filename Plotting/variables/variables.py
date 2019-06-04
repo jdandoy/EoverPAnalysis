@@ -6,6 +6,10 @@ from math import pi
 #trk_TotalHadronicBackgroundCalibHitEnergy_EM_275
 #trk_TotalCalibHitEnergy_EM_200
 
+def TruthMomentum(trk):
+    return trk["trk_truthP"]
+calc_TruthMomentum = calculation(TruthMomentum, ["trk_truthP"])
+
 def TotalCalibHitEnergyEM(trk):
     return trk["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalCalibHitEnergy_EM_200"]
 

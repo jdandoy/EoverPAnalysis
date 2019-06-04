@@ -7,7 +7,7 @@ from math import pi
 import pickle
 import numpy as np
 from selections.selections import EtaBin, PBin, sel_SubleadingTrack
-from variables.variables import calc_trkP, calc_trkPt
+from variables.variables import calc_trkP, calc_trkPt, calc_TruthMomentum
 
 def CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges,  p_bins_for_eta_range, description):
     eta_count = -1
@@ -41,5 +41,15 @@ def CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges,  p_bins_fo
                                            list_selections = selections,\
                                            bins = p_bins,\
                                            xlabel ="Track P [GeV]",\
+                                           ylabel = "Number of Tracks")
+
+        ################################################################################
+        histogram_name = "TrackTruthPSpectrum"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        hist_filler.BookHistograms(histogram_name,\
+                                           calc_TruthMomentum,\
+                                           list_selections = selections,\
+                                           bins = p_bins,\
+                                           xlabel ="Track Truth P [GeV]",\
                                            ylabel = "Number of Tracks")
 
