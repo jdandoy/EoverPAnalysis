@@ -34,7 +34,7 @@ pion_selections = [sel_Pion, sel_HardScatter]
 #This is a script that fills the histograms for
 def fill_histograms(hist_filler, outputRootFileName):
     #import thje variables that we want to plot
-    from variables.variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount, calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike
+    from variables.variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount, calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike, calc_TruthMomentum
 
     hist_filler.ApplySelectionsForChannel("PythiaJetJetPionsReweighted", pion_selections)
 
@@ -47,18 +47,18 @@ def fill_histograms(hist_filler, outputRootFileName):
     hist = trk_count_reweight_file.Get("PythiaJetJetPionsOnlyTrackCountReweightedToData")
     hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkCount, hist, selection=[])
 
-#    for i, eta_bin_selection in enumerate(eta_bin_selections):
-#        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
-#        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i))
-#        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJet", calc_trkPt, hist, selection=[eta_bin_selection]) 
-#
-#        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i)+".root", "READ")
-#        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i))
-#        hist_filler.weightCalculator.addReweightHistogram("SinglePion", calc_trkPt, hist, selection=[eta_bin_selection]) 
-#
-#        event_count_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i)+".root", "READ")
-#        hist = event_count_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
-#        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
+    for i, eta_bin_selection in enumerate(eta_bin_selections):
+        spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
+        hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i))
+        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJet", calc_trkPt, hist, selection=[eta_bin_selection]) 
+
+        spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/TruthPSpectrumReweightPythiaJetJetOverSinglePion_Eta"+str(i)+".root", "READ")
+        hist = spectrum_reweight_file.Get("TruthPSpectrumReweightPythiaJetJetOverSinglePion_Eta"+str(i))
+        hist_filler.weightCalculator.addReweightHistogram("SinglePion", calc_TruthMomentum, hist, selection=[eta_bin_selection]) 
+
+        spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i)+".root", "READ")
+        hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
+        hist_filler.weightCalculator.addReweightHistogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
 
     #import the selections that we want to plot
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")

@@ -41,6 +41,8 @@ def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
 
     weights = getWeightsFromBins(variable_in_histogram, low_edges, high_edges, hist_weights)
 
+    weights[variable_in_histogram > high_edges[-1]] = 0.0 #set the weights of those events not in the reweighting histogram to 0
+
     return weights
 
 class weightCalculation:
