@@ -94,6 +94,8 @@ class HistogramFiller:
         '''
         Given a string channel, string filename, a list of calculation variables and a list of calculations list_selections, return a dictionary keys selection_dict, variable_dict and weights. selection_dict is a dictionary of key selection name to numpy array of bool. variable_dict is a dictionary of string variable name to numpy array variable. weights is a numpy array of floats
         '''
+        print("\n"*2)
+        print("Getting branches for channel {}".format(channel))
         branches = GetListOfNeededBranches(variables, list_selections)
 
         #get the parition of the ttree to be read
@@ -106,7 +108,7 @@ class HistogramFiller:
 
         tree = self.tree_dict[filename]
 
-        print("Getting data for partition " + str(partition))
+        print("Reading entries from {} until {}".format(partition[0], partition[1]))
         result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, tree = tree, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
 
         #Get the selections, variables and weights
@@ -115,11 +117,12 @@ class HistogramFiller:
         weights = result["weights"]
 
         if channel in self.selections_for_channels:
+            print("Applying selections for this channel")
             selections = self.selections_for_channels[channel]
             total_selection = np.ones(len(weights)) > 0.5
             for selection in selections:
+                print("\t Applying {}, with {} events passing".format(selection.name, np.sum(1 * selection_dict[selection.name])))
                 total_selection &= selection_dict[selection.name]
-
             weights = weights[total_selection]
             for key in selection_dict:
                 selection_dict[key] = selection_dict[key][total_selection]
@@ -128,7 +131,7 @@ class HistogramFiller:
 
         if self.verbose: print "The following selections have been evaluated "
         for selection in selection_dict:
-            if self.verbose: print selection
+            print("Selection {} has {} tracks passing".format(selection, np.sum(1 * selection_dict[selection])))
         if self.verbose: print "The following variables have be evaluated "
         for variable in variable_dict:
             if self.verbose: print variable
@@ -171,7 +174,7 @@ class HistogramFiller:
                     fill_hist(histogram_dictionary[channel], to_fill, to_weight)
                 else:
                     fill_hist(histogram_dictionary[channel], to_fill)
-            return histogram_dictionary
+        return histogram_dictionary
 
     def Get2DHistograms(self, histogram_name, data_dictionary, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
         '''the 2-d histgram with variable_x and variable_y drawn'''
@@ -298,6 +301,7 @@ class HistogramFiller:
     def DumpHistograms(self):
         data_dictionary = {}
         for channel in self.channels:
+            print("Dumping for channel {}".format(channel))
             data_dictionary[channel] = {}
             for filename in self.channelFiles[channel]:
                 data_dictionary[channel][filename] = self.GetVariablesAndWeights(channel,filename, self.total_variables, self.total_selections)
