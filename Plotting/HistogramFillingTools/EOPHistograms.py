@@ -56,7 +56,8 @@ def PutBinningVectorsInFile(outFile, eta_ranges, p_bins_for_eta_range, descripti
         binningTree.Write()
     
 
-def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta_range, description, doClusterPlots=False, doCalibHitPlots=False):
+def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta_range, description, doClusterPlots=False, doCalibHitPlots=False, optimalBinningFile=None):
+
     #define a set of eta bins
     eta_count = -1
     for eta_range, p_bins in zip(eta_ranges, p_bins_for_eta_range):
@@ -70,7 +71,7 @@ def CreateEOPBinnedHistograms(hist_filler, base_selection, eta_ranges,p_bins_for
         Pt_low = 0.5
         Pt_high = max(p_bins)
         ptbins = get_log_bins(Pt_low, Pt_high, NPtBins)
-        eop_bins = get_bins(-1.0, +5.0, 100)
+        eop_bins = get_bins(-1.0, +3.0, 800) # use a super fine binning
 
         histogramName = "EOPProfileVsMomentum"
         histogramName = histogramName + "_" + "_" + description + "_Eta_" + str(eta_count)
