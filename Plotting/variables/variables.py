@@ -7,7 +7,7 @@ from math import pi
 #trk_TotalCalibHitEnergy_EM_200
 
 def TruthMomentum(trk):
-    return trk["trk_truthP"]
+    return trk["trk_truthP"] * 1000.0 #scale to GeV
 calc_TruthMomentum = calculation(TruthMomentum, ["trk_truthP"])
 
 def TotalCalibHitEnergyEM(trk):
