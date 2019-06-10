@@ -26,6 +26,7 @@ hm = HistogramManager(filename)
 
 histograms = hm.getHistograms(hist_name)
 
+#numerator:
 ratio_hist = histograms[num_channel].Clone(output_name)
 ratio_hist.Divide(histograms[den_channel])
 
