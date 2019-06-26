@@ -4,54 +4,54 @@ from PlottingTools.Plotter import *
 from PlottingTools.CommonPlots import *
 from array import array
 import os
-import time
 from FittingTools.FittingTools import fitHistograms
 
+MCKeys = ['PythiaJetJet', 'PythiaJetJetPionsReweighted', 'SinglePion']
+
 global_scope = []
-ROOT.gROOT.SetBatch(ROOT.kTRUE)
-ROOT.gStyle.SetImageScaling(3.)
+ROOT.gROOT.SetBatch(ROOT.kFALSE)
+#ROOT.gStyle.SetImageScaling(2.)
 
 def CloseCanvas(canv):
     canv.Close()
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "PTSpectrumReweighted.root"
-#filename = "CountReweightedPlots.root"
+filename = "PtSpectrumReweighted.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
 
 if "Count" in filename:
     base_description = []
-if "Spectrum" in filename:
+if "Pt" in filename and "weight" in filename:
     base_description = ["P_{T} Reweighted"]
 channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only"}
+
 plotting_directory = (filename.split("/")[-1]).replace(".root","") + "plots"
 
 if not os.path.exists("Plots"):
     os.makedirs("Plots")
-
 if not os.path.exists("Plots/" + plotting_directory):
     os.makedirs("Plots/" + plotting_directory)
-
 plotting_directory = "Plots/" + plotting_directory
 
 #CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory)
 
 #test the plot creation
-#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, fitfunction="convolution", refit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
-CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],doFit = True ,fitfunction="convolution", refit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
+#CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 #CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + [],doFit = True,fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
 
-#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False, channelLabels=channelLabels,plotting_directory=plotting_directory)
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70HardScatter", filename, base_description = ["MIP Selection"],doFit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreatePlotsFromSelection(HM,"NonZeroEnergyHardScatter", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreatePlotsFromSelection(HM,"InclusiveHardScatter", filename, base_description = [],doFit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
 
-#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatterOnlyPion", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = False, channelLabels=channelLabels,plotting_directory=plotting_directory)
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatterOnlyPion", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70HardScatterOnlyPion", filename, base_description = ["MIP Selection"],doFit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreatePlotsFromSelection(HM,"NonZeroEnergyHardScatterOnlyPion", filename, base_description = ["E_{TOTAL} != 0.0"],doFit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
 #CreatePlotsFromSelection(HM,"InclusiveHardScatterOnlyPion", filename, base_description = [],doFit=False, channelLabels=channelLabels,plotting_directory=plotting_directory)
@@ -105,7 +105,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 ratio_min=0.6,\
                                 ratio_max=1.4,\
@@ -119,7 +119,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 ratio_min=0.6,\
                                 ratio_max=1.4,\
@@ -136,7 +136,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
@@ -154,7 +154,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC3 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC3[0].Draw()
@@ -166,7 +166,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC5 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
@@ -179,7 +179,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC6 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
@@ -192,7 +192,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC7 = DrawDataVsMC(hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 extra_description = description)
         DataVsMC7[0].Draw()
@@ -205,7 +205,7 @@ if True:
             description = base_description + ["Inclusive Selection"]
             DataVsMC4 = DrawDataVsMC(hist,\
                                     channelLabels,\
-                                    MCKeys = ['PythiaJetJet'],\
+                                    MCKeys = MCKeys,\
                                     DataKey='LowMuData',\
                                     doLogx = True,\
                                     doLogy = True,\
@@ -227,7 +227,7 @@ if True:
         description = base_description + ["Inclusive Selection"]
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
-                                MCKeys = ['PythiaJetJet'],\
+                                MCKeys = MCKeys,\
                                 DataKey='LowMuData',\
                                 doLogx=True,
                                 doLogy=False,
@@ -237,31 +237,19 @@ if True:
         DataVsMC9[0].Draw()
         DataVsMC9[0].Print(plotting_directory + "/" + histogramName_num.replace("Numerator", "") + ".png")
 
-        histogramName = "EtaLess08_TwoDHistTrkPvsPhiInnerToExtrapolEM2"
-        description = base_description + ["|#eta_{ID}|<0.8"]
-        hist = HM.getHistograms(histogramName)
-        DataVsMC10 = Draw2DHistogramOnCanvas(hist["PythiaJetJet"], doLogx = False, doLogy = True)
-        DataVsMC10.Draw()
-        DataVsMC10.Print(plotting_directory + "/" + histogramName.replace("Numerator", "") + "PythiaJetJet" + ".png")
+        for histogramName in ["EtaLess08_TwoDHistTrkPvsPhiInnerToExtrapolEM2", "TwoDHistTrkPvsPhiInnerToExtrapolEM2"]:
 
-        histogramName = "EtaLess08_TwoDHistTrkPvsPhiInnerToExtrapolEM2"
-        description = base_description + ["|#eta_{ID}|<0.8"]
-        hist = HM.getHistograms(histogramName)
-        DataVsMC10 = Draw2DHistogramOnCanvas(hist["LowMuData"], doLogx = False, doLogy = True)
-        DataVsMC10.Draw()
-        DataVsMC10.Print(plotting_directory + "/" + histogramName.replace("Numerator", "") + "LowMuData" + ".png")
+            description = base_description + ["|#eta_{ID}|<0.8"]
+            hist = HM.getHistograms(histogramName)
+            DataVsMC10 = Draw2DHistogramOnCanvas(hist["PythiaJetJet"], doLogx = False, doLogy = True, x_range=(0.0, 1.5))
+            DataVsMC10.Draw()
+            DataVsMC10.Print(plotting_directory + "/" + histogramName.replace("Numerator", "") + "PythiaJetJet" + ".png")
 
-        DataVSMC10 = DrawDataVsMC(histograms,\
-                                  channelLabels,\
-                                  MCKeys = ['PythiaJetJet'],\
-                                  DataKey = "LowMuData",\
-                                  doLogx = True,\
-                                  doLogy = False,
-                                  ratio_min = 0.9,\
-                                  ratio_max = 1.1,\
-                                  extra_description = description)
-        DataVSMC10[0].Draw()
-        DataVSMC10[0].Print(plotting_directory + "/" + histogramName + ".png")
+            description = base_description + ["|#eta_{ID}|<0.8"]
+            hist = HM.getHistograms(histogramName)
+            DataVsMC10 = Draw2DHistogramOnCanvas(hist["LowMuData"], doLogx = False, doLogy = True, x_range=(0.0,1.5))
+            DataVsMC10.Draw()
+            DataVsMC10.Print(plotting_directory + "/" + histogramName.replace("Numerator", "") + "LowMuData" + ".png")
 
 
         description = base_description + ["0.8<|#eta_{ID}|<1.2", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
@@ -272,7 +260,7 @@ if True:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKeys = ['PythiaJetJet'],\
+                                  MCKeys = MCKeys,\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -291,7 +279,7 @@ if True:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKeys = ['PythiaJetJet'],\
+                                  MCKeys = MCKeys,\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -309,7 +297,7 @@ if True:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKeys = ['PythiaJetJet'],\
+                                  MCKeys = MCKeys,\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -327,7 +315,7 @@ if True:
 
         DataVSMC10 = DrawDataVsMC(histograms,\
                                   channelLabels,\
-                                  MCKeys = ['PythiaJetJet'],\
+                                  MCKeys = MCKeys,\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -422,7 +410,7 @@ if True:
         #
         #    DataVSMC10 = DrawDataVsMC(histograms,\
         #                          channelLabels,\
-        #                          MCKeys = ['PythiaJetJet'],\
+        #                          MCKeys = MCKeys,\
         #                          DataKey = "LowMuData",\
         #                          doLogx = True,\
         #                          doLogy = False,
@@ -453,7 +441,7 @@ if True:
 
             DataVSMC10 = DrawDataVsMC(frac_MIP_of_NonZero,\
                                   channelLabels,\
-                                  MCKeys = ['PythiaJetJet'],\
+                                  MCKeys = MCKeys,\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -467,7 +455,7 @@ if True:
 
             DataVSMC10 = DrawDataVsMC(frac_MIP_of_Inclusive,\
                                   channelLabels,\
-                                  MCKeys = ['PythiaJetJet'],\
+                                  MCKeys = MCKeys,\
                                   DataKey = "LowMuData",\
                                   doLogx = True,\
                                   doLogy = False,
@@ -491,7 +479,7 @@ if True:
                 histogram_num = histograms
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
-                                      MCKeys = ['PythiaJetJet'],\
+                                      MCKeys = MCKeys,\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
@@ -508,7 +496,7 @@ if True:
                 histogram_den = histograms
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
-                                      MCKeys = ['PythiaJetJet'],\
+                                      MCKeys = MCKeys,\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
@@ -523,7 +511,7 @@ if True:
                 histogramName = "EOPCorrHistogram_" + bkgProfileName + "_"  + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
                 DataVSMC10 = DrawDataVsMC(EOPCorrHistograms,\
                                       channelLabels,\
-                                      MCKeys = ['PythiaJetJet'],\
+                                      MCKeys = MCKeys,\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,\
@@ -548,7 +536,7 @@ if True:
             histograms = HM.getHistograms(histogram_name)
             DataVsMC = DrawDataVsMC(histograms,\
                                     channelLabels,\
-                                    MCKeys = ['PythiaJetJet'],\
+                                    MCKeys = MCKeys,\
                                     DataKey="LowMuData",\
                                     ratio_min=0.6,\
                                     ratio_max=1.4,\
@@ -576,7 +564,7 @@ if True:
                 histograms = ProjectProfiles(histograms)
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
-                                      MCKeys = ['PythiaJetJet'],\
+                                      MCKeys = MCKeys,\
                                       DataKey = "LowMuData",\
                                       doLogx = True,\
                                       doLogy = False,
@@ -614,7 +602,7 @@ if True:
                             histograms = HM.getHistograms(histogramName)
                             DataVSMC = DrawDataVsMC(histograms,\
                                            channelLabels,\
-                                           MCKeys = ['PythiaJetJet'],\
+                                           MCKeys = MCKeys,\
                                            DataKey = "LowMuData",\
                                            doLogx = False,\
                                            doLogy = False,
@@ -630,7 +618,7 @@ if True:
                             hist = HM.getHistograms(histogram_name)
                             DataVsMC1 = DrawDataVsMC(hist,\
                                                     channelLabels,\
-                                                    MCKeys = ['PythiaJetJet'],\
+                                                    MCKeys = MCKeys,\
                                                     DataKey='LowMuData',\
                                                     extra_description =  ["P_{T} Reweighted", eta_descriptor, p_low_str + " < |P/GeV| < " + p_high_str] + extra_stuff)
                             DataVsMC1[0].Draw()

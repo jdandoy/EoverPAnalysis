@@ -236,7 +236,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     MCKeys = [MCHists_key[1] for MCHists_key in MCHists_keys]
 
     DataHist = histogram_dict[DataKey]
-    DataHist.SetMarkerSize(0.30)
+    #DataHist.SetMarkerSize(0.30)
     MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
 
     [MCHist.SetLineColor(COLOURS[MCKey]) for MCKey, MCHist in zip(MCKeys, MCHists)]

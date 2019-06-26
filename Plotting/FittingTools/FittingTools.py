@@ -38,12 +38,9 @@ def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=
            mean = histogram.GetMean()
            rms = histogram.GetRMS()
            sigmas[channel]=rms
-           #gaus fit:
-           #new_low_fit = mean - rms * 1.0
-           #new_high_fit = mean + rms * 1.0
-           #convolution fit:
-           new_low_fit = mean - rms * 1.4
-           new_high_fit = mean + rms * 1.2
+
+           new_low_fit = mean - rms * 1.0
+           new_high_fit = mean + rms * 1.0
            means[channel]=mean
            if new_low_fit < low_fit:
                low_fit = new_low_fit
@@ -54,8 +51,8 @@ def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=
        histogram_name = histogram.GetName()
        fit_function_string = fit_function + histogram_name
        fit = histogram.GetFunction(fit_function_string)
-       low_fit = fit.GetParameter(0) - fit.GetParameter(1) * 1.4
-       high_fit = fit.GetParameter(0) + fit.GetParameter(1) * 1.2
+       low_fit = fit.GetParameter(0) - fit.GetParameter(1) * 0.8
+       high_fit = fit.GetParameter(0) + fit.GetParameter(1) * 0.8
        for channel in channels:
            means[channel] = fit.GetParameter(0)
            sigmas[channel] = fit.GetParameter(1)
