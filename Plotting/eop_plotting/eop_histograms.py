@@ -75,7 +75,7 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
 
         from eop_plotting.variables import calc_EOP
-        AverageEOP  =  hist_filler.book_tprofile_fill(histogram_name,
+        hist_filler.book_tprofile_fill(histogram_name,
                                                   calc_trkP,\
                                                   calc_EOP,\
                                                   selections = selections,\
@@ -86,7 +86,7 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
 
         histogram_name = "2DHist_EOPVsMomentum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
-        AverageEOP  =  hist_filler.book_2dhistogram_fill(histogram_name,
+        hist_filler.book_2dhistogram_fill(histogram_name,
                                                   calc_trkP,\
                                                   calc_EOP,\
                                                   selections = selections,\
@@ -99,7 +99,7 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
         histogram_name = "EnergyAnulusProfileVsMomentum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
         from eop_plotting.variables import calc_EnergyAnulus
-        AverageAnulus =  hist_filler.book_tprofile_fill(histogram_name,\
+        hist_filler.book_tprofile_fill(histogram_name,\
                                                   calc_trkP,\
                                                   calc_EnergyAnulus,\
                                                   selections = selections,\
@@ -110,7 +110,7 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
 
         histogram_name = "2DHist_EnergyAnulusVsMomentum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
-        AverageAnulus =  hist_filler.book_2dhistogram_fill(histogram_name,\
+        hist_filler.book_2dhistogram_fill(histogram_name,\
                                                   calc_trkP,\
                                                   calc_EnergyAnulus,\
                                                   selections = selections,\
@@ -123,9 +123,69 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
         histogram_name = "EnergyBkgProfileVsMomentum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
         from eop_plotting.variables import calc_EOPBkg
-        AverageAnulus =  hist_filler.book_tprofile_fill(histogram_name,\
+        hist_filler.book_tprofile_fill(histogram_name,\
                                                   calc_trkP,\
                                                   calc_EOPBkg,\
+                                                  selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogram_name = "EnergyBkgUpProfileVsMomentum"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        from eop_plotting.variables import calc_EOPBkgUp
+        hist_filler.book_tprofile_fill(histogram_name,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkgUp,\
+                                                  selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogram_name = "EnergyBkgDownProfileVsMomentum"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        from eop_plotting.variables import calc_EOPBkgDown
+        hist_filler.book_tprofile_fill(histogram_name,\
+                                                  calc_trkP,\
+                                                  calc_EOPBkgDown,\
+                                                  selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogram_name = "EnergyBigBkgProfileVsMomentum"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        from eop_plotting.variables import calc_EOPBigBkg
+        hist_filler.book_tprofile_fill(histogram_name,\
+                                                  calc_trkP,\
+                                                  calc_EOPBigBkg,\
+                                                  selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogram_name = "EnergyBigBkgUpProfileVsMomentum"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        from eop_plotting.variables import calc_EOPBigBkgUp
+        hist_filler.book_tprofile_fill(histogram_name,\
+                                                  calc_trkP,\
+                                                  calc_EOPBigBkgUp,\
+                                                  selections = selections,\
+                                                  bins = p_bins,\
+                                                  xlabel ="P[GeV]",\
+                                                  ylabel = "<E/p>_{BKG}",\
+                                                  )
+
+        histogram_name = "EnergyBigBkgDownProfileVsMomentum"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        from eop_plotting.variables import calc_EOPBigBkgDown
+        hist_filler.book_tprofile_fill(histogram_name,\
+                                                  calc_trkP,\
+                                                  calc_EOPBigBkgDown,\
                                                   selections = selections,\
                                                   bins = p_bins,\
                                                   xlabel ="P[GeV]",\
@@ -135,7 +195,7 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
 
         histogram_name = "2DHist_EnergyBkgVsMomentum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
-        AverageAnulus =  hist_filler.book_2dhistogram_fill(histogram_name,\
+        hist_filler.book_2dhistogram_fill(histogram_name,\
                                                   calc_trkP,\
                                                   calc_EOPBkg,\
                                                   selections = selections,\

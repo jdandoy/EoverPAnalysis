@@ -188,7 +188,6 @@ class HistogramFiller:
             histogram_dictionary[channel].Sumw2()
 
         for channel in self.channels:
-            normalization_weight = 0.0
             for filename in self.channel_files[channel]:
                 variable_dict, selection_dict, weights = data[channel][filename]
                 total_selection = np.ones(len(weights)) > 0.0

@@ -231,10 +231,60 @@ def EnergyAnulus(trk):
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_100"]
 calc_EnergyAnulus = Calculation(EnergyAnulus, branches)
 
+def EnergyAnulusUp(trk):
+    return trk["trk_ClusterEnergy_EM_200"] - trk["trk_ClusterEnergy_EM_125"]
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_125"]
+calc_EnergyAnulusUp = Calculation(EnergyAnulusUp, branches)
+
+def EnergyAnulusDown(trk):
+    return trk["trk_ClusterEnergy_EM_175"] - trk["trk_ClusterEnergy_EM_100"]
+branches = ["trk_ClusterEnergy_EM_175", "trk_ClusterEnergy_EM_100"]
+calc_EnergyAnulusDown = Calculation(EnergyAnulusDown, branches)
+
 def EOPBkg(trk):
-    return (1./trk["trk_p"]) * (4.0/3.0) * (EnergyAnulus(trk))
+    return (1./trk["trk_p"]) * ( (0.2**2)/( (0.2**2) - (0.1**2) )) * (EnergyAnulus(trk))
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_100", "trk_p"]
 calc_EOPBkg = Calculation(EOPBkg, branches)
+
+def EOPBkgUp(trk):
+    return (1./trk["trk_p"]) * ( (0.2**2)/( (0.2**2) - (0.125**2) )) * (EnergyAnulusUp(trk))
+branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_125", "trk_p"]
+calc_EOPBkgUp = Calculation(EOPBkgUp, branches)
+
+def EOPBkgDown(trk):
+    return (1./trk["trk_p"]) * ( (0.2**2)/( (0.175**2) - (0.1**2) )) * (EnergyAnulusDown(trk))
+branches = ["trk_ClusterEnergy_EM_175", "trk_ClusterEnergy_EM_100", "trk_p"]
+calc_EOPBkgDown = Calculation(EOPBkgDown, branches)
+
+def EnergyBigAnulus(trk):
+    return trk["trk_ClusterEnergy_EM_275"] - trk["trk_ClusterEnergy_EM_200"]
+branches = ["trk_ClusterEnergy_EM_275", "trk_ClusterEnergy_EM_200"]
+calc_EnergyBigAnulus = Calculation(EnergyBigAnulus, branches)
+
+def EnergyBigAnulusUp(trk):
+    return trk["trk_ClusterEnergy_EM_275"] - trk["trk_ClusterEnergy_EM_225"]
+branches = ["trk_ClusterEnergy_EM_275", "trk_ClusterEnergy_EM_225"]
+calc_EnergyBigAnulusUp = Calculation(EnergyBigAnulusUp, branches)
+
+def EnergyBigAnulusDown(trk):
+    return trk["trk_ClusterEnergy_EM_275"] - trk["trk_ClusterEnergy_EM_225"]
+branches = ["trk_ClusterEnergy_EM_275", "trk_ClusterEnergy_EM_225"]
+calc_EnergyBigAnulusDown = Calculation(EnergyBigAnulusDown, branches)
+
+def EOPBigBkgUp(trk):
+    return (1./trk["trk_p"]) * ( (0.2**2)/( (0.275**2) - (0.225**2) )) * (EnergyBigAnulusUp(trk))
+branches = ["trk_ClusterEnergy_EM_275", "trk_ClusterEnergy_EM_225", "trk_p"]
+calc_EOPBigBkgUp = Calculation(EOPBigBkgUp, branches)
+
+def EOPBigBkgDown(trk):
+    return (1./trk["trk_p"]) * ( (0.2**2)/( (0.25**2) - (0.2**2) )) * (EnergyBigAnulusDown(trk))
+branches = ["trk_ClusterEnergy_EM_250", "trk_ClusterEnergy_EM_200", "trk_p"]
+calc_EOPBigBkgDown = Calculation(EOPBigBkgDown, branches)
+
+def EOPBigBkg(trk):
+    return (1./trk["trk_p"]) * ( (0.2**2)/( (0.275**2) - (0.2**2) )) * (EnergyBigAnulus(trk))
+branches = ["trk_ClusterEnergy_EM_275", "trk_ClusterEnergy_EM_200", "trk_p"]
+calc_EOPBigBkg = Calculation(EOPBigBkg, branches)
 
 def EOP(trk):
     return (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])/trk["trk_p"]

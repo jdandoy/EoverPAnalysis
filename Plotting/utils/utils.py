@@ -40,7 +40,10 @@ indentified_files = {}
 
 files = {}
 files["inclusive"] = inclusive_files
-files["test"] = {"PythiaJetJetJZ0":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist"]}
+files["test"] = {"PythiaJetJet":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist"],\
+                 "SinglePion":["user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist"],\
+                 "LowMuData":["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist"],\
+                }
 files["indentified"] = indentified_files 
 
 def get_files(flavour):
