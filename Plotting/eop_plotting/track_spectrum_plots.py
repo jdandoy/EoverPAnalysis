@@ -1,15 +1,13 @@
-
-from HistogramFillingTools.HistogramFiller import HistogramFiller, get_p, get_bins, get_log_bins, create_selection_function
+from histogram_filling import HistogramFiller, get_p, get_bins, get_log_bins, create_selection_function
 import ROOT
-
 import os
 from math import pi
 import pickle
 import numpy as np
-from selections.selections import EtaBin, PBin, sel_SubleadingTrack
-from variables.variables import calc_trkP, calc_trkPt, calc_TruthMomentum
+from selections import EtaBin, PBin, sel_SubleadingTrack
+from variables import calc_trkP, calc_trkPt, calc_TruthMomentum
 
-def CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges,  p_bins_for_eta_range, description):
+def create_spectrum_plots(hist_filler, base_selection, eta_ranges,  p_bins_for_eta_range, description):
     eta_count = -1
     for eta_range, p_bins in zip(eta_ranges, p_bins_for_eta_range):
         eta_count += 1
@@ -26,9 +24,9 @@ def CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges,  p_bins_fo
         ################################################################################
         histogram_name = "TrackPtSpectrum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
-        hist_filler.BookHistograms(histogram_name,\
+        hist_filler.book_histogram_fill(histogram_name,\
                                            calc_trkPt,\
-                                           list_selections = selections,\
+                                           selections = selections,\
                                            bins = ptbins,\
                                            xlabel ="Track P_{T} [GeV]",\
                                            ylabel = "Number of Tracks")
@@ -36,9 +34,9 @@ def CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges,  p_bins_fo
         ################################################################################
         histogram_name = "TrackPSpectrum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
-        hist_filler.BookHistograms(histogram_name,\
+        hist_filler.book_histogram_fill(histogram_name,\
                                            calc_trkPt,\
-                                           list_selections = selections,\
+                                           selections = selections,\
                                            bins = p_bins,\
                                            xlabel ="Track P [GeV]",\
                                            ylabel = "Number of Tracks")
@@ -46,9 +44,9 @@ def CreateTrackSpectrumPlots(hist_filler, base_selection, eta_ranges,  p_bins_fo
         ################################################################################
         histogram_name = "TrackTruthPSpectrum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
-        hist_filler.BookHistograms(histogram_name,\
+        hist_filler.book_histogram_fill(histogram_name,\
                                            calc_TruthMomentum,\
-                                           list_selections = selections,\
+                                           selections = selections,\
                                            bins = p_bins,\
                                            xlabel ="Track Truth P [GeV]",\
                                            ylabel = "Number of Tracks")

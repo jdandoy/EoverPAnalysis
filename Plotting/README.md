@@ -1,31 +1,37 @@
 # EoverPPlotting
 
-These plotting macros use root_numpy, cython and a module called atlas-plots. They ship jobs to condor for all of your plotting needs. The histograms are filled in the Fillingscript.py file.
+These macros ship jobs to condor for all of your plotting needs. The histograms are filled in the Fillingscript.py file.
 
 ## Setup
-This creates local installations of root_numpy, cython and psutils. These packages are needed for these plotting macros.
+This setups up the envorment that we will need for all of the plotting fun!
 ```
-source setup.sh
+cd $TestArea/EoverPAnalysis/
+source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_94python3 x86_64-centos7-gcc62-opt
+python3 -m venv Plotting
+cd Plotting
+source ./setup.sh
 ```
 
 ## When logging back in
 ```
-source login.sh
+source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_94python3 x86_64-centos7-gcc62-opt
+source ./setup.sh
 ```
 
 ## Prepare batch plotting jobs for submission
+This script prepares a condor job. The job is defined in the macros/fill_script.py, which must have a function called fill_histograms. fill_histograms takes a HistogramFiller and books many histograms for plotting. Take a look inside of the script fill_scipt.py to get an idea of how this works.
 ```
-python condorSubmission/PrepareSubmission.py --treeName LA_EoverP_InDetTrackParticlesSortedLooseIsolatedVertexAssociated_tree --jobName Plots --NPartitions 200
+python macros/prepare_submission.py --tree_name LA_EoverP_InDetTrackParticlesSortedLooseIsolatedVertexAssociated_tree --n_jobs 100 --queue_flavour longlunch --file_flavour test --filling_script macros/fill_script.py --job_name test
 ```
 
 ## Test one of the jobs locally
 ```
-python condorSubmission/submit.py --num 0 --picklefile Plots/Submission/Plots.pickle --jobName Plots
+source condor/test/test_scripts/plot_local.sh 1 condor/test/Submission/test.pickle test
 ```
 
 ## Submit all of the batch jobs
 ```
-condor_submit condor_testPlots.sub
+condor_submit condor/test/test_scripts/condor_test.sub
 ```
 
 ## Upon job completion

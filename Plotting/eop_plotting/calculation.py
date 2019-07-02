@@ -1,10 +1,9 @@
 from pyximport import install
-
 import numpy as np
 install(setup_args={"include_dirs":np.get_include()},reload_support=True)
-from util import getWeightsFromBins
+from utils_cython import get_weights_from_bins
 
-class calculationDataMC:
+class CalculationDataMC:
     def __init__(self, function, list_of_branches):
         self.function = function
         self.name = function.__name__
@@ -14,7 +13,7 @@ class calculationDataMC:
     def eval(self, data, dataFlag):
         return self.function(data, dataFlag)
 
-class calculation:
+class Calculation:
     def __init__(self, function, list_of_branches):
         self.function = function
         self.name = function.__name__
@@ -39,13 +38,13 @@ def WeightsToNormalizeToHistogram(variable_in_histogram, histogram):
     high_edges = np.array(high_edges, np.float)
     hist_weights = np.array(normalizations, np.float)
 
-    weights = getWeightsFromBins(variable_in_histogram, low_edges, high_edges, hist_weights)
+    weights = get_weights_from_bins(variable_in_histogram, low_edges, high_edges, hist_weights)
 
     weights[variable_in_histogram > high_edges[-1]] = 0.0 #set the weights of those events not in the reweighting histogram to 0
 
     return weights
 
-class weightCalculation:
+class WeightCalculation:
     def __init__(self, function, list_of_branches):
         self.function = function
         self.name = function.__name__
@@ -66,7 +65,7 @@ class weightCalculation:
                 weights[total_selection] *= extra_weight[total_selection]
         return weights
 
-    def addReweightHistogram(self, channel, variable, histogram, selection=[]):
+    def add_reweight_histogram(self, channel, variable, histogram, selection=[]):
         histogram.SetDirectory(0)
         if channel not in self.reweightDictionary:
             self.reweightDictionary[channel] = {}

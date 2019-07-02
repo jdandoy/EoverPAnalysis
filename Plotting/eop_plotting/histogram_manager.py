@@ -1,5 +1,8 @@
 import ROOT
 class HistogramManager:
+    '''
+    A class to handle the reading of histograms from files produced by the filling script
+    '''
     channels = []
     histograms = []
     filename = None

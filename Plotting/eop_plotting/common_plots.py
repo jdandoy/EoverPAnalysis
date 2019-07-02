@@ -1,7 +1,7 @@
 import ROOT
-from PlottingTools.Plotter import ProjectProfiles, DrawDataVsMC, DivideHistograms
+from plotting_tools import ProjectProfiles, DrawDataVsMC
 from array import array
-from FittingTools.FittingTools import fitHistograms
+from fitting_tools import fitHistograms
 
 
 def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[], channelLabels={}, plotting_directory=""):

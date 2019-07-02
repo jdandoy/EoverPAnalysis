@@ -1,0 +1,17 @@
+python condorSubmission/submit.py --num 11  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 25  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 32  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 33  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 40  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 41  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 46  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 52  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 53  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 54  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 55  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 56  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 181  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 187  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 194  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 195  --jobName Plots --picklefile Plots/Submission/Plots.pickle
+python condorSubmission/submit.py --num 197  --jobName Plots --picklefile Plots/Submission/Plots.pickle

@@ -1,14 +1,10 @@
-from calculation.calculation import calculation, calculationDataMC, weightCalculation
+from calculation import Calculation, CalculationDataMC, WeightCalculation
 import numpy as np
 from math import pi
 
-#trk_TotalPhotonBackgroundCalibHitEnergy_EM_200
-#trk_TotalHadronicBackgroundCalibHitEnergy_EM_275
-#trk_TotalCalibHitEnergy_EM_200
-
 def TruthMomentum(trk):
     return trk["trk_truthP"] * 1000.0 #scale to GeV
-calc_TruthMomentum = calculation(TruthMomentum, ["trk_truthP"])
+calc_TruthMomentum = Calculation(TruthMomentum, ["trk_truthP"])
 
 def TotalCalibHitEnergyEM(trk):
     return trk["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalCalibHitEnergy_EM_200"]
@@ -23,80 +19,80 @@ CalibHitBranches = ["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200", "trk_Total
 
 def HasCalibHit(trk):
     return TotalCalibHitEnergy(trk) > 0.0
-sel_HasCalibHit = calculation(HasCalibHit, CalibHitBranches)
+sel_HasCalibHit = Calculation(HasCalibHit, CalibHitBranches)
 
 def HasEMCalibHit(trk):
     return TotalCalibHitEnergyEM(trk) > 0.0
-sel_HasEMCalibHit = calculation(HasCalibHit, CalibHitBranches)
+sel_HasEMCalibHit = Calculation(HasCalibHit, CalibHitBranches)
 
 def HasHADCalibHit(trk):
     return TotalCalibHitEnergyHAD(trk) > 0.0
-sel_HasHADCalibHit = calculation(HasHADCalibHit, CalibHitBranches)
+sel_HasHADCalibHit = Calculation(HasHADCalibHit, CalibHitBranches)
 
 def CalibHitFrac(trk):
     return (trk["trk_TotalCalibHitEnergy_EM_200"] + trk["trk_TotalCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
-calc_CalibHitFrac = calculation(CalibHitFrac, CalibHitBranches)
+calc_CalibHitFrac = Calculation(CalibHitFrac, CalibHitBranches)
 
 def PhotonCalibHitFrac(trk):
     return (trk["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalPhotonBackgroundCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
-calc_PhotonCalibHitFrac = calculation(PhotonCalibHitFrac, CalibHitBranches)
+calc_PhotonCalibHitFrac = Calculation(PhotonCalibHitFrac, CalibHitBranches)
 
 def HadronCalibHitFrac(trk):
     return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
-calc_HadronCalibHitFrac = calculation(HadronCalibHitFrac, CalibHitBranches)
+calc_HadronCalibHitFrac = Calculation(HadronCalibHitFrac, CalibHitBranches)
 
 def EMCalibHitFrac(trk):
     return (trk["trk_TotalCalibHitEnergy_EM_200"]) / TotalCalibHitEnergyEM(trk)
-calc_EMCalibHitFrac = calculation(EMCalibHitFrac, CalibHitBranches)
+calc_EMCalibHitFrac = Calculation(EMCalibHitFrac, CalibHitBranches)
 
 def HADCalibHitFrac(trk):
     return (trk["trk_TotalCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergyHAD(trk)
-calc_HADCalibHitFrac = calculation(HADCalibHitFrac, CalibHitBranches)
+calc_HADCalibHitFrac = Calculation(HADCalibHitFrac, CalibHitBranches)
 
 def PhotonEMCalibHitFrac(trk):
     return (trk["trk_TotalPhotonBackgroundCalibHitEnergy_EM_200"] ) / TotalCalibHitEnergyEM(trk)
-calc_PhotonEMCalibHitFrac = calculation(PhotonEMCalibHitFrac, CalibHitBranches)
+calc_PhotonEMCalibHitFrac = Calculation(PhotonEMCalibHitFrac, CalibHitBranches)
 
 def PhotonHADCalibHitFrac(trk):
     return (trk["trk_TotalPhotonBackgroundCalibHitEnergy_HAD_200"] ) / TotalCalibHitEnergyHAD(trk)
-calc_PhotonHADCalibHitFrac = calculation(PhotonHADCalibHitFrac, CalibHitBranches)
+calc_PhotonHADCalibHitFrac = Calculation(PhotonHADCalibHitFrac, CalibHitBranches)
 
 def HadronCalibHitFrac(trk):
     return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] + trk["trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
-calc_HadronCalibHitFrac = calculation(HadronCalibHitFrac, CalibHitBranches)
+calc_HadronCalibHitFrac = Calculation(HadronCalibHitFrac, CalibHitBranches)
 
 def HadronEMCalibHitFrac(trk):
     return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_EM_200"] )/ TotalCalibHitEnergyEM(trk)
-calc_HadronEMCalibHitFrac = calculation(HadronEMCalibHitFrac, CalibHitBranches)
+calc_HadronEMCalibHitFrac = Calculation(HadronEMCalibHitFrac, CalibHitBranches)
 
 def HadronHADCalibHitFrac(trk):
     return (trk["trk_TotalHadronicBackgroundCalibHitEnergy_HAD_200"] )/ TotalCalibHitEnergyHAD(trk)
-calc_HadronHADCalibHitFrac = calculation(HadronHADCalibHitFrac, CalibHitBranches)
+calc_HadronHADCalibHitFrac = Calculation(HadronHADCalibHitFrac, CalibHitBranches)
 
 def HadFrac(trk):
     return (trk["trk_ClusterEnergy_HAD_200"]) / (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
-calc_HadFrac = calculation(HadFrac, branches)
+calc_HadFrac = Calculation(HadFrac, branches)
 
 def MomentumHadFrac(trk):
     return (trk["trk_ClusterEnergy_HAD_200"])/trk["trk_p"]
 branches = ["trk_ClusterEnergy_HAD_200", "trk_p"]
-calc_MomentumHadFrac = calculation(MomentumHadFrac, branches)
+calc_MomentumHadFrac = Calculation(MomentumHadFrac, branches)
 
 def EnergyEMDR100(trk):
     return (trk["trk_ClusterEnergy_EM_100"])
 branches = ["trk_ClusterEnergy_EM_100"]
-calc_EnergyEMDR100 = calculation(EnergyEMDR100, branches)
+calc_EnergyEMDR100 = Calculation(EnergyEMDR100, branches)
 
 def nTRT(trk):
     return trk["trk_nTRT"]
 branches = ["trk_nTRT"]
-calc_nTRT = calculation(nTRT, branches)
+calc_nTRT = Calculation(nTRT, branches)
 
 def trkCount(trk):
     return np.zeros(len(trk))
 branches = []
-calc_trkCount = calculation(trkCount, branches)
+calc_trkCount = Calculation(trkCount, branches)
 
 def trkNClusters_template(trk, rad1, rad2):
     nclusters_EM = trk["trk_nclusters_EM_" + rad1] - trk["trk_nclusters_EM_" + rad2]
@@ -105,52 +101,52 @@ def trkNClusters_template(trk, rad1, rad2):
 
 def trkNClusters(trk):
     return trk["trk_nclusters_EM_200"] + trk["trk_nclusters_HAD_200"]
-calc_trkNClusters = calculation(trkNClusters, ["trk_nclusters_EM_200", "trk_nclusters_HAD_200"])
+calc_trkNClusters = Calculation(trkNClusters, ["trk_nclusters_EM_200", "trk_nclusters_HAD_200"])
 
 def trkNClusters_EM(trk):
     return trk["trk_nclusters_EM_200"]
-calc_trkNClusters_EM = calculation(trkNClusters_EM, ["trk_nclusters_EM_200"])
+calc_trkNClusters_EM = Calculation(trkNClusters_EM, ["trk_nclusters_EM_200"])
 
 def trkNClusters_emlike(trk):
     return trk["trk_nclusters_EM_emlike_200"] + trk["trk_nclusters_HAD_emlike_200"]
-calc_trkNClusters_emlike = calculation(trkNClusters_emlike, ["trk_nclusters_EM_emlike_200","trk_nclusters_HAD_emlike_200"])
+calc_trkNClusters_emlike = Calculation(trkNClusters_emlike, ["trk_nclusters_EM_emlike_200","trk_nclusters_HAD_emlike_200"])
 
 def trkNClusters_HAD(trk):
     return trk["trk_nclusters_HAD_200"]
-calc_trkNClusters_HAD = calculation(trkNClusters_HAD, ["trk_nclusters_HAD_200"])
+calc_trkNClusters_HAD = Calculation(trkNClusters_HAD, ["trk_nclusters_HAD_200"])
 
 def trkNClusters_hadlike(trk):
     return trk["trk_nclusters_EM_hadlike_200"] + trk["trk_nclusters_HAD_hadlike_200"]
-calc_trkNClusters_hadlike = calculation(trkNClusters_hadlike, ["trk_nclusters_EM_hadlike_200", "trk_nclusters_HAD_hadlike_200"])
+calc_trkNClusters_hadlike = Calculation(trkNClusters_hadlike, ["trk_nclusters_EM_hadlike_200", "trk_nclusters_HAD_hadlike_200"])
 
 def trkHADFraction(trk):
     return_value = np.zeros(len(trk))
     return_value = (trk["trk_ClusterEnergy_HAD_200"])/(trk["trk_ClusterEnergy_HAD_200"] + trk["trk_ClusterEnergy_EM_200"])
     return return_value
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
-calc_trkHADFraction = calculation(trkHADFraction, branches)
+calc_trkHADFraction = Calculation(trkHADFraction, branches)
 
 def trkEMFraction(trk):
     return_value = np.zeros(len(trk))
     return_value = trk["trk_ClusterEnergy_EM_200"]/(trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])
     return return_value
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200"]
-calc_trkEMFraction = calculation(trkEMFraction, branches)
+calc_trkEMFraction = Calculation(trkEMFraction, branches)
 
 def trkPt(trk):
     return trk["trk_pt"]
 branches = ["trk_pt"]
-calc_trkPt = calculation(trkPt, branches)
+calc_trkPt = Calculation(trkPt, branches)
 
 def trkEtaID(trk):
     return trk["trk_etaID"]
 branches = ["trk_etaID"]
-calc_trkEta = calculation(trkEtaID, branches)
+calc_trkEta = Calculation(trkEtaID, branches)
 
 def trkEtaID_ABS(trk):
     return np.abs(trk["trk_etaID"])
 branches = ["trk_etaID"]
-calc_trkEta_ABS = calculation(trkEtaID_ABS, branches)
+calc_trkEta_ABS = Calculation(trkEtaID_ABS, branches)
 
 def trkEtaPhiECAL(trk):
     trk_etaEMB = np.abs(trk["trk_etaEMB2"])
@@ -183,67 +179,67 @@ def trkEtaPhiECAL(trk):
 def trkEtaECAL(trk):
     return trkEtaPhiECAL(trk)[0]
 branches = ["trk_etaEMB2","trk_etaEME2", "trk_phiEMB2", "trk_phiEME2"]
-calc_trkEtaECAL = calculation(trkEtaECAL, branches)
+calc_trkEtaECAL = Calculation(trkEtaECAL, branches)
 
 def trkPhiECAL(trk):
     return trkEtaPhiECAL(trk)[1]
 branches = ["trk_phiEMB2","trk_phiEME2", "trk_etaEMB2","trk_etaEME2"]
-calc_trkPhiECAL = calculation(trkPhiECAL, branches)
+calc_trkPhiECAL = Calculation(trkPhiECAL, branches)
 
 def trkNearestNeighbourEM2(trk):
     return trk["trk_nearest_dR_EM"]
 branches = ["trk_nearest_dR_EM"]
-calc_trkNearestNeighbourEM2 =  calculation(trkNearestNeighbourEM2, branches)
+calc_trkNearestNeighbourEM2 =  Calculation(trkNearestNeighbourEM2, branches)
 
 def trkNPV2(trk):
     return trk["trk_NPV_2"]
 branches = ["trk_NPV_2"]
-calc_trkNPV2 = calculation(trkNPV2, branches)
+calc_trkNPV2 = Calculation(trkNPV2, branches)
 
 def trkNPV4(trk):
     return trk["trk_NPV_4"]
 branches = ["trk_NPV_4"]
-calc_trkNPV4 = calculation(trkNPV4, branches)
+calc_trkNPV4 = Calculation(trkNPV4, branches)
 
 def trkAverageMu(trk):
     return trk["trk_averagemu"]
 branches = ["trk_averagemu"]
-calc_trkAverageMu = calculation(trkAverageMu, branches)
+calc_trkAverageMu = Calculation(trkAverageMu, branches)
 
 def trkP(trk):
     return trk["trk_p"]
 branches = ["trk_p"]
-calc_trkP = calculation(trkP, branches)
+calc_trkP = Calculation(trkP, branches)
 
 def trkEtaID(trk):
     return trk["trk_etaID"]
 branches = ["trk_etaID"]
-calc_trkEtaID = calculation(trkEtaID, branches)
+calc_trkEtaID = Calculation(trkEtaID, branches)
 
 def trkEtaEME2(trk):
     return trk["trk_etaEME2"]
 branches = ["trk_etaEME2"]
-calc_trkEtaEME2 = calculation(trkEtaEME2, branches)
+calc_trkEtaEME2 = Calculation(trkEtaEME2, branches)
 
 def trkEtaEMB2(trk):
     return trk["trk_etaEMB2"]
 branches = ["trk_etaEMB2"]
-calc_trkEtaEMB2 = calculation(trkEtaEMB2, branches)
+calc_trkEtaEMB2 = Calculation(trkEtaEMB2, branches)
 
 def EnergyAnulus(trk):
     return trk["trk_ClusterEnergy_EM_200"] - trk["trk_ClusterEnergy_EM_100"]
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_100"]
-calc_EnergyAnulus = calculation(EnergyAnulus, branches)
+calc_EnergyAnulus = Calculation(EnergyAnulus, branches)
 
 def EOPBkg(trk):
     return (1./trk["trk_p"]) * (4.0/3.0) * (EnergyAnulus(trk))
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_100", "trk_p"]
-calc_EOPBkg = calculation(EOPBkg, branches)
+calc_EOPBkg = Calculation(EOPBkg, branches)
 
 def EOP(trk):
     return (trk["trk_ClusterEnergy_EM_200"] + trk["trk_ClusterEnergy_HAD_200"])/trk["trk_p"]
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_HAD_200", "trk_p"]
-calc_EOP = calculation(EOP, branches)
+calc_EOP = Calculation(EOP, branches)
 
 def DPhi(trk):
     dphi = np.ones(len(trk)) * 100000000.0
@@ -257,7 +253,7 @@ def DPhi(trk):
     dphi[greater_than_pi] = 2.0 * pi - dphi[greater_than_pi]
     return dphi
 branches = ["trk_phiEMB2", "trk_phiEME2","trk_phiID"]
-calc_trkDPhi = calculation(DPhi, branches)
+calc_trkDPhi = Calculation(DPhi, branches)
 
 def DEta(trk):
     deta = np.ones(len(trk)) * 100000000.0
@@ -269,11 +265,11 @@ def DEta(trk):
     return deta
 
 branches = ["trk_etaEMB2", "trk_etaEME2","trk_etaID"]
-calc_trkDEta = calculation(DEta, branches)
+calc_trkDEta = Calculation(DEta, branches)
 
 def weight(trk, isData):
     if not isData:
         return trk["trkWeight"]
     return np.ones(len(trk))
 branches = ["trkWeight"]
-calc_weight = weightCalculation(weight, branches)
+calc_weight = WeightCalculation(weight, branches)

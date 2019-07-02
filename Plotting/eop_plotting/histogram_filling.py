@@ -1,6 +1,6 @@
 import numpy as np
 from array import array
-from calculation.calculation import calculation
+from calculation import Calculation
 import ROOT
 import imp
 import time
@@ -29,6 +29,9 @@ def get_p(Pt, eta):
     return Pt*np.cosh(eta)
 
 def create_selection_function(template, branches, *args):
+    '''
+    Given a function template, and the branches that are needed to do the calculation in the function, create a calculation class instance and return it.
+    '''
     if len(args) > 3:
         raise ValueError("Only up to three variables supported for the template function")
     if len(args) == 0:
@@ -42,74 +45,62 @@ def create_selection_function(template, branches, *args):
         function = lambda x, y=args[0], z=args[1], w=args[2]: template(x,y,z,w)
 
     function.__name__ = template.__name__ + "_".join([str(arg) for arg in args])
-    selection_function = calculation(function, branches)
+    selection_function = Calculation(function, branches)
     return selection_function
 
 class HistogramFiller:
     '''
+    Handle the filling of histograms.
     '''
-    def __init__(self, inputs, treeName, weightCalculator, base_selections = "", partition_dictionary = None):
-        self.channelFiles = {}
-        self.channelLabels = {}
-        self.binningHistograms = {}
-        self.AddInputDictionary(inputs)
-        self.treeName = treeName
-        self.partition_dictionary = partition_dictionary
-        self.normalization_dictionary = {}
-        self.test = False
+    def __init__(self, trees, tree_name, weight_calculator, selection_string = "", partitions = None):
+        self.channel_files = {}
+        self.tree_name = tree_name
+        self.partitions = partitions
         self.verbose = False
-        self.total_selections = []
-        self.total_variables =[]
-        self.HistogramCallDictionary = {}
-        self.base_selections = base_selections
-        self.NormalizationWeightsDictionary = {} # A dictionary of channel to variable to the weights needed for the reweighting of this variable
+        self.all_selections = []
+        self.all_variables =[]
+        self.histogram_filling_functions = {}
+        self.selection_string = selection_string
         self.object_counter = 0
-        self.weightCalculator = weightCalculator
+        self.weight_calculator = weight_calculator
         self.selections_for_channels = {}
+        self.trees = trees
+        self.channels = list(trees.keys())
 
-    def ApplySelectionsForChannel(self, channel, list_selections):
+        for channel in self.trees:
+            self.channel_files[channel] = []
+            for f in self.trees[channel]:
+                self.channel_files[channel].append(f)
+
+    def apply_selection_for_channel(self, channel, selections):
         if channel not in self.selections_for_channels:
-            self.selections_for_channels[channel] = list_selections
+            self.selections_for_channels[channel] = selections
         else:
-            self.selections_for_channels[channel] += list_selections
-        for selection in list_selections:
-            if selection.name not in [sel.name for sel in self.total_selections]:
-                self.total_selections.append(selection)
+            self.selections_for_channels[channel] += selections
+        for selection in selections:
+            if selection.name not in [sel.name for sel in self.all_selections]:
+                self.all_selections.append(selection)
 
-
-    def BookHistogramForBinning(self, histogram, histogramName):
-        '''This saves a histogram that can be used later to determine bin sizes. This could be a track multiplicity distribution, for example'''
-        histogram.SetDirectory(0)
-        self.binningHistograms[histogramName] = histogram
-        toGlobalScope(histogram) #keep the histogram alive at the global scope
-
-    def AddInputDictionary(self, dictionary):
-        '''Take an input dictionary of channel names to: tuple of (channel descriptor for legend, list of [input root filename strings])'''
-        self.channels = dictionary.keys()
-        for channel in self.channels:
-            self.channelFiles[channel] = dictionary[channel][1]
-            self.channelLabels[channel] = dictionary[channel][0]
-
-    def GetVariablesAndWeights(self, channel, filename, variables, list_selections):
+    def get_data(self, channel, filename, variables, selections):
         '''
-        Given a string channel, string filename, a list of calculation variables and a list of calculations list_selections, return a dictionary keys selection_dict, variable_dict and weights. selection_dict is a dictionary of key selection name to numpy array of bool. variable_dict is a dictionary of string variable name to numpy array variable. weights is a numpy array of floats
+        Given a string channel, string filename, a list of calculation variables and a list of calculations selections, return a dictionary keys selection_dict, variable_dict and weights. selection_dict is a dictionary of key selection name to numpy array of bool. variable_dict is a dictionary of string variable name to numpy array variable. weights is a numpy array of floats
         '''
         print("\n"*2)
         print("Getting branches for channel {}".format(channel))
-        branches = GetListOfNeededBranches(variables, list_selections)
+        branches = get_needed_branches(variables, selections)
 
         #get the parition of the ttree to be read
         partition = None
-        if self.partition_dictionary == None:
+        if self.partitions == None:
             partition = (0, total_entries)
         else:
-            partition = self.partition_dictionary[filename]
+            partition = self.partitions[channel][filename]
             if self.verbose: print("Found a partition")
 
-        tree = self.tree_dict[filename]
+        tree = self.trees[channel][filename]
 
         print("Reading entries from {} until {}".format(partition[0], partition[1]))
-        result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, tree = tree, treename = self.treeName, variables=variables, weightCalculator = self.weightCalculator, selections = list_selections, selection_string = self.base_selections, verbose = self.verbose)
+        result = GetData(partition = partition, bare_branches = branches, channel = channel, filename = filename, tree = tree, treename = self.tree_name, variables=variables, weight_calculator = self.weight_calculator, selections = selections, selection_string = self.selection_string, verbose = self.verbose)
 
         #Get the selections, variables and weights
         selection_dict = result["selection_dict"]
@@ -117,7 +108,7 @@ class HistogramFiller:
         weights = result["weights"]
 
         if channel in self.selections_for_channels:
-            print("Applying selections for this channel")
+            print("Applying selections for this channell")
             selections = self.selections_for_channels[channel]
             total_selection = np.ones(len(weights)) > 0.5
             for selection in selections:
@@ -129,22 +120,20 @@ class HistogramFiller:
             for key in variable_dict:
                 variable_dict[key] = variable_dict[key][total_selection]
 
-        if self.verbose: print "The following selections have been evaluated "
+        if self.verbose: print("The following selections have been evaluated ")
         for selection in selection_dict:
             print("Selection {} has {} tracks passing".format(selection, np.sum(1 * selection_dict[selection])))
-        if self.verbose: print "The following variables have be evaluated "
+        if self.verbose: print("The following variables have be evaluated ")
         for variable in variable_dict:
-            if self.verbose: print variable
+            if self.verbose: print(variable)
 
         return variable_dict, selection_dict, weights
 
-
-    def GetHistograms(self, histogram_name, data_dictionary, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
+    def fill_histograms(self, histogram_name, data, variable, selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
         '''
-        Get the histogram for variable after list_selections is applied.
+        Get the histogram for variable after selections is applied.
         '''
-
-        variableNameToFill = variable.name
+        name_to_fill = variable.name
         variables = [variable]
         histogram_dictionary = {}
         for channel in self.channels:
@@ -158,17 +147,17 @@ class HistogramFiller:
             histogram_dictionary[channel].Sumw2()
 
         for channel in self.channels:
-            for filename in self.channelFiles[channel]:
-                variable_dict, selection_dict, weights = data_dictionary[channel][filename]
+            for filename in self.channel_files[channel]:
+                variable_dict, selection_dict, weights = data[channel][filename]
                 total_selection = np.ones(len(weights)) > 0.0
-                for selection in list_selections:
+                for selection in selections:
                     total_selection &= selection_dict[selection.name]
-                to_fill = variable_dict[variableNameToFill][total_selection]
+                to_fill = variable_dict[name_to_fill][total_selection]
                 to_weight = weights[total_selection]
                 if self.verbose: print(len(to_fill))
                 if self.verbose: print(len(to_weight))
-                if self.verbose: print to_fill
-                if self.verbose: print to_weight
+                if self.verbose: print(to_fill)
+                if self.verbose: print(to_weight)
                 if self.verbose: print("Filling Variable " + variable.name)
                 if useWeights:
                     fill_hist(histogram_dictionary[channel], to_fill, to_weight)
@@ -176,10 +165,10 @@ class HistogramFiller:
                     fill_hist(histogram_dictionary[channel], to_fill)
         return histogram_dictionary
 
-    def Get2DHistograms(self, histogram_name, data_dictionary, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
+    def fill_2d_histograms(self, histogram_name, data, variable_x, variable_y, selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel="",):
         '''the 2-d histgram with variable_x and variable_y drawn'''
-        variableNameToFill_x = variable_x.name
-        variableNameToFill_y = variable_y.name
+        name_to_fill_x = variable_x.name
+        name_to_fill_y = variable_y.name
         variables = [variable_x, variable_y]
         histogram_dictionary = {}
         for channel in self.channels:
@@ -200,28 +189,28 @@ class HistogramFiller:
 
         for channel in self.channels:
             normalization_weight = 0.0
-            for filename in self.channelFiles[channel]:
-                variable_dict, selection_dict, weights = data_dictionary[channel][filename]
+            for filename in self.channel_files[channel]:
+                variable_dict, selection_dict, weights = data[channel][filename]
                 total_selection = np.ones(len(weights)) > 0.0
-                for selection in list_selections:
+                for selection in selections:
                     total_selection &= selection_dict[selection.name]
                 to_weight = weights[total_selection]
                 n_sel = len(to_weight)
                 to_fill = np.zeros((n_sel,2))
-                to_fill[:,0] = variable_dict[variableNameToFill_x][total_selection]
-                to_fill[:,1] = variable_dict[variableNameToFill_y][total_selection]
-                if self.verbose: print to_fill
-                if self.verbose: print to_weight
+                to_fill[:,0] = variable_dict[name_to_fill_x][total_selection]
+                to_fill[:,1] = variable_dict[name_to_fill_y][total_selection]
+                if self.verbose: print(to_fill)
+                if self.verbose: print(to_weight)
                 if self.verbose: print("Filling Variable " + variable.name)
                 fill_hist(histogram_dictionary[channel], to_fill, to_weight)
         return histogram_dictionary
 
 
-    def GetTProfileHistograms(self, histogram_name, data_dictionary, variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="",):
-        '''Get a TProfile histogram with variable_y profiled against variable_x, after selections list_selections have been applied'''
+    def fill_tprofile_histograms(self, histogram_name, data, variable_x, variable_y, selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel="",):
+        '''Get a TProfile histogram with variable_y profiled against variable_x, after selections selections have been applied'''
 
-        variableNameToFill_x = variable_x.name
-        variableNameToFill_y = variable_y.name
+        name_to_fill_x = variable_x.name
+        name_to_fill_y = variable_y.name
         variables = [variable_x, variable_y]
         histogram_dictionary = {}
         for channel in self.channels:
@@ -233,18 +222,18 @@ class HistogramFiller:
             histogram_dictionary[channel].Sumw2()
 
         for channel in self.channels:
-            for filename in self.channelFiles[channel]:
-                variable_dict, selection_dict, weights = data_dictionary[channel][filename]
+            for filename in self.channel_files[channel]:
+                variable_dict, selection_dict, weights = data[channel][filename]
                 total_selection = np.ones(len(weights)) > 0.0
-                for selection in list_selections:
+                for selection in selections:
                     total_selection &= selection_dict[selection.name]
                 to_weight = weights[total_selection]
                 n_sel = len(to_weight)
                 to_fill = np.zeros((n_sel,2))
-                to_fill[:,0] = variable_dict[variableNameToFill_x][total_selection]
-                to_fill[:,1] = variable_dict[variableNameToFill_y][total_selection]
-                if self.verbose: print to_fill
-                if self.verbose: print to_weight
+                to_fill[:,0] = variable_dict[name_to_fill_x][total_selection]
+                to_fill[:,1] = variable_dict[name_to_fill_y][total_selection]
+                if self.verbose: print(to_fill)
+                if self.verbose: print(to_weight)
                 if self.verbose: print("Filling Variable " + variable.name)
                 if self.verbose: print("Filling Histogram")
                 fill_profile(histogram_dictionary[channel], to_fill, to_weight)
@@ -254,64 +243,63 @@ class HistogramFiller:
             histogram_dictionary[channel].GetYaxis().SetTitle(ylabel)
         return histogram_dictionary
 
-    def BookHistograms(self, histogram_name, variable, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
-        if histogram_name not in self.HistogramCallDictionary:
-            self.HistogramCallDictionary[histogram_name] = lambda data_dictionary : self.GetHistograms(histogram_name, data_dictionary, variable, list_selections = list_selections, bins = bins, range_low = range_low, range_high=range_high,  xlabel = xlabel, ylabel = ylabel, HistogramPerFile=HistogramPerFile, useWeights = useWeights)
+    def book_histogram_fill(self, histogram_name, variable, selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = "", HistogramPerFile=False, useWeights = True):
+        if histogram_name not in self.histogram_filling_functions:
+            self.histogram_filling_functions[histogram_name] = lambda data : self.fill_histograms(histogram_name, data, variable, selections = selections, bins = bins, range_low = range_low, range_high=range_high,  xlabel = xlabel, ylabel = ylabel, HistogramPerFile=HistogramPerFile, useWeights = useWeights)
         else:
             raise ValueError("histogram name already exists")
-        for selection in list_selections:
-            if selection.name not in [sel.name for sel in self.total_selections]:
-                self.total_selections.append(selection)
+        for selection in selections:
+            if selection.name not in [sel.name for sel in self.all_selections]:
+                self.all_selections.append(selection)
 
-        if variable.name not in [var.name for var in self.total_variables]:
-            self.total_variables.append(variable)
+        if variable.name not in [var.name for var in self.all_variables]:
+            self.all_variables.append(variable)
 
-    def Book2DHistograms(self, histogram_name, variable_x, variable_y, list_selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel=""):
-        if histogram_name not in self.HistogramCallDictionary:
-            self.HistogramCallDictionary[histogram_name] = lambda data_dictionary : self.Get2DHistograms(histogram_name, data_dictionary, variable_x, variable_y, list_selections = list_selections, bins_x = bins_x, range_low_x =range_low_x, range_high_x=range_high_x,  xlabel =xlabel, bins_y=bins_y, range_low_y=range_low_y, range_high_y=range_high_y, ylabel = ylabel, zlabel=zlabel)
-        else:
-            raise ValueError("histogram name already exists")
-
-        for selection in list_selections:
-            if selection.name not in [sel.name for sel in self.total_selections]:
-                self.total_selections.append(selection)
-
-        if variable_x.name not in [var.name for var in self.total_variables]:
-            self.total_variables.append(variable_x)
-
-        if variable_y.name not in [var.name for var in self.total_variables]:
-            self.total_variables.append(variable_y)
-
-    def BookTProfileHistograms(self, histogram_name,  variable_x, variable_y, list_selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = ""):
-        if histogram_name not in self.HistogramCallDictionary:
-            self.HistogramCallDictionary[histogram_name] = lambda data_dictionary : self.GetTProfileHistograms(histogram_name, data_dictionary, variable_x, variable_y, list_selections = list_selections, bins = bins, range_low = range_low, range_high=range_high,  xlabel =xlabel, ylabel=ylabel)
+    def book_2dhistogram_fill(self, histogram_name, variable_x, variable_y, selections = [], bins_x = 1, range_low_x = 0.000001, range_high_x=1. - 0.00001,  xlabel ="", bins_y=1, range_low_y=0.000001, range_high_y=1. - 0.00001, ylabel = "", zlabel=""):
+        if histogram_name not in self.histogram_filling_functions:
+            self.histogram_filling_functions[histogram_name] = lambda data : self.fill_2d_histograms(histogram_name, data, variable_x, variable_y, selections = selections, bins_x = bins_x, range_low_x =range_low_x, range_high_x=range_high_x,  xlabel =xlabel, bins_y=bins_y, range_low_y=range_low_y, range_high_y=range_high_y, ylabel = ylabel, zlabel=zlabel)
         else:
             raise ValueError("histogram name already exists")
 
-        for selection in list_selections:
-            if selection.name not in [sel.name for sel in self.total_selections]:
-                self.total_selections.append(selection)
+        for selection in selections:
+            if selection.name not in [sel.name for sel in self.all_selections]:
+                self.all_selections.append(selection)
 
-        if variable_x.name not in [var.name for var in self.total_variables]:
-            self.total_variables.append(variable_x)
+        if variable_x.name not in [var.name for var in self.all_variables]:
+            self.all_variables.append(variable_x)
 
-        if variable_y.name not in [var.name for var in self.total_variables]:
-            self.total_variables.append(variable_y)
+        if variable_y.name not in [var.name for var in self.all_variables]:
+            self.all_variables.append(variable_y)
+
+    def book_tprofile_fill(self, histogram_name,  variable_x, variable_y, selections = [], bins = 1, range_low = 0.000001, range_high=1. - 0.00001,  xlabel ="", ylabel = ""):
+        if histogram_name not in self.histogram_filling_functions:
+            self.histogram_filling_functions[histogram_name] = lambda data : self.fill_tprofile_histograms(histogram_name, data, variable_x, variable_y, selections = selections, bins = bins, range_low = range_low, range_high=range_high,  xlabel =xlabel, ylabel=ylabel)
+        else:
+            raise ValueError("histogram name already exists")
+
+        for selection in selections:
+            if selection.name not in [sel.name for sel in self.all_selections]:
+                self.all_selections.append(selection)
+
+        if variable_x.name not in [var.name for var in self.all_variables]:
+            self.all_variables.append(variable_x)
+
+        if variable_y.name not in [var.name for var in self.all_variables]:
+            self.all_variables.append(variable_y)
 
     def DumpHistograms(self):
-        data_dictionary = {}
+        data = {}
         for channel in self.channels:
             print("Dumping for channel {}".format(channel))
-            data_dictionary[channel] = {}
-            for filename in self.channelFiles[channel]:
-                data_dictionary[channel][filename] = self.GetVariablesAndWeights(channel,filename, self.total_variables, self.total_selections)
+            data[channel] = {}
+            for filename in self.channel_files[channel]:
+                data[channel][filename] = self.get_data(channel,filename, self.all_variables, self.all_selections)
 
+        histograms = {}
+        for histogram_name in self.histogram_filling_functions:
+            histograms[histogram_name] = self.histogram_filling_functions[histogram_name](data)
 
-        histogram_dictionary = {}
-        for histogram_name in self.HistogramCallDictionary:
-            histogram_dictionary[histogram_name] = self.HistogramCallDictionary[histogram_name](data_dictionary)
-
-        return histogram_dictionary
+        return histograms
 
 
 #These are python JZW samples. I normalize to the number of generated events, the cross section and the filter efficiency
@@ -326,10 +314,10 @@ weight_dictionary = {\
 try:
     imp.find_module('root_numpy')
     foundRootNumpy=True
-    print "Found root_numpy"
+    print("Found root_numpy")
 except ImportError:
     foundRootNumpy=False
-    print "Didn't find root_numpy module. Did NOT set atlas style. Continuing"
+    print("Didn't find root_numpy module. Did NOT set atlas style. Continuing")
 
 if foundRootNumpy:
     from root_numpy import fill_hist, fill_profile
@@ -340,42 +328,60 @@ import psutil
 process = psutil.Process(os.getpid())
 
 def branchDresser(branches):
-    '''this is a function that dresses the branches to extend the branches'''
-    return branches #No extension necessary
+    '''this is a function that dresses the branches with information about the depth and dummy variables if entries have too few entires'''
+    return branches 
 
 def getXSectionWeight(filename):
+    '''
+    Search for the x-section weight for this file by searching for the dsid in the filename. Return the weight.
+    '''
+    filename = filename.split("/")[-1]
     weight = None
     for dsid in weight_dictionary:
         if dsid in filename:
             weight = weight_dictionary[dsid]
-
     if weight == None:
         raise ValueError("Can't find the dataset id in the weight file")
     return weight
 
 def getIsData(filename):
-    return "Data" in filename or "data" in filename
+    '''
+    Return true if the file is a data file. Otherwise, return false because the file is simulation.
+    '''
+    return "Data" in filename.split("/")[-1] or "data" in filename.split("/")[-1]
 
-def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = None, tree = None, treename = None, variables = [], weightCalculator = None, selections = [], selection_string = "",  verbose = False):
-    '''a function used for multiprocessing. It makes all of the selections used by the analysis'''
-    global process
+def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = None, tree = None, treename = None, variables = [], weight_calculator = None, selections = [], selection_string = "",  verbose = False):
+    '''
+    A function for retrieving data
+
+    partition -- a tuple of length 2. Retrieve tree entries from partition[0] until partition[1]
+    bare_branches -- a list of all branches to be read. The branches will be dressed. See root_numpy.tree2array for more information
+    channel -- a string for the channel that this file corresponds to. This is needed for the weight calculation, since channels may need reweighting.
+    tree -- the name of the tree to read
+    variables -- a list of all variables to calculate
+    weight_calculator -- a instance of the Calculation class that calculates the weight for the event
+    selections -- a list of all selections to calculate
+    select_string -- a string used to select a subset of the entries in the tree. This uses the same syntax when selecting events using TTree draw:w
+    verbose -- an option to have more printed output from the function.
+    '''
+    assert len(partition) == 2
 
     isData = getIsData(filename)
-    for branch in weightCalculator.branches:
+    for branch in weight_calculator.branches:
         if branch not in bare_branches:
             bare_branches.append(branch)
     branches = branchDresser(bare_branches)
-    if verbose: print branches
+    if verbose: print(branches)
 
-    if verbose: print "Reading from file " + filename
+    if verbose: print("Reading from file " + filename)
 
     data = None
     for i in range(1, 50):
         try:
             data = tree2array(tree, branches, selection_string, start = partition[0], stop = partition[1])
         except Exception as e:
-            print "Catching a failed attempt to retrieve data error. Trying agagin in 5 seconds"
-            print e
+            print("Catching a failed attempt to retrieve data error. Trying agagin in 5 seconds")
+            print(e)
             time.sleep(5) #try again in 5 seconds
         else:
             break
@@ -383,15 +389,13 @@ def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = Non
     if data == None:
         raise ValueError("Could not retrieve the data.")
 
-    if verbose: print "Got the data for parition " + str(partition)
+    if verbose: print("Got the data for parition " + str(partition))
 
-    # a dictionary of selections
     selection_dict = {}
-    # a dictionary of variables = {}
     variable_dict = {}
 
     print("Evaluating weights")
-    weights = weightCalculator.eval(data, isData, channel)
+    weights = weight_calculator.eval(data, isData, channel)
 
     if not isData:
         print("getting the xsection weight")
@@ -411,6 +415,7 @@ def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = Non
         if not selection.name in selection_dict:
             selection_dict[selection.name] = selection.eval(data)
 
+    #create the return diciontary, which contains all of the variables, selections and weights needed for calculations
     return_dict = {}
     return_dict["selection_dict"] = selection_dict
     return_dict["variable_dict"] = variable_dict
@@ -421,7 +426,7 @@ def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = Non
     
     return return_dict
 
-def GetListOfNeededBranches(variables, selections):
+def get_needed_branches(variables, selections):
     '''given a list of variables and selections, get all of the branches that should be read from the tree'''
     branches = []
 

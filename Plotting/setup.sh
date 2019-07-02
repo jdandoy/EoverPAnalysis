@@ -1,11 +1,9 @@
 
+source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_94python3 x86_64-centos7-gcc62-opt
+source bin/activate
 export EOPPlottingDir=$PWD
-mkdir -p $PWD/CondorPythonLocal
-export PYTHONPATH=$PWD/CondorPythonLocal/lib64/python2.7/site-packages:$PYTHONPATH
-export BLAS=None LAPACK=None ATLAS=None
-
-pip install --install-option="--prefix=$PWD/CondorPythonLocal" --ignore-installed cython
-pip install --install-option="--prefix=$PWD/CondorPythonLocal" --ignore-installed root_numpy
-pip install --install-option="--prefix=$PWD/CondorPythonLocal" --ignore-installed psutil 
+source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_94python3 x86_64-centos7-gcc62-opt
+export PYTHONPATH="${EOPPlottingDir}/eop_plotting:$PYTHONPATH"
+export PYTHONPATH="${EOPPlottingDir}/utils:$PYTHONPATH"
 
 echo "READY TO GO!"
