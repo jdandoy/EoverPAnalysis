@@ -34,7 +34,7 @@ class HistogramManager:
            raise ValueError("Couldn't find histogram " + histogramName  + " in the file")
 
        for channel in self.channels:
-           tFile.cd(channel)
+           #tFile.cd(channel)
            histogram_dict[channel] = tFile.Get(channel + "/" + histogramName + channel)
            histogram_dict[channel].SetDirectory(0)
            if rebin:

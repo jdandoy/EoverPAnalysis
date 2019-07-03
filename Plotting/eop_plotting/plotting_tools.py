@@ -201,7 +201,7 @@ def GetChannelName(hist_dict, hist):
     return channel
 
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None,marker_size = None):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -236,7 +236,10 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     MCKeys = [MCHists_key[1] for MCHists_key in MCHists_keys]
 
     DataHist = histogram_dict[DataKey]
-    #DataHist.SetMarkerSize(0.30)
+
+    if marker_size != None:
+        DataHist.SetMarkerSize(marker_size)
+
     MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
 
     [MCHist.SetLineColor(COLOURS[MCKey]) for MCKey, MCHist in zip(MCKeys, MCHists)]

@@ -1,10 +1,10 @@
 import ROOT
-from plotting_tools import ProjectProfiles, DrawDataVsMC
+from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms
 from array import array
 from fitting_tools import fitHistograms
 
 
-def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[], channelLabels={}, plotting_directory=""):
+def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[], channelLabels={}, plotting_directory="",MCKeys=[]):
     #get the binning vectors
     f = ROOT.TFile(filename, "READ")
     tree = f.Get(numerator_selection_name + "BinningTree")
@@ -89,11 +89,10 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
 #                                   "NClusters_hadlike",\
                                    ]
 
-    #OK now lets make all of the plots in all of the bins!
-
     for i, eta_low, eta_high in zip(list(range(0, eta_bins_low.size())), eta_bins_low, eta_bins_high):
         #the plots binned in eta
         for histogram in histograms_in_eta_bins:
+            ylabel = None
             if "MIP" in selection_name and "Spectrum" in histogram:
                 continue
             if "pectrum" in histogram:
@@ -107,10 +106,11 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             hist = HM.getHistograms(histogram_name, rebin = rebin)
             #shouldILogy=True
             to_plot = MCKeys
-            if "Profile" in histogram_name and not "EnergyBkg" in histogram_name:
+            if "EOPProfileVs" in histogram_name and not "EnergyBkg" in histogram_name:
                 shouldILogy = False
                 ratio_min = 0.9
                 ratio_max = 1.1
+                ylabel = "<E/P>_{Raw}"
 
             else:
                 shouldILogy = False
@@ -146,9 +146,13 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         #the plots binned in eta and momentum
         for histogram in histograms_in_momentum_bins:
             print("Fetching histograms {}".format(histogram))
-            if histogram == "EOPDistribution":
+            ratio_min = 0.6
+            ratio_max = 1.4
+            if "EOPDistribution" in histogram:
                 rebin = 20
-            if histogram == "HadFrac":
+                ratio_min = 0.6
+                ratio_max = 1.4
+            elif histogram == "HadFrac":
                 rebin = 2
             else:
                 rebin = None
@@ -166,7 +170,10 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                         MCKeys = MCKeys,\
                                         xAxis_range=xAxis_range,\
                                         rebin=rebin,\
+                                        ratio_min = ratio_min,\
+                                        ratio_max = ratio_max,\
                                         doLogy=False,\
+                                        marker_size = 1.0,\
                                         DataKey='LowMuData',\
                                         extra_description = description)
 

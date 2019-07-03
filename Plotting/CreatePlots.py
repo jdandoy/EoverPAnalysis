@@ -1,15 +1,17 @@
-from PlottingTools.HistogramManager import HistogramManager
+from histogram_manager import HistogramManager
 import ROOT
-from PlottingTools.Plotter import *
-from PlottingTools.CommonPlots import *
+from plotting_tools import *
+from common_plots import *
 from array import array
 import os
-from FittingTools.FittingTools import fitHistograms
+from fitting_tools import fitHistograms
 
-MCKeys = ['PythiaJetJet', 'PythiaJetJetPionsReweighted', 'SinglePion']
+MCKeys = ['PythiaJetJet']
+#, 'PythiaJetJetPionsReweighted'
+#, 'SinglePion']
 
 global_scope = []
-ROOT.gROOT.SetBatch(ROOT.kFALSE)
+ROOT.gROOT.SetBatch(ROOT.kTRUE)
 #ROOT.gStyle.SetImageScaling(2.)
 
 def CloseCanvas(canv):
@@ -36,14 +38,14 @@ if not os.path.exists("Plots/" + plotting_directory):
     os.makedirs("Plots/" + plotting_directory)
 plotting_directory = "Plots/" + plotting_directory
 
-#CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory)
-#CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory)
+CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 
 #test the plot creation
-#CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-#CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
+CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + [],doFit = True,fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
 
 #CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, channelLabels=channelLabels,plotting_directory=plotting_directory)
