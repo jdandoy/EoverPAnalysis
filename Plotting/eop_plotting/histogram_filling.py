@@ -48,6 +48,29 @@ def create_selection_function(template, branches, *args):
     selection_function = Calculation(function, branches)
     return selection_function
 
+def create_inverse_selection_function(list_of_selections, name = None):
+    '''
+    Given a list of selections, create a selection that is the logical inverse of all of the selections
+    '''
+    #create the selection function
+    branches = []
+    for f in list_of_selections:
+        for b in f.branches:
+            if b not in branches:
+                branches.append(b)
+
+    #create the function that does the selection. Also, how slick is this! huh?
+    sel_function = lambda trk, list_of_selections = list_of_selections: np.logical_not(np.logical_or.reduce([sel.eval(trk) for sel in list_of_selections]))
+
+    if name == None:
+        name = "_".join(s.name for s in list_of_selections)
+    sel_function.__name__ = name
+
+    #create the calculation
+    sel_calculation = Calculation(sel_function, branches)
+
+    return sel_calculation
+
 class HistogramFiller:
     '''
     Handle the filling of histograms.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from eop_plotting.histogram_filling import HistogramFiller, get_p, get_bins, get_log_bins, create_selection_function
+from eop_plotting.histogram_filling import HistogramFiller, get_p, get_bins, get_log_bins, create_selection_function, create_inverse_selection_function
 from eop_plotting.eop_histograms import put_binning_vectors_in_file, create_eop_histograms
 from eop_plotting.track_spectrum_plots import create_spectrum_plots
 
@@ -27,9 +27,25 @@ eta_bin_descriptions = ["eta_extrapol00_02", "eta_extrapol02_07", "eta_extrapol0
 eta_bin_branches = ["trk_etaEMB2","trk_etaEME2","trk_phiEMB2", "trk_phiEME2"]
 eta_bin_selections = [create_selection_function(EtaBin, eta_bin_branches, eta_bin_tuple[0], eta_bin_tuple[1]) for eta_bin_tuple in eta_bin_tuples]
 
-from selections import sel_HardScatter, ParticlePDGID_ABS
+from selections import sel_HardScatter, ParticlePDGID_ABS, ParticlePDGID
 sel_Pion = create_selection_function(ParticlePDGID_ABS, ["trk_truthPdgId"], 211.0)
+sel_PionPos = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], 211.0)
+sel_PionNeg = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], -211.0)
+sel_KaonPos = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], 321.0)
+sel_KaonNeg = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], -321.0)
+sel_ProtonPos = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], 2212.0)
+sel_ProtonNeg = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], -2212.0)
+sel_Other = create_inverse_selection_function([sel_PionPos, sel_PionNeg, sel_KaonPos, sel_KaonNeg, sel_ProtonPos, sel_ProtonNeg], name="sel_other")
+
 pion_selections = [sel_Pion, sel_HardScatter]
+pion_pos_selections = [sel_PionPos, sel_HardScatter]
+pion_neg_selections = [sel_PionNeg, sel_HardScatter]
+kaon_pos_selections = [sel_KaonPos, sel_HardScatter]
+kaon_neg_selections = [sel_KaonNeg, sel_HardScatter]
+proton_pos_selections = [sel_ProtonPos, sel_HardScatter]
+proton_neg_selections = [sel_ProtonNeg, sel_HardScatter]
+other_selections = [sel_Other, sel_HardScatter]
+
 sel_Truth = [sel_HardScatter]
 
 #This is a script that fills the histograms for
@@ -39,6 +55,13 @@ def fill_histograms(hist_filler, outputRootFileName):
 
     hist_filler.apply_selection_for_channel("PythiaJetJetPionsReweighted", pion_selections) #Those tracks truth matched to pions
     hist_filler.apply_selection_for_channel("PythiaJetJetTruthReweighted", sel_Truth) #Those tracks that are truth matched
+    hist_filler.apply_selection_for_channel("PythiaJetJetPionsPosReweighted", pion_pos_selections) #Those tracks truth matched to pos pions
+    hist_filler.apply_selection_for_channel("PythiaJetJetPionsNegReweighted", pion_neg_selections) #Those tracks truth matched to neg pions
+    hist_filler.apply_selection_for_channel("PythiaJetJetProtonsPosReweighted", proton_pos_selections) #Those tracks truth matched to protons
+    hist_filler.apply_selection_for_channel("PythiaJetJetProtonsNegReweighted", proton_neg_selections) #Those tracks truth matched to anti protons
+    hist_filler.apply_selection_for_channel("PythiaJetJetKaonsPosReweighted", kaon_pos_selections) #Those tracks truth matched to kaons
+    hist_filler.apply_selection_for_channel("PythiaJetJetKaonsNegReweighted", kaon_neg_selections) #Those tracks truth matched to anti kaons
+    hist_filler.apply_selection_for_channel("PythiaJetJetOtherReweighted", other_selections) #Those tracks truth matched to something else
 
     #reweight the event count in MC to match the one from data
     event_count_reweight_file = ROOT.TFile("ReweightingHistograms/EventCountPythiaJetJetToData.root", "READ")
