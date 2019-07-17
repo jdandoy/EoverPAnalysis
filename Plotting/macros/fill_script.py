@@ -30,13 +30,15 @@ eta_bin_selections = [create_selection_function(EtaBin, eta_bin_branches, eta_bi
 from selections import sel_HardScatter, ParticlePDGID_ABS
 sel_Pion = create_selection_function(ParticlePDGID_ABS, ["trk_truthPdgId"], 211.0)
 pion_selections = [sel_Pion, sel_HardScatter]
+sel_Truth = [sel_HardScatter]
 
 #This is a script that fills the histograms for
 def fill_histograms(hist_filler, outputRootFileName):
     #import thje variables that we want to plot
     from variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount, calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike, calc_TruthMomentum
 
-    hist_filler.apply_selection_for_channel("PythiaJetJetPionsReweighted", pion_selections)
+    hist_filler.apply_selection_for_channel("PythiaJetJetPionsReweighted", pion_selections) #Those tracks truth matched to pions
+    hist_filler.apply_selection_for_channel("PythiaJetJetTruthReweighted", sel_Truth) #Those tracks that are truth matched
 
     #reweight the event count in MC to match the one from data
     event_count_reweight_file = ROOT.TFile("ReweightingHistograms/EventCountPythiaJetJetToData.root", "READ")
@@ -64,10 +66,9 @@ def fill_histograms(hist_filler, outputRootFileName):
         hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
         hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
 
-    #import the selections that we want to plot
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
 
-    ##just count the number of tracks in each histogram
+    #count the number of tracks in each channel
     histogram_name = "trkCount"
     selections = []
     trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
@@ -79,7 +80,7 @@ def fill_histograms(hist_filler, outputRootFileName):
                                                          xlabel ='Always 0',\
                                                          ylabel = 'Number of Tracks')
 
-    ##just count the number of events 
+    #count the number of events in each channel
     histogram_name = "EventCount"
     selections = [sel_Event]
     trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
@@ -92,7 +93,6 @@ def fill_histograms(hist_filler, outputRootFileName):
                                                          ylabel = 'Number Events')
 
     ################################################################################
-    #plot the first set of variables that we're interested in
     #plot the trk avaerage mu histogram
     histogram_name = "trkAverageMu"
     selections = []
@@ -106,7 +106,7 @@ def fill_histograms(hist_filler, outputRootFileName):
                                                         ylabel = 'Number of Tracks')
 
    ################################################################################
-   #plot a histogram of the average event NPV
+   #plot a histogram of track NPV w/ 2 tracks
     histogram_name = "trkNPV2"
     trkNPV2Hist = hist_filler.book_histogram_fill(histogram_name,\
                                        calc_trkNPV2,\
@@ -143,6 +143,7 @@ def fill_histograms(hist_filler, outputRootFileName):
                                           ylabel = 'Number of Events')
 
 #    ################################################################################
+    #plot the pt spectra of the tracks from 0.0 to 30.0 GeV
     #prepare the momentum bins
     binMax = 30.0
     binMin = 0.5
@@ -165,7 +166,6 @@ def fill_histograms(hist_filler, outputRootFileName):
                                        ylabel = "Number of Tracks")
 
 #    ################################################################################
-    #prepare the momentum bins
     binMax = 30.0
     binMin = 0.5
     nBins = 50
