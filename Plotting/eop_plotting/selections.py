@@ -7,6 +7,10 @@ def NoSelection(trk):
 branches = []
 sel_NoSelection = Calculation(NoSelection, branches)
 
+def TightIso(trk):
+    return trk["trk_nearest_dR_EM"] < 2.75
+sel_TightIso = Calculation(TightIso, ["trk_nearest_dR_EM"])
+
 def hasHADExtrapolation(trk):
     return (trk["trk_phiHEC1"] > -100) | (trk["trk_phiTileBar2"] > -100) | (trk["trk_phiTileExt1"] > -100)
 branches =["trk_phiHEC1", "trk_phiTileBar2", "trk_phiTileExt1"]

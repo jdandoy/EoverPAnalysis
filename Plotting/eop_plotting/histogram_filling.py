@@ -89,6 +89,7 @@ class HistogramFiller:
         self.selections_for_channels = {}
         self.trees = trees
         self.channels = list(trees.keys())
+        self.subchannels = {} #dictionary of new_channel to dictionary of old_channel and selections
 
         for channel in self.trees:
             self.channel_files[channel] = []
@@ -103,6 +104,18 @@ class HistogramFiller:
         for selection in selections:
             if selection.name not in [sel.name for sel in self.all_selections]:
                 self.all_selections.append(selection)
+
+    def create_subchannel_for_channel(self, subchannel, channel, selections):
+        assert subchannel not in self.subchannels
+        assert subchannel not in self.channels
+        self.subchannels[subchannel] = {}
+        self.subchannels[subchannel]["original_channel"] = channel
+        self.subchannels[subchannel]["selections"] = selections
+        for selection in selections:
+            if selection.name not in [sel.name for sel in self.all_selections]:
+                self.all_selections.append(selection)
+        self.channels.append(subchannel)
+        self.channel_files[subchannel] = self.channel_files[channel]
 
     def get_data(self, channel, filename, variables, selections):
         '''
@@ -314,8 +327,31 @@ class HistogramFiller:
         for channel in self.channels:
             print("Dumping for channel {}".format(channel))
             data[channel] = {}
-            for filename in self.channel_files[channel]:
-                data[channel][filename] = self.get_data(channel,filename, self.all_variables, self.all_selections)
+            if channel not in self.subchannels:
+                for filename in self.channel_files[channel]:
+                    data[channel][filename] = self.get_data(channel,filename, self.all_variables, self.all_selections)
+
+        for subchannel in self.subchannels:
+            print("Getting the data for subchannel {}".format(subchannel))
+            origin_channel = self.subchannels[subchannel]["original_channel"]
+            selections = self.subchannels[subchannel]["selections"]
+            assert subchannel not in data
+            data[subchannel] = {}
+            for filename in data[origin_channel]:
+                variable_dict, selection_dict, weights = data[channel][filename]
+                total_selection = np.ones(len(weights)) > 0.5
+                for sel in selections:
+                    total_selection &= selection_dict[sel.name]
+
+                new_variable_dict = {}
+                new_selection_dict = {}
+
+                for key in variable_dict:
+                    new_variable_dict[key] = variable_dict[key][total_selection]
+                for key in selection_dict:
+                    new_selection_dict[key] = selection_dict[key][total_selection]
+                new_weights = weights[total_selection]
+                data[subchannel][filename] = new_variable_dict, new_selection_dict, new_weights
 
         histograms = {}
         for histogram_name in self.histogram_filling_functions:

@@ -27,7 +27,7 @@ eta_bin_descriptions = ["eta_extrapol00_02", "eta_extrapol02_07", "eta_extrapol0
 eta_bin_branches = ["trk_etaEMB2","trk_etaEME2","trk_phiEMB2", "trk_phiEME2"]
 eta_bin_selections = [create_selection_function(EtaBin, eta_bin_branches, eta_bin_tuple[0], eta_bin_tuple[1]) for eta_bin_tuple in eta_bin_tuples]
 
-from selections import sel_HardScatter, ParticlePDGID_ABS, ParticlePDGID
+from selections import sel_HardScatter, ParticlePDGID_ABS, ParticlePDGID, sel_TightIso
 sel_Pion = create_selection_function(ParticlePDGID_ABS, ["trk_truthPdgId"], 211.0)
 sel_PionPos = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], 211.0)
 sel_PionNeg = create_selection_function(ParticlePDGID, ["trk_truthPdgId"], -211.0)
@@ -45,49 +45,44 @@ kaon_neg_selections = [sel_KaonNeg, sel_HardScatter]
 proton_pos_selections = [sel_ProtonPos, sel_HardScatter]
 proton_neg_selections = [sel_ProtonNeg, sel_HardScatter]
 other_selections = [sel_Other, sel_HardScatter]
-
 sel_Truth = [sel_HardScatter]
+sel_TightIso = [sel_TightIso]
 
 #This is a script that fills the histograms for
 def fill_histograms(hist_filler, outputRootFileName):
     #import thje variables that we want to plot
     from variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount, calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike, calc_TruthMomentum
 
-    hist_filler.apply_selection_for_channel("PythiaJetJetPionsReweighted", pion_selections) #Those tracks truth matched to pions
-    hist_filler.apply_selection_for_channel("PythiaJetJetTruthReweighted", sel_Truth) #Those tracks that are truth matched
-    hist_filler.apply_selection_for_channel("PythiaJetJetPionsPosReweighted", pion_pos_selections) #Those tracks truth matched to pos pions
-    hist_filler.apply_selection_for_channel("PythiaJetJetPionsNegReweighted", pion_neg_selections) #Those tracks truth matched to neg pions
-    hist_filler.apply_selection_for_channel("PythiaJetJetProtonsPosReweighted", proton_pos_selections) #Those tracks truth matched to protons
-    hist_filler.apply_selection_for_channel("PythiaJetJetProtonsNegReweighted", proton_neg_selections) #Those tracks truth matched to anti protons
-    hist_filler.apply_selection_for_channel("PythiaJetJetKaonsPosReweighted", kaon_pos_selections) #Those tracks truth matched to kaons
-    hist_filler.apply_selection_for_channel("PythiaJetJetKaonsNegReweighted", kaon_neg_selections) #Those tracks truth matched to anti kaons
-    hist_filler.apply_selection_for_channel("PythiaJetJetOtherReweighted", other_selections) #Those tracks truth matched to something else
+    hist_filler.apply_selection_for_channel("LowMuDataTightIso", sel_TightIso) #Tighter isolation requirement
+    hist_filler.apply_selection_for_channel("PythiaJetJetTightIso", sel_TightIso) #Tighter isolation requirement
+    hist_filler.apply_selection_for_channel("PythiaJetJetHardScatter", sel_Truth) #Those tracks truth matched to pions
+    hist_filler.apply_selection_for_channel("PythiaJetJetHardScatterTightIso", sel_Truth + sel_TightIso) #Tighter isolation requirement
 
     #reweight the event count in MC to match the one from data
-    event_count_reweight_file = ROOT.TFile("ReweightingHistograms/EventCountPythiaJetJetToData.root", "READ")
-    hist = event_count_reweight_file.Get("EventCountPythiaJetJetToData")
-    hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkCount, hist, selection=[]) 
+#   event_count_reweight_file = ROOT.TFile("ReweightingHistograms/EventCountPythiaJetJetToData.root", "READ")
+#   hist = event_count_reweight_file.Get("EventCountPythiaJetJetToData")
+#   hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkCount, hist, selection=[]) 
 
-    trk_count_reweight_file = ROOT.TFile("ReweightingHistograms/PythiaJetJetPionsOnlyTrackCountReweightedToData.root", "READ")
-    hist = trk_count_reweight_file.Get("PythiaJetJetPionsOnlyTrackCountReweightedToData")
-    hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetPionsReweighted", calc_trkCount, hist, selection=[])
+#   trk_count_reweight_file = ROOT.TFile("ReweightingHistograms/PythiaJetJetPionsOnlyTrackCountReweightedToData.root", "READ")
+#   hist = trk_count_reweight_file.Get("PythiaJetJetPionsOnlyTrackCountReweightedToData")
+#   hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetPionsReweighted", calc_trkCount, hist, selection=[])
 
-    for i, eta_bin_selection in enumerate(eta_bin_selections):
-        spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
-        hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i))
-        hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkPt, hist, selection=[eta_bin_selection]) 
+#   for i, eta_bin_selection in enumerate(eta_bin_selections):
+#       spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
+#       hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i))
+#       hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkPt, hist, selection=[eta_bin_selection]) 
 
-        spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/TruthPSpectrumReweightPythiaJetJetOverSinglePion_Eta"+str(i)+".root", "READ")
-        hist = spectrum_reweight_file.Get("TruthPSpectrumReweightPythiaJetJetOverSinglePion_Eta"+str(i))
-        hist_filler.weight_calculator.add_reweight_histogram("SinglePion", calc_TruthMomentum, hist, selection=[eta_bin_selection]) 
+#       spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/TruthPSpectrumReweightPythiaJetJetOverSinglePion_Eta"+str(i)+".root", "READ")
+#       hist = spectrum_reweight_file.Get("TruthPSpectrumReweightPythiaJetJetOverSinglePion_Eta"+str(i))
+#       hist_filler.weight_calculator.add_reweight_histogram("SinglePion", calc_TruthMomentum, hist, selection=[eta_bin_selection]) 
 
-        spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i)+".root", "READ")
-        hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i))
-        hist_filler.weight_calculator.add_reweight_histogram("SinglePion", calc_trkPt, hist, selection=[eta_bin_selection]) 
+#       spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i)+".root", "READ")
+#       hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverSinglePion_Eta"+str(i))
+#       hist_filler.weight_calculator.add_reweight_histogram("SinglePion", calc_trkPt, hist, selection=[eta_bin_selection]) 
 
-        spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i)+".root", "READ")
-        hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
-        hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
+#       spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i)+".root", "READ")
+#       hist = spectrum_reweight_file.Get("PtSpectrumReweightLowMuDataOverPythiaJetJetPionsReweighted_Eta"+str(i))
+#       hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetPionsReweighted", calc_trkPt, hist, selection=[eta_bin_selection]) 
 
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
 
@@ -613,15 +608,15 @@ def fill_histograms(hist_filler, outputRootFileName):
 
     ##select inclusive distributions
     ##Create a set of binned EOP response histograms 
-    eta_ranges = eta_bin_tuples
-    base_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
-    p_bins_for_eta_range = []
-    for eta_range in eta_bin_tuples:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 15)
-        p_bins_for_eta_range.append(p_bins)
-    description = "MIPSelectionBetween30and90OfMomentum"
-    put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
+    #eta_ranges = eta_bin_tuples
+    #base_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum]
+    #p_bins_for_eta_range = []
+    #for eta_range in eta_bin_tuples:
+    #    p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
+    #    p_bins = get_log_bins(p_bins_min, 30.05, 15)
+    #    p_bins_for_eta_range.append(p_bins)
+    #description = "MIPSelectionBetween30and90OfMomentum"
+    #put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
     #create_eop_histograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
 
     from selections import sel_EHadFracAbove70, sel_Lar1_1GeV
@@ -695,69 +690,6 @@ def fill_histograms(hist_filler, outputRootFileName):
         p_bins = get_log_bins(p_bins_min, 30.05, 15)
         p_bins_for_eta_range.append(p_bins)
     description = "Inclusive"
-    put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
-    create_eop_histograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 40.05, 300)
-        p_bins_for_eta_range.append(p_bins)
-    create_spectrum_plots(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    # Crete histograms for the hard scatter histograms
-    eta_ranges = eta_bin_tuples
-    base_selection = [sel_NTRT20, sel_Lar1_1GeV, sel_EHadBetween30And90OfMomentum, sel_HardScatter]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 15)
-        p_bins_for_eta_range.append(p_bins)
-    description = "MIPSelectionBetween30and90OfMomentumHardScatter"
-    put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
-    #create_eop_histograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    eta_ranges = eta_bin_tuples
-    from selections import sel_EHadFracAbove70, sel_Lar1_1GeV
-    base_selection = [sel_EHadFracAbove70, sel_NTRT20, sel_Lar1_1GeV, sel_HardScatter]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 15)
-        p_bins_for_eta_range.append(p_bins)
-   
-    description = "MIPSelectionHadFracAbove70HardScatter"
-    put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
-    create_eop_histograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    base_selection = [sel_NTRT20, sel_NonZeroEnergy, sel_HardScatter]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 15)
-        p_bins_for_eta_range.append(p_bins)
-    description = "20TRTHitsNonZeroEnergyHardScatter"
-    put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
-    create_eop_histograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    eta_ranges = eta_bin_tuples
-    base_selection = [sel_NonZeroEnergy, sel_HardScatter]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 15)
-        p_bins_for_eta_range.append(p_bins)
-    description = "NonZeroEnergyHardScatter"
-    put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
-    create_eop_histograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
-
-    eta_ranges = eta_bin_tuples
-    base_selection = [sel_HardScatter]
-    p_bins_for_eta_range = []
-    for eta_range in eta_ranges:
-        p_bins_min = get_p(0.5, (eta_range[0] + eta_range[1]) / 2.0)
-        p_bins = get_log_bins(p_bins_min, 30.05, 15)
-        p_bins_for_eta_range.append(p_bins)
-    description = "InclusiveHardScatter"
     put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, description)
     create_eop_histograms(hist_filler, base_selection, eta_ranges, p_bins_for_eta_range, description) 
     p_bins_for_eta_range = []
