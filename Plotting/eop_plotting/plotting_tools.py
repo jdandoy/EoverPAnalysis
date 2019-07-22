@@ -6,18 +6,18 @@ import imp
 try:
     imp.find_module('atlasplots')
     foundAtlasPlots = True
-    print "Found atlas plots module. Setting atlas style"
+    print("Found atlas plots module. Setting atlas style")
 except ImportError:
     foundAtlasPlots = False
-    print "Didn't find atlas plots module. Did NOT set atlas style. Continuing"
+    print("Didn't find atlas plots module. Did NOT set atlas style. Continuing")
 
 try:
     imp.find_module('root_numpy')
     foundRootNumpy=True
-    print "Found root_numpy"
+    print("Found root_numpy")
 except ImportError:
     foundRootNumpy=False
-    print "Didn't find root_numpy module. Did NOT set atlas style. Continuing"
+    print("Didn't find root_numpy module. Did NOT set atlas style. Continuing")
 
 if foundRootNumpy:
     from root_numpy import fill_hist, fill_profile

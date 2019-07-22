@@ -141,7 +141,7 @@ def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=
        max_x[channel]=max_x_tmp
        max_x_err[channel]=max_x_tmp_err
 
-       print "The maximum value in data was at eop " + str(max_x_tmp)
+       print("The maximum value in data was at eop " + str(max_x_tmp))
 
     return max_x, max_x_err, chisq
 

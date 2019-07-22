@@ -345,7 +345,6 @@ class HistogramFiller:
 
                 new_variable_dict = {}
                 new_selection_dict = {}
-
                 for key in variable_dict:
                     new_variable_dict[key] = variable_dict[key][total_selection]
                 for key in selection_dict:

@@ -7,10 +7,12 @@ class HistogramManager:
     histograms = []
     filename = None
 
-    def __init__(self, fileName):
-       self.filename = fileName
+    def __init__(self, file_name):
+       print("Initializing histogram manager on file {}".format(file_name))
+       self.filename = file_name
        tFile = ROOT.TFile(self.filename, "READ")
        self.channels = [key.GetName() for key in tFile.GetListOfKeys() if not "Binning" in  key.GetName()]
+       print("Found these channels in the file {}".format(self.channels))
        dir = tFile.Get(self.channels[0])
        self.histograms = [key.GetName() for key in dir.GetListOfKeys() if not "Binning" in key.GetName()]
        for channel in self.channels:
@@ -19,10 +21,10 @@ class HistogramManager:
        tFile.Close()
 
     def listHistograms(self):
-       print "=" * 50
-       print "listing all histograms:"
+       print("=" * 50)
+       print("listing all histograms:")
        for histogram in sorted(self.histograms, key=str.lower):
-           print histogram
+           print(histogram)
 
     def hasHistogram(self, histogramName):
         return histogramName in self.histograms

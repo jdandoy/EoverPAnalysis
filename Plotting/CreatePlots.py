@@ -7,6 +7,7 @@ import os
 from fitting_tools import fitHistograms
 
 MCKeys = ['PythiaJetJet']
+data_key = "LowMuData"
 #, 'PythiaJetJetPionsReweighted'
 #, 'SinglePion']
 
@@ -19,11 +20,12 @@ def CloseCanvas(canv):
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "PtSpectrumReweighted.root"
+filename = "raw_plots.root"
 
 HM = HistogramManager(filename)
 HM.listHistograms()
 
+base_description = []
 if "Count" in filename:
     base_description = []
 if "Pt" in filename and "weight" in filename:
@@ -108,7 +110,7 @@ if True:
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 ratio_min=0.6,\
                                 ratio_max=1.4,\
                                 extra_description = description)
@@ -122,7 +124,7 @@ if True:
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 ratio_min=0.6,\
                                 ratio_max=1.4,\
                                 doLogx=True,\
@@ -139,7 +141,7 @@ if True:
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
                                 doLogx=True,\
@@ -157,7 +159,7 @@ if True:
         DataVsMC3 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 extra_description = description)
         DataVsMC3[0].Draw()
         DataVsMC3[0].Print(plotting_directory + "/" + histogramName + ".png")
@@ -169,7 +171,7 @@ if True:
         DataVsMC5 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
                                 extra_description = description)
@@ -182,7 +184,7 @@ if True:
         DataVsMC6 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
                                 extra_description = description)
@@ -195,7 +197,7 @@ if True:
         DataVsMC7 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 extra_description = description)
         DataVsMC7[0].Draw()
         DataVsMC7[0].Print(plotting_directory + "/" + histogramName + ".png")
@@ -208,7 +210,7 @@ if True:
             DataVsMC4 = DrawDataVsMC(hist,\
                                     channelLabels,\
                                     MCKeys = MCKeys,\
-                                    DataKey='LowMuData',\
+                                    DataKey=data_key,\
                                     doLogx = True,\
                                     doLogy = True,\
                                     ratio_min = 0.8,\
@@ -230,7 +232,7 @@ if True:
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey='LowMuData',\
+                                DataKey=data_key,\
                                 doLogx=True,
                                 doLogy=False,
                                 ratio_min = 0.8,\
@@ -429,8 +431,6 @@ if True:
         plotDescriptors = [ [], ["0.3 P < E_{HAD} < 0.9 P", "E^{dR<0.1}_{EM} < 1.1 GeV", "N_{TRT} >= 20"], ["E_{HAD}/E_{TOTAL} > 0.7", "E^{dR<0.1}_{EM} < 1.1 GeV", "N_{TRT} >= 20"], ["E_{TOTAL} != 0.0"]]
 
         for eta_range, eta_descriptor in zip(eta_ranges, eta_descriptors):
-            print eta_range
-            print eta_descriptor
             histogramName = "TrkMultiplicityVsP_NonZeroE" + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
             hist_NonZero = HM.getHistograms(histogramName, rebin = 100)
             histogramName = "TrkMultiplicityVsP" + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
@@ -621,7 +621,7 @@ if True:
                             DataVsMC1 = DrawDataVsMC(hist,\
                                                     channelLabels,\
                                                     MCKeys = MCKeys,\
-                                                    DataKey='LowMuData',\
+                                                    DataKey=data_key,\
                                                     extra_description =  ["P_{T} Reweighted", eta_descriptor, p_low_str + " < |P/GeV| < " + p_high_str] + extra_stuff)
                             DataVsMC1[0].Draw()
                             DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + ".png")

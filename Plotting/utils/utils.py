@@ -29,11 +29,11 @@ inclusive_files["LowMuDataTightIso"] = ["user.luadamek.data17_13TeV.00341294.phy
 inclusive_files["SinglePion"] = [\
 "user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist",\
 "user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist"]
-inclusive_files["PythiJetJet"] = [\
+inclusive_files["PythiaJetJet"] = [\
 "user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
 "user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
 "user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
-inclusive_files["PythiJetJetTightIso"] = [\
+inclusive_files["PythiaJetJetTightIso"] = [\
 "user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
 "user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
 "user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
