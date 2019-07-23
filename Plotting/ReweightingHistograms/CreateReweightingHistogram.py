@@ -5,7 +5,7 @@ from sys import path as sys_path
 Curr_DIR = os_path.expandvars('$EOPPlottingDir')
 sys_path.insert(1, Curr_DIR)
 
-from PlottingTools.HistogramManager import HistogramManager
+from histogram_manager import HistogramManager
 import argparse
 parser = argparse.ArgumentParser(description='Create a root file that has a histogram required to reweight events')
 parser.add_argument('--file', '-f', dest="file", type=str, required=True, help='Create a histogram required for reweighting')
