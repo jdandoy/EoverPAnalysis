@@ -33,6 +33,7 @@ DataColor = ROOT.kBlack
 #ColorBlindFriendlyColours
 COLOURS = {}
 COLOURS["PythiaJetJet"] = ROOT.TColor.GetColor(0,73,73)
+COLOURS["PythiJetJet"] = ROOT.TColor.GetColor(0,73,73)
 COLOURS["PythiaJetJetPionsReweighted"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["SinglePion"] = ROOT.TColor.GetColor(109,182,255)
 
@@ -375,7 +376,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         top_pad.SetLogx()
 
     ROOT.gROOT.SetStyle("ATLAS")
-    astyle.ATLASLabel(0.2, 0.87, "Internal")
+    if foundAtlasPlots:
+        astyle.ATLASLabel(0.2, 0.87, "Internal")
     top_pad.Modified()
     top_pad.Update()
     toGlobalScope(top_pad)
