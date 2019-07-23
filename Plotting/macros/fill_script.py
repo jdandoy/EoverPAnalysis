@@ -58,14 +58,30 @@ def fill_histograms(hist_filler, outputRootFileName):
     hist_filler.apply_selection_for_channel("PythiaJetJetHardScatter", sel_Truth) #Those tracks truth matched to pions
     hist_filler.apply_selection_for_channel("PythiaJetJetHardScatterTightIso", sel_Truth + sel_TightIso) #Tighter isolation requirement
 
-    #reweight the event count in MC to match the one from data
-#   event_count_reweight_file = ROOT.TFile("ReweightingHistograms/EventCountPythiaJetJetToData.root", "READ")
-#   hist = event_count_reweight_file.Get("EventCountPythiaJetJetToData")
-#   hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkCount, hist, selection=[]) 
+    #LowMuData_SinglePion_TrkCount_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_SinglePion_TrkCount_Reweight.root", "READ")
+    #hist = LowMuData_SinglePion_TrkCount_Reweight_file.Get("LowMuData_SinglePion_TrkCount_Reweight")
+    #hist_filler.weight_calculator.add_reweight_histogram("SinglePion", calc_trkCount, hist, selection = [])
 
-#   trk_count_reweight_file = ROOT.TFile("ReweightingHistograms/PythiaJetJetPionsOnlyTrackCountReweightedToData.root", "READ")
-#   hist = trk_count_reweight_file.Get("PythiaJetJetPionsOnlyTrackCountReweightedToData")
-#   hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetPionsReweighted", calc_trkCount, hist, selection=[])
+    #LowMuDataTightIso_SinglePion_TrkCount_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_SinglePion_TrkCount_Reweight.root", "READ")
+    #hist = LowMuDataTightIso_SinglePion_TrkCount_Reweight_file.Get("LowMuDataTightIso_SinglePion_TrkCount_Reweight")
+    #hist_filler.weight_calculator.add_reweight_histogram("SinglePionTightIso", calc_trkCount, hist, selection = [])
+
+    #LowMuData_PythiaJetJet_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_PythiaJetJet_Count_Reweight.root", "READ")
+    #hist = LowMuData_PythiaJetJet_Count_Reweight_file.Get("LowMuData_PythiaJetJet_Count_Reweight")
+    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkCount, hist, selection = [sel_Event])
+
+    #LowMuData_PythiaJetJetHardScatter_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_PythiaJetJetHardScatter_Count_Reweight.root","READ")
+    #hist = LowMuData_PythiaJetJetHardScatter_Count_Reweight_file.Get("LowMuData_PythiaJetJetHardScatter_Count_Reweight")
+    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetHardScatter", calc_trkCount, hist, selection = [sel_Event])
+
+    #LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight.root", "READ")
+    #hist = LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight_file.Get("LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight")
+    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetTightIso", calc_trkCount, hist, selection = [sel_Event])
+
+    #LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight.root", "READ")
+    #hist = LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight_file.Get("LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight")
+    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetHardScatterTightIso", calc_trkCount, hist, selection = [sel_Event])
+
 
 #   for i, eta_bin_selection in enumerate(eta_bin_selections):
 #       spectrum_reweight_file = ROOT.TFile("ReweightingHistograms/PtSpectrumReweightLowMuDataOverPythiaJetJet_Eta"+str(i)+".root", "READ")
