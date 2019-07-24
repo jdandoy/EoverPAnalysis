@@ -325,9 +325,9 @@ class HistogramFiller:
     def DumpHistograms(self):
         data = {}
         for channel in self.channels:
-            print("Dumping for channel {}".format(channel))
-            data[channel] = {}
             if channel not in self.subchannels:
+                print("Dumping for channel {}".format(channel))
+                data[channel] = {}
                 for filename in self.channel_files[channel]:
                     data[channel][filename] = self.get_data(channel,filename, self.all_variables, self.all_selections)
 
@@ -338,7 +338,7 @@ class HistogramFiller:
             assert subchannel not in data
             data[subchannel] = {}
             for filename in data[origin_channel]:
-                variable_dict, selection_dict, weights = data[channel][filename]
+                variable_dict, selection_dict, weights = data[origin_channel][filename]
                 total_selection = np.ones(len(weights)) > 0.5
                 for sel in selections:
                     total_selection &= selection_dict[sel.name]
