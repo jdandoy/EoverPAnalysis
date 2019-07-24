@@ -58,29 +58,40 @@ def fill_histograms(hist_filler, outputRootFileName):
     hist_filler.apply_selection_for_channel("PythiaJetJetHardScatter", sel_Truth) #Those tracks truth matched to pions
     hist_filler.apply_selection_for_channel("PythiaJetJetHardScatterTightIso", sel_Truth + sel_TightIso) #Tighter isolation requirement
 
-    #LowMuData_SinglePion_TrkCount_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_SinglePion_TrkCount_Reweight.root", "READ")
-    #hist = LowMuData_SinglePion_TrkCount_Reweight_file.Get("LowMuData_SinglePion_TrkCount_Reweight")
-    #hist_filler.weight_calculator.add_reweight_histogram("SinglePion", calc_trkCount, hist, selection = [])
+    LowMuData_SinglePion_TrkCount_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_SinglePion_TrkCount_Reweight.root", "READ")
+    hist = LowMuData_SinglePion_TrkCount_Reweight_file.Get("LowMuData_SinglePion_TrkCount_Reweight")
+    hist_filler.weight_calculator.add_reweight_histogram("SinglePion", calc_trkCount, hist, selection = [])
 
-    #LowMuDataTightIso_SinglePion_TrkCount_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_SinglePion_TrkCount_Reweight.root", "READ")
-    #hist = LowMuDataTightIso_SinglePion_TrkCount_Reweight_file.Get("LowMuDataTightIso_SinglePion_TrkCount_Reweight")
-    #hist_filler.weight_calculator.add_reweight_histogram("SinglePionTightIso", calc_trkCount, hist, selection = [])
+    LowMuDataTightIso_SinglePion_TrkCount_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_SinglePion_TrkCount_Reweight.root", "READ")
+    hist = LowMuDataTightIso_SinglePion_TrkCount_Reweight_file.Get("LowMuDataTightIso_SinglePion_TrkCount_Reweight")
+    hist_filler.weight_calculator.add_reweight_histogram("SinglePionTightIso", calc_trkCount, hist, selection = [])
 
-    #LowMuData_PythiaJetJet_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_PythiaJetJet_Count_Reweight.root", "READ")
-    #hist = LowMuData_PythiaJetJet_Count_Reweight_file.Get("LowMuData_PythiaJetJet_Count_Reweight")
-    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkCount, hist, selection = [sel_Event])
+    LowMuData_PythiaJetJet_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_PythiaJetJet_Count_Reweight.root", "READ")
+    hist = LowMuData_PythiaJetJet_Count_Reweight_file.Get("LowMuData_PythiaJetJet_Count_Reweight")
+    hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJet", calc_trkCount, hist, selection = [sel_Event])
 
-    #LowMuData_PythiaJetJetHardScatter_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_PythiaJetJetHardScatter_Count_Reweight.root","READ")
-    #hist = LowMuData_PythiaJetJetHardScatter_Count_Reweight_file.Get("LowMuData_PythiaJetJetHardScatter_Count_Reweight")
-    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetHardScatter", calc_trkCount, hist, selection = [sel_Event])
+    LowMuData_PythiaJetJetHardScatter_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuData_PythiaJetJetHardScatter_Count_Reweight.root","READ")
+    hist = LowMuData_PythiaJetJetHardScatter_Count_Reweight_file.Get("LowMuData_PythiaJetJetHardScatter_Count_Reweight")
+    hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetHardScatter", calc_trkCount, hist, selection = [sel_Event])
 
-    #LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight.root", "READ")
-    #hist = LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight_file.Get("LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight")
-    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetTightIso", calc_trkCount, hist, selection = [sel_Event])
+    LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight.root", "READ")
+    hist = LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight_file.Get("LowMuDataTightIso_PythiaJetJetTightIso_Count_Reweight")
+    hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetTightIso", calc_trkCount, hist, selection = [sel_Event])
 
-    #LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight.root", "READ")
-    #hist = LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight_file.Get("LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight")
-    #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetHardScatterTightIso", calc_trkCount, hist, selection = [sel_Event])
+    LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight_file = ROOT.TFile("ReweightingHistograms/LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight.root", "READ")
+    hist = LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight_file.Get("LowMuDataTightIso_PythiaJetJetHardScatterTightIso_Count_Reweight")
+    hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetHardScatterTightIso", calc_trkCount, hist, selection = [sel_Event])
+
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterPionPos", "PythiaJetJetHardScatter", pion_pos_selections)
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterPionNeg", "PythiaJetJetHardScatter", pion_neg_selections)
+
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterKaonPos", "PythiaJetJetHardScatter", kaon_pos_selections)
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterKaonNeg", "PythiaJetJetHardScatter", kaon_neg_selections)
+
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterProtonPos", "PythiaJetJetHardScatter", proton_pos_selections)
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterProtonNeg", "PythiaJetJetHardScatter", proton_neg_selections)
+
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterOther", "PythiaJetJetHardScatter", other_selections)
 
 
 #   for i, eta_bin_selection in enumerate(eta_bin_selections):

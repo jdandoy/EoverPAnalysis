@@ -8,7 +8,7 @@ branches = []
 sel_NoSelection = Calculation(NoSelection, branches)
 
 def TightIso(trk):
-    return trk["trk_nearest_dR_EM"] > 0.275
+    return trk["trk_nearest_dR_EM"] > 0.55
 sel_TightIso = Calculation(TightIso, ["trk_nearest_dR_EM"])
 
 def hasHADExtrapolation(trk):
