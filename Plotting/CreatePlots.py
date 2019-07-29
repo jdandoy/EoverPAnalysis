@@ -6,7 +6,7 @@ from array import array
 import os
 from fitting_tools import fitHistograms
 
-MCKeys = ['PythiaJetJet']
+MCKeys = ['PythiaJetJet']#,"SinglePion","PythiaJetJetHardScatter"]
 data_key = "LowMuData"
 #, 'PythiaJetJetPionsReweighted'
 #, 'SinglePion']
@@ -20,17 +20,19 @@ def CloseCanvas(canv):
     ROOT.gSystem.ProcessEvents()
     del canv
 
-filename = "raw_plots.root"
+filename = "count_reweight_plots.root"
+
 
 HM = HistogramManager(filename)
 HM.listHistograms()
+
 
 base_description = []
 if "Count" in filename:
     base_description = []
 if "Pt" in filename and "weight" in filename:
     base_description = ["P_{T} Reweighted"]
-channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only"}
+channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched"}
 
 plotting_directory = (filename.split("/")[-1]).replace(".root","") + "plots"
 
@@ -40,14 +42,16 @@ if not os.path.exists("Plots/" + plotting_directory):
     os.makedirs("Plots/" + plotting_directory)
 plotting_directory = "Plots/" + plotting_directory
 
+CreateCompositionPlot(HM, plotting_directory)
+
 CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 
 #test the plot creation
-CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + [],doFit = True,fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
 
 #CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergyHardScatter", filename, base_description = ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], doFit = True, channelLabels=channelLabels,plotting_directory=plotting_directory)
@@ -142,8 +146,8 @@ if True:
                                 channelLabels,\
                                 MCKeys = MCKeys,\
                                 DataKey=data_key,\
-                                ratio_min=0.2,\
-                                ratio_max=1.8,\
+                                ratio_min=0.0,\
+                                ratio_max=2.0,\
                                 doLogx=True,\
                                 xlabel="Subleading Track P_{T} [GeV]",\
                                 ylabel="Number of Events",\
@@ -213,8 +217,8 @@ if True:
                                     DataKey=data_key,\
                                     doLogx = True,\
                                     doLogy = True,\
-                                    ratio_min = 0.8,\
-                                    ratio_max = 1.2,\
+                                    ratio_min = 0.0,\
+                                    ratio_max = 2.0,\
                                     extra_description = description)
             DataVsMC4[0].Draw()
             DataVsMC4[0].Print(plotting_directory + "/" + histogramName + ".png")
@@ -255,79 +259,6 @@ if True:
             DataVsMC10.Draw()
             DataVsMC10.Print(plotting_directory + "/" + histogramName.replace("Numerator", "") + "LowMuData" + ".png")
 
-
-        description = base_description + ["0.8<|#eta_{ID}|<1.2", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_8_12"
-        histograms = HM.getHistograms(histogramName)
-        for key in histograms:
-            histograms[key] = histograms[key].ProjectionX(histogramName + "_px", "E")
-
-        DataVSMC10 = DrawDataVsMC(histograms,\
-                                  channelLabels,\
-                                  MCKeys = MCKeys,\
-                                  DataKey = "LowMuData",\
-                                  doLogx = True,\
-                                  doLogy = False,
-                                  ratio_min = 0.9,\
-                                  ratio_max = 1.1,\
-                                  extra_description = description)
-        DataVSMC10[0].Draw()
-        DataVSMC10[0].Print(plotting_directory + "/" + histogramName + ".png")
-
-
-        description = base_description + ["1.2<|#eta_{ID}|<1.6", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_12_16"
-        histograms = HM.getHistograms(histogramName)
-        for key in histograms:
-            histograms[key] = histograms[key].ProjectionX(histogramName + "_px", "E")
-
-        DataVSMC10 = DrawDataVsMC(histograms,\
-                                  channelLabels,\
-                                  MCKeys = MCKeys,\
-                                  DataKey = "LowMuData",\
-                                  doLogx = True,\
-                                  doLogy = False,
-                                  ratio_min = 0.9,\
-                                  ratio_max = 1.1,\
-                                  extra_description = description)
-        DataVSMC10[0].Draw()
-        DataVSMC10[0].Print(plotting_directory + "/" + histogramName + ".png")
-
-        description = base_description + ["1.6<|#eta_{ID}|<2.0", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_16_20"
-        histograms = HM.getHistograms(histogramName)
-        for key in histograms:
-            histograms[key] = histograms[key].ProjectionX(histogramName + "_px", "E")
-
-        DataVSMC10 = DrawDataVsMC(histograms,\
-                                  channelLabels,\
-                                  MCKeys = MCKeys,\
-                                  DataKey = "LowMuData",\
-                                  doLogx = True,\
-                                  doLogy = False,
-                                  ratio_min = 0.9,\
-                                  ratio_max = 1.1,\
-                                  extra_description = description)
-        DataVSMC10[0].Draw()
-        DataVSMC10[0].Print(plotting_directory + "/" + histogramName + ".png")
-
-        description = base_description + ["2.0<|#eta_{ID}|<2.4", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
-        histogramName = "EOPProfileVsMomentum_MIPSelection_HadFracAbove70_InBin_20_24"
-        histograms = HM.getHistograms(histogramName)
-        for key in histograms:
-            histograms[key] = histograms[key].ProjectionX(histogramName + "_px", "E")
-
-        DataVSMC10 = DrawDataVsMC(histograms,\
-                                  channelLabels,\
-                                  MCKeys = MCKeys,\
-                                  DataKey = "LowMuData",\
-                                  doLogx = True,\
-                                  doLogy = False,
-                                  ratio_min = 0.9,\
-                                  ratio_max = 1.1,\
-                                  extra_description = description)
-        DataVSMC10[0].Draw()
-        DataVSMC10[0].Print(plotting_directory + "/" + histogramName + ".png")
 
         description = base_description + ["0.0<|#eta_{ID}|<0.4", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
         histogramName = "2DHist_EOPVsMomentum_MIPSelection_HadFracAbove70_InBin_0_4"

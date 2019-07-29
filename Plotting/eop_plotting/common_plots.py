@@ -2,6 +2,78 @@ import ROOT
 from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms
 from array import array
 from fitting_tools import fitHistograms
+from histogram_manager import HistogramManager
+
+
+# a funciton to show the composition of tracks from the hard scatter as a function of track pT
+def CreateCompositionPlot(HM, filename):
+    ROOT.gROOT.SetBatch(ROOT.kFALSE)
+    particles = ["Pion", "Kaon", "Proton"]
+    charges = ["Pos", "Neg"]
+    channels = ["PythiaJetJetHardScatter"]
+    histogram_name_base = "trkPtHist"
+
+    labels = []
+    channel_names = []
+    for p in particles:
+        label_str = ""
+        if p == "Kaon":
+            label_str += "#\Kappa"
+        if p == "Pion":
+            label_str += "#\pi"
+        if p == "Proton":
+            label_str += "#\mathrm{p}"
+        for c in charges:
+            if p != "Proton":
+                if c == "Pos":
+                    label_str = label_str.rstrip("#") +  "^{+}"
+                if c == "Neg":
+                    label_str = label_str.rstrip("#") +  "^{-}"
+            else:
+                if c == "Neg":
+                    label_str = "#\\bar{" + label_str.strip("#") + "}"
+            for ch in channels:
+                channel_names.append("{}{}{}".format(ch,p,c))
+                labels.append(label_str)
+
+    for ch in channels:
+        channel_names.append("{}{}".format(ch,"Other"))
+        labels.append("Other")
+
+    CB_color_cycle = [r'#377eb8', r'#ff7f00',r'#dede00', r'#4daf4a',\
+                  r'#f781bf', r'#a65628', r'#e41a1c', r'#984ea3',\
+                  ]
+    root_colors = [ROOT.TColor.GetColor(c) for c in CB_color_cycle]
+
+
+    histograms = HM.getHistograms("trkPtHist")
+
+    histogram_to_normalize_to = histograms["PythiaJetJetHardScatter"]
+    stack = ROOT.THStack("Stack", "Stack")
+
+    l=ROOT.TLegend()
+    l.SetNColumns(2);
+
+    c1 = ROOT.TCanvas()
+    for channel, color, label in zip(channel_names, root_colors, labels):
+        hist = histograms[channel]
+        hist.Divide(histogram_to_normalize_to)
+        hist.SetLineColor(color)
+        hist.SetFillColor(color)
+        hist.SetMarkerColor(color)
+        l.AddEntry(hist,label)
+        stack.Add(hist)
+    c1.Draw()
+    stack.Draw("Hist")
+    stack.GetXaxis().SetTitle("Track P_{T} [GeV]")
+    stack.GetYaxis().SetTitle("Number of Tracks")
+    l.Draw("SAME")
+    c1.SetLogx()
+    c1.Update()
+    c1.Modified()
+    raw_input()
+    ROOT.gROOT.SetBatch(ROOT.kTRUE)
+
 
 
 def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[], channelLabels={}, plotting_directory="",MCKeys=[]):
