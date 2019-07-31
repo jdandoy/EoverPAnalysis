@@ -33,8 +33,8 @@ DataColor = ROOT.kBlack
 #ColorBlindFriendlyColours
 COLOURS = {}
 COLOURS["PythiaJetJet"] = ROOT.TColor.GetColor(0,73,73)
-COLOURS["PythiJetJet"] = ROOT.TColor.GetColor(0,73,73)
 COLOURS["PythiaJetJetPionsReweighted"] = ROOT.TColor.GetColor(146,73,0)
+COLOURS["PythiaJetJetHardScatter"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["SinglePion"] = ROOT.TColor.GetColor(109,182,255)
 
 def GetBinsFromHistogram(hist, entriesPerBin):
@@ -327,9 +327,9 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         [MCHist.GetYaxis().SetTitle(ylabel) for MCHist in MCHists]
 
 
-    MCHists[0].Draw("HIST E")
+    MCHists[0].Draw("][ HIST E")
     for MCHist in MCHists[1:]:
-        MCHist.Draw("SAME HIST E")
+        MCHist.Draw("SAME ][ HIST E")
     DataHist.Draw("SAME")
 
     hist_description = []
@@ -401,9 +401,9 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         data_ratio.SetLineColor(COLOURS[MCKey])
 
         if counter == 1:
-            data_ratio.Draw("HIST E")
+            data_ratio.Draw("][ HIST E")
         else:
-            data_ratio.Draw("SAME E")
+            data_ratio.Draw("][ SAME E")
 
         MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
         variableLabel = MCHist.GetXaxis().GetTitle()
@@ -425,9 +425,9 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         data_ratio.SetMinimum(ratio_min + 0.0001)
 
         if counter == 1:
-            data_ratio.Draw("HIST E")
+            data_ratio.Draw("][ HIST E")
         else:
-            data_ratio.Draw("SAME HIST E")
+            data_ratio.Draw("SAME ][ HIST E")
 
         toGlobalScope(data_ratio)
 

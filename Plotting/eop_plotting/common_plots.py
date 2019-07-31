@@ -1,12 +1,12 @@
 import ROOT
-from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms
+from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms, cleanUpHistograms
 from array import array
 from fitting_tools import fitHistograms
 from histogram_manager import HistogramManager
 
 
 # a funciton to show the composition of tracks from the hard scatter as a function of track pT
-def CreateCompositionPlot(HM, filename):
+def CreateCompositionPlot(HM, folder):
     ROOT.gROOT.SetBatch(ROOT.kFALSE)
     particles = ["Pion", "Kaon", "Proton"]
     charges = ["Pos", "Neg"]
@@ -52,7 +52,8 @@ def CreateCompositionPlot(HM, filename):
     stack = ROOT.THStack("Stack", "Stack")
 
     l=ROOT.TLegend()
-    l.SetNColumns(2);
+    l.SetBorderSize(0)
+    l.SetNColumns(2)
 
     c1 = ROOT.TCanvas()
     for channel, color, label in zip(channel_names, root_colors, labels):
@@ -64,14 +65,37 @@ def CreateCompositionPlot(HM, filename):
         l.AddEntry(hist,label)
         stack.Add(hist)
     c1.Draw()
-    stack.Draw("Hist")
+    stack.Draw("Hist ][")
     stack.GetXaxis().SetTitle("Track P_{T} [GeV]")
-    stack.GetYaxis().SetTitle("Number of Tracks")
+    stack.GetYaxis().SetTitle("Fractional Composition")
     l.Draw("SAME")
     c1.SetLogx()
     c1.Update()
     c1.Modified()
-    raw_input()
+    c1.Print(folder + "/FractionalComposition.png")
+    ROOT.gROOT.SetBatch(ROOT.kTRUE)
+
+    count = -1
+    for channel, color, label in zip(channel_names, root_colors, labels):
+        count += 1
+        hist = histograms[channel]
+        hist = cleanUpHistograms(hist)
+        hist.SetLineColor(color)
+        hist.SetFillColor(color)
+        hist.SetMarkerColor(color)
+        hist.SetMinimum(0.0)
+        if count == 0:
+            hist.Draw("][ Hist")
+            stack.GetXaxis().SetTitle("Track P_{T} [GeV]")
+            stack.GetYaxis().SetTitle("Fractional Composition")
+        else:
+            hist.Draw("][ HIST SAME")
+    c1.Draw()
+    l.Draw("SAME")
+    c1.SetLogx()
+    c1.Update()
+    c1.Modified()
+    c1.Print(folder + "/FractionalComposition_nostack.png")
     ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 
