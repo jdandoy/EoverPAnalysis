@@ -386,7 +386,7 @@ process = psutil.Process(os.getpid())
 
 def branchDresser(branches):
     '''this is a function that dresses the branches with information about the depth and dummy variables if entries have too few entires'''
-    return branches 
+    return branches
 
 def getXSectionWeight(filename):
     '''
@@ -480,7 +480,6 @@ def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = Non
     f = tree.GetCurrentFile()
     tree.SetDirectory(0)
     f.Close()
-    
     return return_dict
 
 def get_needed_branches(variables, selections):

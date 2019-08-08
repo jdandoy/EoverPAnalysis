@@ -45,60 +45,66 @@ def CreateCompositionPlot(HM, folder):
                   ]
     root_colors = [ROOT.TColor.GetColor(c) for c in CB_color_cycle]
 
+    rebin = 10
+    for eta_bin in range(0, 5):
+        histograms = HM.getHistograms("TrackPSpectrum__{}_Eta_{}".format("Inclusive", eta_bin))
+        histogram_to_normalize_to = histograms["PythiaJetJetHardScatter"]
+        histogram_to_normalize_to.Rebin(rebin)
+        stack = ROOT.THStack("Stack", "Stack")
+        l=ROOT.TLegend()
+        l.SetBorderSize(0)
+        l.SetNColumns(2)
+        c1 = ROOT.TCanvas()
+        for channel, color, label in zip(channel_names, root_colors, labels):
+            hist = histograms[channel]
+            hist.Rebin(rebin)
+            hist.Divide(histogram_to_normalize_to)
+            hist.SetLineColor(color)
+            hist.SetFillColor(color)
+            hist.SetMarkerColor(color)
+            hist.SetMaximum(1.0)
+            l.AddEntry(hist,label,"F")
+            stack.Add(hist)
+        c1.Draw()
+        stack.Draw("Hist ][")
+        stack.SetMaximum(1.0)
+        stack.GetXaxis().SetTitle("Track P [GeV]")
+        stack.GetYaxis().SetTitle("Fraction of Total")
+        l.Draw("SAME")
+        c1.SetLogx()
+        c1.Update()
+        c1.Modified()
+        c1.Print(folder + "/FractionalComposition_{}.png".format(eta_bin))
+        ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
-    histograms = HM.getHistograms("trkPtHist")
-
-    histogram_to_normalize_to = histograms["PythiaJetJetHardScatter"]
-    stack = ROOT.THStack("Stack", "Stack")
-
-    l=ROOT.TLegend()
-    l.SetBorderSize(0)
-    l.SetNColumns(2)
-
-    c1 = ROOT.TCanvas()
-    for channel, color, label in zip(channel_names, root_colors, labels):
-        hist = histograms[channel]
-        hist.Divide(histogram_to_normalize_to)
-        hist.SetLineColor(color)
-        hist.SetFillColor(color)
-        hist.SetMarkerColor(color)
-        l.AddEntry(hist,label)
-        stack.Add(hist)
-    c1.Draw()
-    stack.Draw("Hist ][")
-    stack.GetXaxis().SetTitle("Track P_{T} [GeV]")
-    stack.GetYaxis().SetTitle("Fractional Composition")
-    l.Draw("SAME")
-    c1.SetLogx()
-    c1.Update()
-    c1.Modified()
-    c1.Print(folder + "/FractionalComposition.png")
-    ROOT.gROOT.SetBatch(ROOT.kTRUE)
-
-    count = -1
-    for channel, color, label in zip(channel_names, root_colors, labels):
-        count += 1
-        hist = histograms[channel]
-        hist = cleanUpHistograms(hist)
-        hist.SetLineColor(color)
-        hist.SetFillColor(color)
-        hist.SetMarkerColor(color)
-        hist.SetMinimum(0.0)
-        if count == 0:
-            hist.Draw("][ Hist")
-            stack.GetXaxis().SetTitle("Track P_{T} [GeV]")
-            stack.GetYaxis().SetTitle("Fractional Composition")
-        else:
-            hist.Draw("][ HIST SAME")
-    c1.Draw()
-    l.Draw("SAME")
-    c1.SetLogx()
-    c1.Update()
-    c1.Modified()
-    c1.Print(folder + "/FractionalComposition_nostack.png")
-    ROOT.gROOT.SetBatch(ROOT.kTRUE)
-
-
+        c1 = ROOT.TCanvas()
+        l=ROOT.TLegend(0.4, 0.55, 0.7, 0.85)
+        l.SetBorderSize(0)
+        l.SetNColumns(2)
+        count = -1
+        for channel, color, label in zip(channel_names, root_colors, labels):
+            count += 1
+            hist = histograms[channel]
+            hist = cleanUpHistograms(hist)
+            hist.SetLineColor(color)
+            hist.SetFillColor(color)
+            hist.SetMarkerColor(color)
+            hist.SetMinimum(0.0)
+            hist.SetMaximum(0.75)
+            l.AddEntry(hist,label,"F")
+            if count == 0:
+                hist.Draw("][ Hist")
+                hist.GetXaxis().SetTitle("Track P [GeV]")
+                hist.GetYaxis().SetTitle("Fraction of Total")
+            else:
+                hist.Draw("][ HIST SAME")
+        c1.Draw()
+        l.Draw("SAME")
+        c1.SetLogx()
+        c1.Update()
+        c1.Modified()
+        c1.Print(folder + "/FractionalComposition_nostack_{}.png".format(eta_bin))
+        ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
 def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[], channelLabels={}, plotting_directory="",MCKeys=[]):
     #get the binning vectors

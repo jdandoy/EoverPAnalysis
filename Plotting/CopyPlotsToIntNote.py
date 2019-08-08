@@ -26,6 +26,13 @@ if args.flavour == "reweighted":
 elif args.flavour == "event_count":
     plot_dir = os.path.join(os.getenv("EOPPlottingDir"), "Plots", "count_reweight_plotsplots")
     plot_list = ["trkPtHist.png"]
+    base = "FractionalComposition_{}.png"
+    for i in range(0, 5):
+        plot_list.append(base.format(i))
+
+    base = "FractionalComposition_nostack_{}.png"
+    for i in range(0, 5):
+        plot_list.append(base.format(i))
 
     for plot in plot_list:
         plot = os.path.join(plot_dir, plot)
