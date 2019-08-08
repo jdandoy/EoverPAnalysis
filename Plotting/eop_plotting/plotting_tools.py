@@ -328,8 +328,10 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
 
 
     MCHists[0].Draw("][ HIST E")
+    MCHists[0].Draw("][ HIST SAME")
     for MCHist in MCHists[1:]:
         MCHist.Draw("SAME ][ HIST E")
+        MCHist.Draw("SAME ][ HIST")
     DataHist.Draw("SAME")
 
     hist_description = []
@@ -402,8 +404,10 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
 
         if counter == 1:
             data_ratio.Draw("][ HIST E")
+            data_ratio.Draw("][ HIST SAME")
         else:
-            data_ratio.Draw("][ SAME E")
+            data_ratio.Draw("][ HIST SAME E")
+            data_ratio.Draw("][ HIST SAME")
 
         MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
         variableLabel = MCHist.GetXaxis().GetTitle()
@@ -426,8 +430,10 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
 
         if counter == 1:
             data_ratio.Draw("][ HIST E")
+            data_ratio.Draw("][ HIST SAME")
         else:
             data_ratio.Draw("SAME ][ HIST E")
+            data_ratio.Draw("SAME ][ HIST SAME")
 
         toGlobalScope(data_ratio)
 
