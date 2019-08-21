@@ -52,7 +52,6 @@ def put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, descr
 
         binningTree.Fill()
         binningTree.Write()
-    
 
 def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta_range, description, do_cluster_plots=False, do_calib_hit_plots=False):
 
