@@ -83,7 +83,7 @@ branches = ["trk_d0"]
 sel_d0Less1_5 = Calculation(d0Less1_5, branches)
 
 def ExtrapolAcceptanceCalculator(trk, min_cut, max_cut):
-    trk_eta = trkEtaPhiECAL(trk)[0]
+    trk_eta = np.abs(trkEtaPhiECAL(trk)[0]) #the absolute value of eta
 
     #check that both tracks are in the acceptance
     in_acceptance = (trk_eta < max_cut) & (trk_eta > min_cut)

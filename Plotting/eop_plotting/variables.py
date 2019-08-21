@@ -149,10 +149,10 @@ branches = ["trk_etaID"]
 calc_trkEta_ABS = Calculation(trkEtaID_ABS, branches)
 
 def trkEtaPhiECAL(trk):
-    trk_etaEMB = np.abs(trk["trk_etaEMB2"])
-    trk_phiEMB = np.abs(trk["trk_phiEMB2"])
-    trk_etaEME = np.abs(trk["trk_etaEME2"])
-    trk_phiEME = np.abs(trk["trk_phiEME2"])
+    trk_etaEMB = trk["trk_etaEMB2"]
+    trk_phiEMB = trk["trk_phiEMB2"]
+    trk_etaEME = trk["trk_etaEME2"]
+    trk_phiEME = trk["trk_phiEME2"]
 
     has_barrel_extrap = trk_etaEMB < 1000.0
     has_endcap_extrap = trk_etaEME < 1000.0
