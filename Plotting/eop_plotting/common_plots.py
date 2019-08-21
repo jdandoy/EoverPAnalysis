@@ -1,5 +1,5 @@
 import ROOT
-from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms, cleanUpHistograms, SubtractHistograms
+from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms, cleanUpHistograms, SubtractHistograms, ProjectProfiles
 from array import array
 from fitting_tools import fitHistograms
 from histogram_manager import HistogramManager
@@ -198,6 +198,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         raw_eop = HM.getHistograms("EOPProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
         bkg_eop = HM.getHistograms("EnergyBkgProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
         corr_eop = SubtractHistograms(raw_eop, bkg_eop)
+        corr_eop = ProjectProfiles(corr_eop)
         histogram_name = "EOPProfileVsMomentumSmallAnnulusCorrected"+"__" + selection_name + "_Eta_"+str(i)
         description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
 
@@ -218,6 +219,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         raw_eop = HM.getHistograms("EOPProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
         bkg_eop = HM.getHistograms("EnergyBigBkgProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
         corr_eop = SubtractHistograms(raw_eop, bkg_eop)
+        corr_eop = ProjectProfiles(corr_eop)
         histogram_name = "EOPProfileVsMomentumBigAnnulusCorrected"+"__" + selection_name + "_Eta_"+str(i)
         description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
 
