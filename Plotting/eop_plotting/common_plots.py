@@ -1,5 +1,5 @@
 import ROOT
-from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms, cleanUpHistograms
+from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms, cleanUpHistograms, SubtractHistograms
 from array import array
 from fitting_tools import fitHistograms
 from histogram_manager import HistogramManager
@@ -179,7 +179,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                    "EnergyBkgProfileVsMomentum"]
 
     histograms_in_momentum_bins = ["EOPDistribution",\
-                                    "EOPBkgDistribution",\
+                                    "EnergyBkgDistribution",\
                                     "trkTRTHits",\
                                     "trkEMDR100",\
                                     "MomentumHadFrac",\
@@ -193,6 +193,48 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
 
     for i, eta_low, eta_high in zip(list(range(0, eta_bins_low.size())), eta_bins_low, eta_bins_high):
         #the plots binned in eta
+        to_plot = MCKeys
+
+        raw_eop = HM.getHistograms("EOPProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
+        bkg_eop = HM.getHistograms("EnergyBkgProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
+        corr_eop = SubtractHistograms(raw_eop, bkg_eop)
+        histogram_name = "EOPProfileVsMomentumSmallAnnulusCorrected"+"__" + selection_name + "_Eta_"+str(i)
+        description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+
+        DataVsMC1 = DrawDataVsMC(corr_eop,\
+                                channelLabels,\
+                                MCKeys = to_plot,\
+                                DataKey='LowMuData',\
+                                doLogy=False,\
+                                doLogx=True,\
+                                ratio_min=0.95,\
+                                ratio_max=1.05,\
+                                extra_description = description)
+
+        DataVsMC1[0].Draw()
+        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "_"  + selection_name + ".png")
+        DataVsMC1[0].Close()
+
+        raw_eop = HM.getHistograms("EOPProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
+        bkg_eop = HM.getHistograms("EnergyBigBkgProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
+        corr_eop = SubtractHistograms(raw_eop, bkg_eop)
+        histogram_name = "EOPProfileVsMomentumBigAnnulusCorrected"+"__" + selection_name + "_Eta_"+str(i)
+        description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+
+        DataVsMC1 = DrawDataVsMC(corr_eop,\
+                                channelLabels,\
+                                MCKeys = to_plot,\
+                                DataKey='LowMuData',\
+                                doLogy=False,\
+                                doLogx=True,\
+                                ratio_min=0.95,\
+                                ratio_max=1.05,\
+                                extra_description = description)
+
+        DataVsMC1[0].Draw()
+        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "_"  + selection_name + ".png")
+        DataVsMC1[0].Close()
+
         for histogram in histograms_in_eta_bins:
             ylabel = None
             if "MIP" in selection_name and "Spectrum" in histogram:
@@ -208,6 +250,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             hist = HM.getHistograms(histogram_name, rebin = rebin)
             #shouldILogy=True
             to_plot = MCKeys
+            shouldILogy=False
             if "EOPProfileVs" in histogram_name and not "EnergyBkg" in histogram_name:
                 shouldILogy = False
                 ratio_min = 0.9
@@ -226,6 +269,11 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                 ratio_min =0.5
                 ratio_min =1.5
 
+            if "Spectrum" in histogram:
+                ratio_min = 0.0
+                ratio_max = 2.0
+                shouldILogy=True
+
             description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
 
             DataVsMC1 = DrawDataVsMC(hist,\
@@ -242,6 +290,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "_"  + selection_name + ".png")
             DataVsMC1[0].Close()
 
+
         p_bins_low = p_bins_low_for_eta_bin[i]
         p_bins_high = p_bins_high_for_eta_bin[i]
 
@@ -250,6 +299,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             print("Fetching histograms {}".format(histogram))
             ratio_min = 0.6
             ratio_max = 1.4
+            doLogy=False
             if "EOPDistribution" in histogram:
                 rebin = 20
                 ratio_min = 0.6
@@ -260,6 +310,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                 rebin = None
             to_plot = []
             for j, p_low, p_high in zip(list(range(0, p_bins_low.size())), p_bins_low, p_bins_high):
+                continue
                 print("Got histogram in bin {} with momentum between {} and {}".format(j, p_low, p_high))
                 histattributes = []
                 histogram_name = histogram + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
@@ -274,7 +325,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                         rebin=rebin,\
                                         ratio_min = ratio_min,\
                                         ratio_max = ratio_max,\
-                                        doLogy=False,\
+                                        doLogy=doLogy,\
                                         marker_size = 1.0,\
                                         DataKey='LowMuData',\
                                         extra_description = description)
