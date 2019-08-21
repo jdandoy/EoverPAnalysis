@@ -65,6 +65,9 @@ elif args.flavour == "pt_reweight":
     base = "TrackPtSpectrum__Inclusive_Eta_{}_Inclusive.png"
     for i in range(0, 5):
         plot_list.append(base.format(i))
+    base = "EOPProfileVsMomentumSmallAnnulusCorrected__MIPSelectionHadFracAbove70_Eta_{}_MIPSelectionHadFracAbove70.png"
+    for i in range(0, 5):
+        plot_list.append(base.format(i))
     for plot in plot_list:
         plot = os.path.join(plot_dir, plot)
         command = "cp {} {}".format(plot, os.path.join(args.loc,"{}_{}.png".format(plot.split("/")[-1].rstrip(".png"),"pt_reweight")))
