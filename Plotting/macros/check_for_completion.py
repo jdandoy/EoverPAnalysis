@@ -14,7 +14,6 @@ outputFiles = []
 for root, dirs, files in os.walk(jobDir+"/Output/", topdown=False):
    for name in files:
       outputFiles.append(os.path.join(root, name))
-print "There are this many log files " + str(len(outputFiles))
 
 #First check for the existence of LSF folders in the directory
 not_finished_count = 0
@@ -32,7 +31,7 @@ for outputFile in outputFiles:
             if "FINISHED" in line:
                 found_finished = True
             if "killed" in line:
-                print outputFile + " killed prematurely"
+                print(outputFile + " killed prematurely")
 
     if not found_finished:
         allJobsDone = False
@@ -40,7 +39,7 @@ for outputFile in outputFiles:
         filename = outputFile.split("/")[-1]
         job_id = int(filename.split('.')[-1])
         not_finished.append(job_id)
-        print "the job with ID " + outputFile.split(".")[-1] + " didn't finish"
+        print("the job with ID " + outputFile.split(".")[-1] + " didn't finish")
 
     job_number = outputFile.split(".")[-1]
     has_file = os.path.isfile(jobDir + "_" + job_number + ".root")
@@ -48,10 +47,10 @@ for outputFile in outputFiles:
         root_file_count += 1
 
 if allJobsDone:
-    print "all plotting jobs have finished"
+    print("all plotting jobs have finished")
 else:
-    print "This many jobs didn't finish " + str(not_finished_count)
-    print "This many root files don't exist " + str(root_file_count)
+    print("This many jobs didn't finish " + str(not_finished_count))
+    print("This many root files don't exist " + str(root_file_count))
 
 if args.resub:
     jobName = jobDir
