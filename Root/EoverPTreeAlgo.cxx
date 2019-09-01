@@ -133,6 +133,7 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_nSCT", &trk_nSCT);
   m_tree->Branch("trk_charge", &trk_charge);
   m_tree->Branch("trk_z0sintheta", &trk_z0sintheta);
+  m_tree->Branch("trk_z0sintheta_primary", &trk_z0sintheta_primary);
   m_tree->Branch("trk_p", &trk_p);
   m_tree->Branch("trk_p_err", &trk_p_err);
   m_tree->Branch("trk_nearest_dR_EM", &trk_nearest_dR_EM);
@@ -230,6 +231,7 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
 
   const xAOD::VertexContainer *vtxs(nullptr);
   ANA_CHECK( HelperFunctions::retrieve(vtxs, "PrimaryVertices", m_event, m_store) );
+  const xAOD::Vertex *pvx = HelperFunctions::getPrimaryVertex(vtxs, msg());
 
   const xAOD::TrackParticleContainer* trks(nullptr);
   ANA_CHECK( HelperFunctions::retrieve(trks, m_inTrackContainerName, m_event, m_store) );
@@ -274,6 +276,15 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
 
     trk_d0 = trk->d0(); //This is the correct d0
     trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct impact parameter w.r.t the primary vertex
+
+
+    float dz;
+    float trk_z0=trk->z0();
+    float beamspot_z0=trk->vz();
+    float theta=trk->theta();
+    dz=fabs((trk_z0-(pvx->z())+beamspot_z0)*sin(theta)); // calculate dz
+    trk_z0sintheta_primary = dz;
+
 
     // coordinates of the track in the ID
     trk_etaID = trk->eta();

@@ -66,6 +66,7 @@ class EoverPTreeAlgo : public xAH::Algorithm
     float trk_truthEnergy;
     float trk_truthP;
     float trk_truthProb;
+    float trk_z0sintheta_primary;
     char trk_hasTruthParticle;
     TLorentzVector truthPartVec;
 
