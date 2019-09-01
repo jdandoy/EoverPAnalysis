@@ -70,6 +70,7 @@ class EoverPTreeAlgo : public xAH::Algorithm
 
     float trk_pt;
     float trk_p;
+    float trk_p_err;
     float trk_d0;
     float trk_z0sintheta;
     float trk_etaEMB2;

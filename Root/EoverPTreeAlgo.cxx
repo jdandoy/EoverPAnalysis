@@ -133,6 +133,7 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_charge", &trk_charge);
   m_tree->Branch("trk_z0sintheta", &trk_z0sintheta);
   m_tree->Branch("trk_p", &trk_p);
+  m_tree->Branch("trk_p_err", &trk_p_err);
   m_tree->Branch("trk_nearest_dR_EM", &trk_nearest_dR_EM);
   m_tree->Branch("trk_nearest_dR_HAD", &trk_nearest_dR_HAD);
   m_tree->Branch("trkWeight", &trkWeight);
@@ -250,8 +251,19 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     if (acc_dRToNearestTrackInHAD.isAvailable(*trk)) trk_nearest_dR_HAD= acc_dRToNearestTrackInHAD(*trk);
     else {ANA_MSG_WARNING("Coulnd't find the decorator for the dR to the nearest track"); trk_nearest_dR_HAD = -1.0;}
 
+    //get the track momentum from q/p
+    trk_p = 0.0;
+    if (fabs(trk->qOverP())>0.) trk_p = (1./fabs(trk->qOverP()))/1e3; 
+    trk_charge = (trk->qOverP()>0.) ? 1 : -1;
+
     //This is the track pT
     trk_pt = trk->pt()/1e3;
+    xAOD::ParametersCovMatrix_t cov;
+    cov = trk->definingParametersCovMatrix();
+    float trk_qoverp_err = 0.0;
+    if (cov(4,4) > 0.0) trk_qoverp_err = TMath::Sqrt(cov(4,4)) * 1e3; // multiply by 1000 to convert to 1/GeV
+    trk_p_err = 0.0;
+    if (trk_qoverp_err > 0) trk_p_err = trk_p * trk_p * trk_qoverp_err; //use error propagation
 
     //Get the value of the eta and phi co-ordinates when extrapolated to the EMB/EME
     for (std::string l: EnergySumHelper::layer){
@@ -261,11 +273,6 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
 
     trk_d0 = trk->d0(); //This is the correct d0
     trk_z0sintheta = trk->z0() * TMath::Sin(trk->theta()); //This isn't the correct impact parameter w.r.t the primary vertex
-
-    //get the track momentum from q/p
-    trk_p = 0.0;
-    if (fabs(trk->qOverP())>0.) trk_p = (1./fabs(trk->qOverP()))/1e3; 
-    trk_charge = (trk->qOverP()>0.) ? 1 : -1;
 
     // coordinates of the track in the ID
     trk_etaID = trk->eta();
