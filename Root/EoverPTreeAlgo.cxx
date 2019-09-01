@@ -130,6 +130,7 @@ EL::StatusCode EoverPTreeAlgo :: initialize ()
   m_tree->Branch("trk_pt", &trk_pt);
   m_tree->Branch("trk_d0", &trk_d0);
   m_tree->Branch("trk_nTRT", &trk_nTRT);
+  m_tree->Branch("trk_nSCT", &trk_nSCT);
   m_tree->Branch("trk_charge", &trk_charge);
   m_tree->Branch("trk_z0sintheta", &trk_z0sintheta);
   m_tree->Branch("trk_p", &trk_p);
@@ -347,6 +348,9 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     m_eventNumber = eventInfo->eventNumber();
     if (!trk->summaryValue(trk_nTRT, xAOD::numberOfTRTHits))ANA_MSG_ERROR("TRT hits not filled");
     ANA_MSG_DEBUG(TString("The number of TRT hits was " + std::to_string (trk_nTRT)));
+
+    if (!trk->summaryValue(trk_nSCT, xAOD::numberOfSCTHits))ANA_MSG_ERROR("SCT hits not filled");
+    ANA_MSG_DEBUG(TString("The number of SCT hits was " + std::to_string (trk_nSCT)));
 
     ///////////////////////////////////////EVENT VARIABLES ////////////////////////////////////////////////////////////////
 

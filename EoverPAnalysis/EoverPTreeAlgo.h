@@ -60,6 +60,7 @@ class EoverPTreeAlgo : public xAH::Algorithm
     unsigned long long m_eventNumber; 
 
     uint8_t trk_nTRT;
+    uint8_t trk_nSCT;
     int trk_truthPdgId;
 
     float trk_truthEnergy;
