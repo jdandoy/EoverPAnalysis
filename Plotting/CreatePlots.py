@@ -7,7 +7,7 @@ import os
 from fitting_tools import fitHistograms
 
 MCKeys = ['PythiaJetJet']#,"SinglePion","PythiaJetJetHardScatter"]
-data_key = "LowMuData"
+DataKey = "LowMuData"
 #, 'PythiaJetJetPionsReweighted'
 #, 'SinglePion']
 
@@ -22,10 +22,10 @@ def CloseCanvas(canv):
 
 #filename = "event_npv2_reweighted.root"
 filename = "pt_reweighted.root"
+#filename = 
 
 HM = HistogramManager(filename)
 HM.listHistograms()
-
 
 base_description = []
 if "Count" in filename:
@@ -34,7 +34,7 @@ if ("Pt" in filename or "pt" in filename) and "weight" in filename:
     base_description = ["P_{T} Reweighted"]
 if "npv2" in filename and "weight" in filename:
     base_description = ["NPV Reweighted"]
-channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", "LowMuData": "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched"}
+channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", DataKey: "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched", "PythiaJetJetTightIso": "Pythia8 MinBias and Dijet", "LowMuDataTightIso":"2017 Low-<#mu> Data"}
 
 plotting_directory = (filename.split("/")[-1]).replace(".root","") + "plots"
 
@@ -44,14 +44,65 @@ if not os.path.exists("Plots/" + plotting_directory):
     os.makedirs("Plots/" + plotting_directory)
 plotting_directory = "Plots/" + plotting_directory
 
+histogram_name_base = "EnergyBkgProfileVsMomentum__{}_Eta_{}"
+histogram_name_base_up = "EnergyBkgUpProfileVsMomentum__{}_Eta_{}"
+histogram_name_base_down = "EnergyBkgDownProfileVsMomentum__{}_Eta_{}"
+selection = "MIPSelectionHadFracAbove70"
+bins = range(0, 5)
+
+for i in bins:
+    histogram_name = histogram_name_base.format(selection, i)
+    histogram_name_up = histogram_name_base_up.format(selection, i)
+    histogram_name_down = histogram_name_base_down.format(selection, i)
+    hist = HM.getHistograms(histogram_name)
+    hist_up = HM.getHistograms(histogram_name_up)
+    hist_down = HM.getHistograms(histogram_name_down)
+
+    for channel in ["LowMuData", "PythiaJetJet"]:
+       #create a set of plots comparing the background subtraction methods
+       to_plot= {}
+       to_plot["nominal"] = hist[channel]
+       to_plot["up"] = hist_up[channel]
+       to_plot["down"] = hist_down[channel]
+       these_MCKeys = ["up", "down"]
+       these_DataKey = "nominal"
+
+       to_plot = ProjectProfiles(to_plot)
+
+       these_channelLabels = {"nominal":"Nominal", "up":"Outer Annulus", "down":"Inner Annulus"}
+       description = base_description + ["MIP Selection"]
+       DataVsMC1 = DrawDataVsMC(to_plot,\
+                               these_channelLabels,\
+                               MCKeys = these_MCKeys,\
+                               DataKey = these_DataKey,\
+                               ratio_min=0.9,\
+                               ratio_max=1.1,\
+                               doLogx=True,\
+                               doLogy=False,\
+                               xlabel="P [GeV]",\
+                               ylabel="<E/p>_{BKG}",\
+                               extra_description = description)
+       DataVsMC1[0].Draw()
+       DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}SystVar.png".format(channel))
+       DataVsMC1[0].Close()
+
+
 #CreateCompositionPlot(HM, plotting_directory)
-#CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-#CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys, DataKey="LowMuData")
+#CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys, DataKey = "LowMuData")
+
+#CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + ["Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey="LowMuDataTightIso")
+#CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20", "Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey = "LowMuDataTightIso")
 
 #test the plot creation
-CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJet"], DataKey  = "LowMuData")
+#CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + ["Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
+#TwentyTRTNonZero_description = base_description + ["E_{TOTAL} != 0.0", "N_{TRT} >= 20", "Tight Isolation"]
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = TwentyTRTNonZero_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection", "Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
 #CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + [],doFit = True,fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
 
@@ -74,13 +125,20 @@ if True:
         DataVsMC.Print(plotting_directory + "/PythiaJetJet" + histogramName + ".png")
         DataVsMC.Close()
 
+        histogramName = "lowPTLess07_TwoDHistTrkEtavsDEtaInnerToExtrapolEM2"
+        hist = HM.getHistograms(histogramName)
+        description = base_description + ["Inclusive Selection"]
+        DataVsMC = Draw2DHistogramOnCanvas(hist["PythiaJetJet"], doLogx = False, doLogy = False, y_range=(0.01, 0.4))
+        DataVsMC.Print(plotting_directory + "/PythiaJetJet" + histogramName + ".png")
+        DataVsMC.Close()
+
         histogramName = "TrkEtaPhiEMCal_MomentumBetween3And4GeV_Denomenator"
         hist = HM.getHistograms(histogramName)
         DataVsMC = Draw2DHistogramOnCanvas(hist["PythiaJetJet"], doLogx = False, doLogy = False, x_range = (-1.0, +1.0), zlabel = "N(E!=0)")
         DataVsMC.Print(plotting_directory + "/PythiaJetJet" + histogramName + ".png")
         DataVsMC.Draw()
         DataVsMC.Close()
-        DataVsMC = Draw2DHistogramOnCanvas(hist["LowMuData"], doLogx = False, doLogy = False, x_range = (-1.0, +1.0), zlabel = "N(E!=0)")
+        DataVsMC = Draw2DHistogramOnCanvas(hist[DataKey], doLogx = False, doLogy = False, x_range = (-1.0, +1.0), zlabel = "N(E!=0)")
         DataVsMC.Print(plotting_directory + "/LowMuData" + histogramName + ".png")
         DataVsMC.Draw()
         DataVsMC.Close()
@@ -92,7 +150,7 @@ if True:
         DataVsMC.Print(plotting_directory + "/PythiaJetJet" + histogramName + ".png")
         DataVsMC.Draw()
         DataVsMC.Close()
-        DataVsMC = Draw2DHistogramOnCanvas(hist["LowMuData"], doLogx = False, doLogy = False, x_range = (-1.0, +1.0), zlabel = "N(E!=0)")
+        DataVsMC = Draw2DHistogramOnCanvas(hist[DataKey], doLogx = False, doLogy = False, x_range = (-1.0, +1.0), zlabel = "N(E!=0)")
         DataVsMC.Print(plotting_directory + "/LowMuData" + histogramName + ".png")
         DataVsMC.Draw()
         DataVsMC.Close()
@@ -104,7 +162,7 @@ if True:
         DataVsMC.Print(plotting_directory + "/PythiaJetJet" + "TrkEtaPhiEMCal_MomentumBetween3And4GeV_ZeroFraction" + ".png")
         DataVsMC.Close()
 
-        DataVsMC = Draw2DHistogramOnCanvas(ratio["LowMuData"], doLogx = False, doLogy = False, x_range = (-1.0, +1.0), zlabel = "N(E!=0)/N(Inclusive)")
+        DataVsMC = Draw2DHistogramOnCanvas(ratio[DataKey], doLogx = False, doLogy = False, x_range = (-1.0, +1.0), zlabel = "N(E!=0)/N(Inclusive)")
         DataVsMC.Draw()
         DataVsMC.Print(plotting_directory + "/LowMuData" + "TrkEtaPhiEMCal_MomentumBetween3And4GeV_ZeroFraction" + ".png")
         DataVsMC.Close()
@@ -115,7 +173,7 @@ if True:
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey= DataKey,\
                                 ratio_min=0.6,\
                                 ratio_max=1.4,\
                                 extra_description = description)
@@ -129,7 +187,7 @@ if True:
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey=DataKey,\
                                 ratio_min=0.6,\
                                 ratio_max=1.4,\
                                 doLogx=True,\
@@ -146,7 +204,7 @@ if True:
         DataVsMC1 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey=DataKey,\
                                 ratio_min=0.0,\
                                 ratio_max=2.0,\
                                 doLogx=True,\
@@ -164,7 +222,7 @@ if True:
         DataVsMC3 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey=DataKey,\
                                 extra_description = description)
         DataVsMC3[0].Draw()
         DataVsMC3[0].Print(plotting_directory + "/" + histogramName + ".png")
@@ -176,7 +234,7 @@ if True:
         DataVsMC5 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey=DataKey,\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
                                 extra_description = description)
@@ -189,7 +247,7 @@ if True:
         DataVsMC6 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey=DataKey,\
                                 ratio_min=0.2,\
                                 ratio_max=1.8,\
                                 extra_description = description)
@@ -202,7 +260,7 @@ if True:
         DataVsMC7 = DrawDataVsMC(hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey=DataKey,\
                                 extra_description = description)
         DataVsMC7[0].Draw()
         DataVsMC7[0].Print(plotting_directory + "/" + histogramName + ".png")
@@ -215,7 +273,7 @@ if True:
             DataVsMC4 = DrawDataVsMC(hist,\
                                     channelLabels,\
                                     MCKeys = MCKeys,\
-                                    DataKey=data_key,\
+                                    DataKey=DataKey,\
                                     doLogx = True,\
                                     doLogy = True,\
                                     ratio_min = 0.0,\
@@ -237,7 +295,7 @@ if True:
         DataVsMC9 = DrawDataVsMC(ratio_hist,\
                                 channelLabels,\
                                 MCKeys = MCKeys,\
-                                DataKey=data_key,\
+                                DataKey=DataKey,\
                                 doLogx=True,
                                 doLogy=False,
                                 ratio_min = 0.8,\
@@ -256,9 +314,9 @@ if True:
 
             description = base_description + ["|#eta_{ID}|<0.8"]
             hist = HM.getHistograms(histogramName)
-            DataVsMC10 = Draw2DHistogramOnCanvas(hist["LowMuData"], doLogx = False, doLogy = True, x_range=(0.0,1.5))
+            DataVsMC10 = Draw2DHistogramOnCanvas(hist[DataKey], doLogx = False, doLogy = True, x_range=(0.0,1.5))
             DataVsMC10.Draw()
-            DataVsMC10.Print(plotting_directory + "/" + histogramName.replace("Numerator", "") + "LowMuData" + ".png")
+            DataVsMC10.Print(plotting_directory + "/" + histogramName.replace("Numerator", "") + DataKey + ".png")
 
 
         description = base_description + ["0.0<|#eta_{ID}|<0.4", "#frac{E_{HAD}}{E_{TOTAL}} > 0.7", "MIP Selection"]
@@ -269,7 +327,7 @@ if True:
         MCCanvas.Draw()
         MCCanvas.Print(plotting_directory + "/" + histogramName + "PythiaJetJet.png")
 
-        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
         DataCanvas.Draw()
         DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
@@ -281,7 +339,7 @@ if True:
         MCCanvas.Draw()
         MCCanvas.Print(plotting_directory + "/" + histogramName + "PythiaJetJet.png")
 
-        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
         DataCanvas.Draw()
         DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
@@ -293,7 +351,7 @@ if True:
         MCCanvas.Draw()
         MCCanvas.Print(plotting_directory + "/" + histogramName + "PythiaJetJet.png")
 
-        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
         DataCanvas.Draw()
         DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
@@ -305,7 +363,7 @@ if True:
         MCCanvas.Draw()
         MCCanvas.Print(plotting_directory + "/" + histogramName + "PythiaJetJet.png")
 
-        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
         DataCanvas.Draw()
         DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
@@ -317,7 +375,7 @@ if True:
         MCCanvas.Draw()
         MCCanvas.Print(plotting_directory + "/" + histogramName + "PythiaJetJet.png")
 
-        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
         DataCanvas.Draw()
         DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
@@ -329,7 +387,7 @@ if True:
         MCCanvas.Draw()
         MCCanvas.Print(plotting_directory + "/" + histogramName + "PythiaJetJet.png")
 
-        DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+        DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
         DataCanvas.Draw()
         DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
@@ -347,7 +405,7 @@ if True:
         #    DataVSMC10 = DrawDataVsMC(histograms,\
         #                          channelLabels,\
         #                          MCKeys = MCKeys,\
-        #                          DataKey = "LowMuData",\
+        #                          DataKey = DataKey,\
         #                          doLogx = True,\
         #                          doLogy = False,
         #                          ratio_min = 0.6,\
@@ -376,7 +434,7 @@ if True:
             DataVSMC10 = DrawDataVsMC(frac_MIP_of_NonZero,\
                                   channelLabels,\
                                   MCKeys = MCKeys,\
-                                  DataKey = "LowMuData",\
+                                  DataKey = DataKey,\
                                   doLogx = True,\
                                   doLogy = False,
                                   ratio_min = 0.2,\
@@ -390,7 +448,7 @@ if True:
             DataVSMC10 = DrawDataVsMC(frac_MIP_of_Inclusive,\
                                   channelLabels,\
                                   MCKeys = MCKeys,\
-                                  DataKey = "LowMuData",\
+                                  DataKey = DataKey,\
                                   doLogx = True,\
                                   doLogy = False,
                                   ratio_min = 0.6,\
@@ -414,7 +472,7 @@ if True:
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
                                       MCKeys = MCKeys,\
-                                      DataKey = "LowMuData",\
+                                      DataKey = DataKey,\
                                       doLogx = True,\
                                       doLogy = False,
                                       ratio_min = 0.5,\
@@ -431,7 +489,7 @@ if True:
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
                                       MCKeys = MCKeys,\
-                                      DataKey = "LowMuData",\
+                                      DataKey = DataKey,\
                                       doLogx = True,\
                                       doLogy = False,
                                       ratio_min = 0.5,\
@@ -446,7 +504,7 @@ if True:
                 DataVSMC10 = DrawDataVsMC(EOPCorrHistograms,\
                                       channelLabels,\
                                       MCKeys = MCKeys,\
-                                      DataKey = "LowMuData",\
+                                      DataKey = DataKey,\
                                       doLogx = True,\
                                       doLogy = False,\
                                       ylabel = "<E/p>_{Corr}",\
@@ -460,7 +518,7 @@ if True:
                 histogramName = TwoDHistName + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
                 histograms = HM.getHistograms(histogramName)
 
-                DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+                DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
                 DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
                 MCCanvas = Draw2DHistogramOnCanvas(histograms["PythiaJetJet"], doLogx = True, doLogy = False)
@@ -471,7 +529,7 @@ if True:
             DataVsMC = DrawDataVsMC(histograms,\
                                     channelLabels,\
                                     MCKeys = MCKeys,\
-                                    DataKey="LowMuData",\
+                                    DataKey=DataKey,\
                                     ratio_min=0.6,\
                                     ratio_max=1.4,\
                                     rebin=100,\
@@ -499,7 +557,7 @@ if True:
                 DataVSMC10 = DrawDataVsMC(histograms,\
                                       channelLabels,\
                                       MCKeys = MCKeys,\
-                                      DataKey = "LowMuData",\
+                                      DataKey = DataKey,\
                                       doLogx = True,\
                                       doLogy = False,
                                       ratio_min = 0.4,\
@@ -511,7 +569,7 @@ if True:
 
                 histogramName = TwoDHistName + "_InBin_" + str(int(10*eta_range[0])) + "_" + str(int(10*eta_range[1]))
                 histograms = HM.getHistograms(histogramName)
-                DataCanvas = Draw2DHistogramOnCanvas(histograms["LowMuData"], doLogx = True, doLogy = False)
+                DataCanvas = Draw2DHistogramOnCanvas(histograms[DataKey], doLogx = True, doLogy = False)
                 DataCanvas.Print(plotting_directory + "/" + histogramName + "LowMuData.png")
 
                 MCCanvas = Draw2DHistogramOnCanvas(histograms["PythiaJetJet"], doLogx = True, doLogy = False)
@@ -537,7 +595,7 @@ if True:
                             DataVSMC = DrawDataVsMC(histograms,\
                                            channelLabels,\
                                            MCKeys = MCKeys,\
-                                           DataKey = "LowMuData",\
+                                           DataKey = DataKey,\
                                            doLogx = False,\
                                            doLogy = False,
                                            ratio_min = 0.4,\
@@ -553,7 +611,7 @@ if True:
                             DataVsMC1 = DrawDataVsMC(hist,\
                                                     channelLabels,\
                                                     MCKeys = MCKeys,\
-                                                    DataKey=data_key,\
+                                                    DataKey=DataKey,\
                                                     extra_description =  ["P_{T} Reweighted", eta_descriptor, p_low_str + " < |P/GeV| < " + p_high_str] + extra_stuff)
                             DataVsMC1[0].Draw()
                             DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + ".png")
