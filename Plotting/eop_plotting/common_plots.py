@@ -106,7 +106,7 @@ def CreateCompositionPlot(HM, folder):
         c1.Print(folder + "/FractionalComposition_nostack_{}.png".format(eta_bin))
         ROOT.gROOT.SetBatch(ROOT.kTRUE)
 
-def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[], channelLabels={}, plotting_directory="",MCKeys=[]):
+def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenator_selection_name, filename, base_description=[], channelLabels={}, plotting_directory="",MCKeys=[], DataKey="LowMuData"):
     #get the binning vectors
     f = ROOT.TFile(filename, "READ")
     tree = f.Get(numerator_selection_name + "BinningTree")
@@ -141,7 +141,7 @@ def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenat
                                     channelLabels,\
                                     MCKeys = MCKeys,\
                                     #MCKeys = MCKeys,\
-                                    DataKey='LowMuData',\
+                                    DataKey=DataKey,\
                                     doLogx=True,\
                                     doLogy=False,\
                                     ylabel="N(E!=0)/N",\
@@ -150,10 +150,11 @@ def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenat
                                     extra_description = description)
 
             DataVsMC1[0].Draw()
+            histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
             DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + ".png")
             DataVsMC1[0].Close()
 
-def CreatePlotsFromSelection(HM, selection_name, filename, base_description = [], channelLabels={}, MCKeys=[], plotting_directory=""):
+def CreatePlotsFromSelection(HM, selection_name, filename, base_description = [], channelLabels={}, MCKeys=[], plotting_directory="", DataKey = "LowMuData"):
     #get the binning vectors
     f = ROOT.TFile(filename, "READ")
 
@@ -176,6 +177,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                    "TrackTruthPSpectrum",\
                                    "EOPProfileVsMomentum",\
                                    "EnergyAnulusProfileVsMomentum",\
+                                   "EnergyBigBkgProfileVsMomentum",\
                                    "EnergyBkgProfileVsMomentum"]
 
     histograms_in_momentum_bins = ["EOPDistribution",\
@@ -206,14 +208,16 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         DataVsMC1 = DrawDataVsMC(corr_eop,\
                                 channelLabels,\
                                 MCKeys = to_plot,\
-                                DataKey='LowMuData',\
+                                DataKey=DataKey,\
                                 doLogy=False,\
                                 doLogx=True,\
-                                ratio_min=0.95,\
-                                ratio_max=1.05,\
+                                ratio_min=0.90,\
+                                ratio_max=1.10,\
+                                ylabel="<E/p>_{CORR}",\
                                 extra_description = description)
 
         DataVsMC1[0].Draw()
+        histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
         DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "_"  + selection_name + ".png")
         DataVsMC1[0].Close()
 
@@ -228,14 +232,16 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         DataVsMC1 = DrawDataVsMC(corr_eop,\
                                 channelLabels,\
                                 MCKeys = to_plot,\
-                                DataKey='LowMuData',\
+                                DataKey=DataKey,\
                                 doLogy=False,\
                                 doLogx=True,\
-                                ratio_min=0.95,\
-                                ratio_max=1.05,\
+                                ratio_min=0.90,\
+                                ratio_max=1.10,\
+                                ylabel="<E/p>_{CORR}",\
                                 extra_description = description)
 
         DataVsMC1[0].Draw()
+        histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
         DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "_"  + selection_name + ".png")
         DataVsMC1[0].Close()
 
@@ -259,7 +265,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                 shouldILogy = False
                 ratio_min = 0.9
                 ratio_max = 1.1
-                ylabel = "<E/P>_{Raw}"
+                ylabel = "<E/P>_{RAW}"
 
             else:
                 shouldILogy = False
@@ -269,9 +275,9 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             if "Profile" in histogram_name:
                 hist = ProjectProfiles(hist)
 
-            if "EnergyBkgProfileVsMomentum" == hist:
-                ratio_min =0.5
-                ratio_min =1.5
+            if "EnergyBkgProfileVsMomentum" in histogram_name:
+                ratio_min =0.0
+                ratio_max =2.0
 
             if "Spectrum" in histogram:
                 ratio_min = 0.0
@@ -283,7 +289,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             DataVsMC1 = DrawDataVsMC(hist,\
                                     channelLabels,\
                                     MCKeys = to_plot,\
-                                    DataKey='LowMuData',\
+                                    DataKey=DataKey,\
                                     doLogy=shouldILogy,\
                                     doLogx=True,\
                                     ratio_min=ratio_min,\
@@ -291,6 +297,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                     extra_description = description)
 
             DataVsMC1[0].Draw()
+            histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
             DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "_"  + selection_name + ".png")
             DataVsMC1[0].Close()
 
@@ -331,7 +338,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                         ratio_max = ratio_max,\
                                         doLogy=doLogy,\
                                         marker_size = 1.0,\
-                                        DataKey='LowMuData',\
+                                        DataKey=DataKey,\
                                         extra_description = description)
 
                 #DataVsMC1[0].Draw()
@@ -347,6 +354,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                 total_canvas.cd(j+1)
                 canvas.DrawClonePad()
             total_canvas.Draw()
+            histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
             canvas_name = plotting_directory + "/" + histogram + "_"  + selection_name + "_Eta_" + str(i) + ".png"
             print("Printing on png file {}".format(canvas_name))
             total_canvas.Print(canvas_name)
