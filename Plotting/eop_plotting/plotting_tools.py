@@ -33,9 +33,12 @@ DataColor = ROOT.kBlack
 #ColorBlindFriendlyColours
 COLOURS = {}
 COLOURS["PythiaJetJet"] = ROOT.TColor.GetColor(0,73,73)
+COLOURS["up"] = ROOT.TColor.GetColor(0,73,73)
+COLOURS["PythiaJetJetTightIso"] = ROOT.TColor.GetColor(0,73,73)
 COLOURS["PythiaJetJetPionsReweighted"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["PythiaJetJetHardScatter"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["SinglePion"] = ROOT.TColor.GetColor(109,182,255)
+COLOURS["down"] = ROOT.TColor.GetColor(146,73,0)
 
 def GetBinsFromHistogram(hist, entriesPerBin):
     ''' Get bins with # of entries entriesPerBin inside of it'''
@@ -57,7 +60,7 @@ def toGlobalScope(obj):
     '''Keep TObjects alive at global scope'''
     global_scope.append(obj)
 
-def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False, x_range = None, rebin=None, zlabel = None):
+def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False, x_range = None, rebin=None, zlabel = None, y_range=None):
      '''Take a 2-D histogram and plot it on a canvas. Options for a logarithmic x and y axis are available.'''
      global CANVAS_COUNTER
      ROOT.gStyle.SetPalette(ROOT.kInvertedDarkBodyRadiator)
@@ -73,6 +76,8 @@ def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False, x_range = 
      TwoDHist.GetYaxis().SetTitleOffset(1.0)
      if x_range:
          TwoDHist.GetXaxis().SetRangeUser(x_range[0], x_range[1])
+     if y_range:
+         TwoDHist.GetYaxis().SetRangeUser(y_range[0], y_range[1])
 
      if doLogx:
          canvas.SetLogx()
