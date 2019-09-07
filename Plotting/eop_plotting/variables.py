@@ -226,6 +226,21 @@ def trkEtaEMB2(trk):
 branches = ["trk_etaEMB2"]
 calc_trkEtaEMB2 = Calculation(trkEtaEMB2, branches)
 
+cone_strings = ["000","025", "050", "075", "100", "125", "150", "175", "200", "225", "250", "275", "300"]
+def total_energy_annulus_template(trk, min_cone, max_cone):
+    assert min_cone in cone_strings
+    assert max_cone in cone_strings
+    assert int(min_cone) < int(max_cone)
+
+    if int(min_cone) < 24:
+        lower_sum = np.zeros(len(trk))
+    else:
+        lower_sum = trk["trk_ClusterEnergy_EM_{}".format(min_cone)] + trk["trk_ClusterEnergy_HAD_{}".format(min_cone)]
+
+    upper_sum = trk["trk_ClusterEnergy_EM_{}".format(max_cone)] + trk["trk_ClusterEnergy_HAD_{}".format(max_cone)]
+
+    return upper_sum - lower_sum
+
 def EnergyAnulus(trk):
     return trk["trk_ClusterEnergy_EM_200"] - trk["trk_ClusterEnergy_EM_100"]
 branches = ["trk_ClusterEnergy_EM_200", "trk_ClusterEnergy_EM_100"]

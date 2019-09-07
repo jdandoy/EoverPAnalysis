@@ -54,7 +54,6 @@ def put_binning_vectors_in_file(outFile, eta_ranges, p_bins_for_eta_range, descr
         binningTree.Write()
 
 def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta_range, description, do_cluster_plots=False, do_calib_hit_plots=False):
-
     #define a set of eta bins
     eta_count = -1
     for eta_range, p_bins in zip(eta_ranges, p_bins_for_eta_range):
@@ -94,6 +93,52 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
                                                   xlabel ="P[GeV]",\
                                                   ylabel = "E/p",\
                                                   )
+        from variables import cone_strings, total_energy_annulus_template
+        for (low, high) in zip(cone_strings[:-1], cone_strings[1:]):
+            #this function calculates the energy in a cone from low to high
+            func_e = lambda x, y = low, z = high : total_energy_annulus_template(x,y,z)
+            func_e.__name__ = "energy_in_cone_{}_{}".format(low, high)
+            #this function calculates the eop in a cone from low to high
+            func_eop = lambda x, y = low, z = high : total_energy_annulus_template(x,y,z)/x["trk_p"]
+            func_eop.__name__ = "eop_in_cone_{}_{}".format(low, high)
+
+            #define the calculation and the branches that we need for this
+            branches = ["trk_ClusterEnergy_EM_{}".format(low), "trk_ClusterEnergy_HAD_{}".format(low)]
+            branches += ["trk_ClusterEnergy_EM_{}".format(high), "trk_ClusterEnergy_HAD_{}".format(high)]
+            clean_branches = []
+            for b in branches:
+                if "000" not in b:
+                    clean_branches.append(b)
+            branches = clean_branches
+            from calculation import Calculation
+            calc_cone_e = Calculation(func_e, branches)
+            branches = branches + ["trk_p"]
+            calc_cone_eop = Calculation(func_eop, branches)
+
+            #book the histograms
+            low_descr = float(low)/10.0
+            high_descr = float(high)/10.0
+            histogram_name = "EnergyAnnulusProfileVsMomentum_{}_{}".format(low, high)
+            histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+            hist_filler.book_tprofile_fill(histogram_name,\
+                                                      calc_trkP,\
+                                                      calc_cone_e,\
+                                                      selections = selections,\
+                                                      bins = p_bins,\
+                                                      xlabel ="P[GeV]",\
+                                                      ylabel = "<E_{r#in[" + "{},{}".format(low_descr, high_descr) + "]}>[GeV]",\
+                                                      )
+
+            histogram_name = "EOPProfileVsMomentum_{}_{}".format(low, high)
+            histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+            hist_filler.book_tprofile_fill(histogram_name,\
+                                                      calc_trkP,\
+                                                      calc_cone_eop,\
+                                                      selections = selections,\
+                                                      bins = p_bins,\
+                                                      xlabel ="P[GeV]",\
+                                                      ylabel = "<E_{r#in[" + "{},{}".format(low_descr, high_descr) + "]}/p>",\
+                                                      )
 
         histogram_name = "EnergyAnulusProfileVsMomentum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
