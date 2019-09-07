@@ -145,10 +145,12 @@ def tchain_files_together(tree_name, channel_to_filelist, on_eos = True):
                 for wild_card in wildcards:
                     files += glob.glob(os.path.join(f, wild_card))
 
+
                 unique_files = []
                 for raw_file in files:
                     file_with_path = os.path.join(f, raw_file)
                     if file_with_path not in unique_files and os.path.isfile(file_with_path):
+                        assert "//" not in file_with_path
                         print("Found file {}".format(file_with_path))
                         if on_eos:
                             trees[channel][f].Add("root://eosatlas/" + file_with_path)
