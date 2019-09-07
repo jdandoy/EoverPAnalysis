@@ -55,7 +55,7 @@ else:
 if args.resub:
     jobName = jobDir
 
-    leading_script = file("condor_" + jobName + ".resub", "w")
+    leading_script = file("condor_" + jobName.split("/")[-1] + ".resub", "w")
     leading_script.write("Universe = vanilla\n")
     leading_script.write("Executable = condorSubmission/plot.sh\n")
 
