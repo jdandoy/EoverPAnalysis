@@ -123,7 +123,6 @@ def handle_underflow_overflow(h):
     '''
     add the underflow and overflow (underflow = 0, overflow=nbins+1)
     '''
-
     # underflow
     underflow = h.GetBinContent(0)
     first_bin = h.GetBinContent(1)
@@ -206,8 +205,7 @@ def GetChannelName(hist_dict, hist):
     channel = hist1_name[first_difference:]
     return channel
 
-
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None,marker_size = None):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None,marker_size = None, ratio_label = None):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -419,7 +417,11 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
 
         data_ratio.GetYaxis().SetNdivisions(yTicksNumber)
 
-        data_ratio.GetYaxis().SetTitle("Data/MC")
+        if ratio_label == None:
+            data_ratio.GetYaxis().SetTitle("Data/MC")
+        else:
+            data_ratio.GetYaxis().SetTitle(ratio_label)
+
         scale_ratio = (top_pad.GetWh()*top_pad.GetAbsHNDC())/(bottom_pad.GetWh() * bottom_pad.GetAbsHNDC())
         data_ratio.GetXaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
         data_ratio.GetYaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
