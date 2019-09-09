@@ -180,6 +180,15 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                    "EnergyBigBkgProfileVsMomentum",\
                                    "EnergyBkgProfileVsMomentum"]
 
+    from variables import cone_strings
+    base = "EOPProfileVsMomentum_{}_{}"
+    for low, high in zip(cone_strings[:-1], cone_strings[1:]):
+     histograms_in_eta_bins.append(base.format(low, high))
+    from variables import cone_strings
+    base = "EnergyAnnulusProfileVsMomentum_{}_{}"
+    for low, high in zip(cone_strings[:-1], cone_strings[1:]):
+        histograms_in_eta_bins.append(base.format(low, high))
+
     histograms_in_momentum_bins = ["EOPDistribution",\
                                     "EnergyBkgDistribution",\
                                     "trkTRTHits",\
