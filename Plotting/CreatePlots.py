@@ -34,7 +34,7 @@ if ("Pt" in filename or "pt" in filename) and "weight" in filename:
     base_description = ["P_{T} Reweighted"]
 if "npv2" in filename and "weight" in filename:
     base_description = ["NPV Reweighted"]
-channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "Pythia8 MinBias and Dijet", DataKey: "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched", "PythiaJetJetTightIso": "Pythia8 MinBias and Dijet", "LowMuDataTightIso":"2017 Low-<#mu> Data"}
+channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "#splitline{Pythia8}{MinBias and Dijet}", DataKey: "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched", "PythiaJetJetTightIso": "#splitline{Pythia8}{MinBias and Dijet}", "LowMuDataTightIso":"2017 Low-<#mu> Data"}
 
 plotting_directory = (filename.split("/")[-1]).replace(".root","") + "plots"
 
@@ -49,6 +49,8 @@ histogram_name_base_up = "EnergyBkgUpProfileVsMomentum__{}_Eta_{}"
 histogram_name_base_down = "EnergyBkgDownProfileVsMomentum__{}_Eta_{}"
 selection = "MIPSelectionHadFracAbove70"
 bins = range(0, 5)
+
+from variables import cone_strings
 
 for i in bins:
     histogram_name = histogram_name_base.format(selection, i)
@@ -66,9 +68,7 @@ for i in bins:
        to_plot["down"] = hist_down[channel]
        these_MCKeys = ["up", "down"]
        these_DataKey = "nominal"
-
        to_plot = ProjectProfiles(to_plot)
-
        these_channelLabels = {"nominal":"Nominal", "up":"Outer Annulus", "down":"Inner Annulus"}
        description = base_description + ["MIP Selection"]
        DataVsMC1 = DrawDataVsMC(to_plot,\
@@ -86,6 +86,54 @@ for i in bins:
        DataVsMC1[0].Draw()
        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}SystVar.png".format(channel))
        DataVsMC1[0].Close()
+
+    hist_dict = {}
+    base = "EOPProfileVsMomentum_{}_{}" +"__" + selection + "_Eta_"+str(i)
+    nominal = "EOPProfileVsMomentum"  +"__" + selection + "_Eta_"+str(i)
+    other_keys = []
+    i = 0
+    for low,high in zip(cone_strings[:-1], cone_strings[1:]):
+        i += 1
+        if i == 9:
+            break
+        histogram_name = base.format(low, high)
+        key = "{}_{}".format(low,high)
+        other_keys.append(key)
+        hist_dict[key] = HM.getHistograms(histogram_name)
+
+    hist_dict["nominal"] = HM.getHistograms(nominal)
+
+    for channel in ["LowMuData", "PythiaJetJet"]:
+        to_plot = {}
+        for key in hist_dict:
+            to_plot[key] = hist_dict[key][channel]
+            these_MCKeys = other_keys
+            these_DataKey = "nominal"
+            these_channelLabels = {"nominal":"Nominal"}
+            for key in these_MCKeys:
+                low, high = key.split("_")
+                low, high = int(low), int(high)
+                low = float(low)/1000.0
+                high = float(high)/1000.0
+                these_channelLabels[key] = "["+str(low)+","+str(high)+"]"
+        to_plot = ProjectProfiles(to_plot)
+        DataVsMC1 = DrawDataVsMC(to_plot,\
+                               these_channelLabels,\
+                               MCKeys = these_MCKeys,\
+                               DataKey = these_DataKey,\
+                               ratio_min=0.0,\
+                               ratio_max=1.0,\
+                               doLogx=True,\
+                               doLogy=False,\
+                               xlabel="P [GeV]",\
+                               ylabel="<E/p>",\
+                               ratio_label = "Ann./Nom.",\
+                               invert_ratio = True,\
+                               skip_ratio = True,\
+                               bigger_legend = True,\
+                               skip_data = True,\
+                               extra_description = description)
+        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}Cones.png".format(channel))
 
 histogram_name_base = "EnergyBigBkgProfileVsMomentum__{}_Eta_{}"
 histogram_name_base_up = "EnergyBigBkgUpProfileVsMomentum__{}_Eta_{}"
@@ -130,8 +178,55 @@ for i in bins:
        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}SystVar.png".format(channel))
        DataVsMC1[0].Close()
 
+    hist_dict = {}
+    base = "EOPProfileVsMomentum_{}_{}" +"__" + selection + "_Eta_"+str(i)
+    nominal = "EOPProfileVsMomentum"  +"__" + selection + "_Eta_"+str(i)
+    other_keys = []
+    i = 0
+    for low,high in zip(cone_strings[:-1], cone_strings[1:]):
+        i += 1
+        if i == 9:
+            break
+        histogram_name = base.format(low, high)
+        key = "{}_{}".format(low,high)
+        other_keys.append(key)
+        hist_dict[key] = HM.getHistograms(histogram_name)
+    hist_dict["nominal"] = HM.getHistograms(nominal)
 
-#CreateCompositionPlot(HM, plotting_directory)
+    for channel in ["LowMuDataTightIso", "PythiaJetJetTightIso"]:
+        to_plot = {}
+        to_plot = ProjectProfiles(to_plot)
+        for key in hist_dict:
+            to_plot[key] = hist_dict[key][channel]
+            these_MCKeys = other_keys
+            these_DataKey = "nominal"
+            these_channelLabels = {"nominal":"Nominal"}
+            for key in these_MCKeys:
+                low, high = key.split("_")
+                low, high = int(low), int(high)
+                low = float(low)/1000.0
+                high = float(high)/1000.0
+                these_channelLabels[key] = "["+str(low)+","+str(high)+"]"
+        DataVsMC1 = DrawDataVsMC(to_plot,\
+                               these_channelLabels,\
+                               MCKeys = these_MCKeys,\
+                               DataKey = these_DataKey,\
+                               ratio_min=0.0,\
+                               ratio_max=1.0,\
+                               doLogx=True,\
+                               doLogy=False,\
+                               xlabel="P [GeV]",\
+                               ylabel="<E/p>",\
+                               ratio_label = "Ann./Nom.",\
+                               invert_ratio = True,\
+                               skip_ratio = True,\
+                               bigger_legend = True,\
+                               skip_data = True,\
+                               extra_description = description)
+        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}Cones.png".format(channel))
+
+
+CreateCompositionPlot(HM, plotting_directory)
 #CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys, DataKey="LowMuData")
 #CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys, DataKey = "LowMuData")
 
@@ -144,9 +239,9 @@ for i in bins:
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + ["Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
 TwentyTRTNonZero_description = base_description + ["E_{TOTAL} != 0.0", "N_{TRT} >= 20", "Tight Isolation"]
 CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = TwentyTRTNonZero_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
-#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection", "Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
+CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection", "Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
 #CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + [],doFit = True,fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
 
