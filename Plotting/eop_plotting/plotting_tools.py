@@ -39,6 +39,20 @@ COLOURS["PythiaJetJetPionsReweighted"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["PythiaJetJetHardScatter"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["SinglePion"] = ROOT.TColor.GetColor(109,182,255)
 COLOURS["down"] = ROOT.TColor.GetColor(146,73,0)
+CB_color_cycle = ['#ffffcc',\
+'#ffeda0',\
+'#fed976',\
+'#feb24c',\
+'#fd8d3c',\
+'#fc4e2a',\
+'#e31a1c',\
+'#bd0026',\
+'#800026']
+from variables import cone_strings
+
+for low, high, color in zip(cone_strings[:-1], cone_strings[1:], CB_color_cycle[::-1]):
+     color = ROOT.TColor.GetColor(color)
+     COLOURS["{}_{}".format(low, high)] = color
 
 def GetBinsFromHistogram(hist, entriesPerBin):
     ''' Get bins with # of entries entriesPerBin inside of it'''
@@ -55,6 +69,27 @@ def GetBinsFromHistogram(hist, entriesPerBin):
 
     return bins, tracks
 
+def ATLASLabel(x, y, text=None, color=1, size = None):
+    """Draw the ATLAS Label.
+    Parameters
+    ----------
+    x : float
+        x position in NDC coordinates
+    y : float
+        y position in NDC coordinates
+    text : string, optional
+        Text displayed next to label (the default is None)
+    color : TColor, optional
+        Text colour (the default is 1, i.e. black).
+        See https://ROOT.cern.ch/doc/master/classTColor.html
+    """
+    l = ROOT.TLatex()
+    l.SetNDC()
+    l.SetTextColor(color)
+    if size != None:
+        l.SetTextSize(size)
+    l.DrawLatex(x, y, r"#bf{#it{ATLAS}} " + text)
+
 
 def toGlobalScope(obj):
     '''Keep TObjects alive at global scope'''
@@ -69,7 +104,7 @@ def Draw2DHistogramOnCanvas(TwoDHist, doLogx = False, doLogy = False, x_range = 
      canvas = ROOT.TCanvas(canvas_name, canvas_name, 1300, 800)
      canvas.SetRightMargin(0.25)
      TwoDHist.Draw("colz")
-     #TwoDHist.GetZaxis().SetTitleSize(0.035)
+     #TwoDHist.GetZaxis().SetTitleSize(text_size)
      TwoDHist.GetZaxis().SetTitleOffset(3.5)
      TwoDHist.GetXaxis().SetTitleOffset(1.0)
      TwoDHist.GetZaxis().SetTitleOffset(0.8)
@@ -107,11 +142,11 @@ def DrawText(x, y, text, color=1, size=0.05):
         The text
     color : int, optional
         Text colour (the default is 1, i.e. black).
-        See https://root.cern.ch/doc/master/classTColor.html.
+        See https://ROOT.cern.ch/doc/master/classTColor.html.
         If you know the hex code, rgb values, etc., use ``ROOT.TColor.GetColor()``
     size : float, optional
         Text size
-        See https://root.cern.ch/doc/master/classTLatex.html
+        See https://ROOT.cern.ch/doc/master/classTLatex.html
     '''
     l = ROOT.TLatex()
     l.SetTextSize(size)
@@ -205,7 +240,7 @@ def GetChannelName(hist_dict, hist):
     channel = hist1_name[first_difference:]
     return channel
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.37, extra_desy = 0.87, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None,marker_size = None, ratio_label = None):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.40, extra_desy = 0.85, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None,marker_size = None, ratio_label = None, invert_ratio = False, bigger_legend = False, skip_data = False, skip_ratio = False):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -227,13 +262,15 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     yTicksNumber: set the number of ticks on the y-axis
     -----------------------------------------------------------------------------------------------------
     '''
+    text_size = 0.05
+    if not skip_ratio:
+        text_size *= 1.3
+
     global CANVAS_COUNTER #This is to make sure that no two canvases ever get the same name. Otherwise root complains...
     canvas_name = "Canvas" + "".join(MCKeys) + DataKey + str(CANVAS_COUNTER)
     CANVAS_COUNTER = CANVAS_COUNTER + 1
     canvas = ROOT.TCanvas(canvas_name, canvas_name, 1300, 800)
     canvas.cd()
-
-    title_offset = 1.2
 
     MCHists_keys = [(histogram_dict[MCKey], MCKey) for MCKey in MCKeys]
     MCHists = [MCHists_key[0] for MCHists_key in MCHists_keys]
@@ -245,6 +282,26 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         DataHist.SetMarkerSize(marker_size)
 
     MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
+
+    title_offset = 0.9
+
+    if not skip_ratio:
+       [MCHist.GetXaxis().SetLabelSize( float(MCHist.GetXaxis().GetLabelSize() * 1.2) ) for MCHist in MCHists]
+       [MCHist.GetYaxis().SetLabelSize( float(MCHist.GetYaxis().GetLabelSize() * 1.2) ) for MCHist in MCHists]
+       DataHist.GetYaxis().SetLabelSize( float(MCHists[0].GetYaxis().GetLabelSize() * 1.2) )
+       DataHist.GetXaxis().SetLabelSize( float(MCHists[0].GetXaxis().GetLabelSize() * 1.2) )
+
+       [MCHist.GetXaxis().SetTitleSize( float(MCHist.GetXaxis().GetTitleSize() * 1.7) ) for MCHist in MCHists]
+       [MCHist.GetYaxis().SetTitleSize( float(MCHist.GetYaxis().GetTitleSize() * 1.7) ) for MCHist in MCHists]
+       DataHist.GetYaxis().SetTitleSize( float(MCHists[0].GetYaxis().GetTitleSize() * 1.7) )
+       DataHist.GetXaxis().SetTitleSize( float(MCHists[0].GetXaxis().GetTitleSize() * 1.7) )
+
+       [MCHist.GetXaxis().SetTitleOffset( title_offset ) for MCHist in MCHists]
+       [MCHist.GetYaxis().SetTitleOffset( title_offset ) for MCHist in MCHists]
+       DataHist.GetYaxis().SetTitleOffset(title_offset)
+
+    #title_offset = DataHist.GetYaxis().GetTitleOffset()
+    #title_offset = MCHists[0].GetYaxis().GetTitleOffset()
 
     [MCHist.SetLineColor(COLOURS[MCKey]) for MCKey, MCHist in zip(MCKeys, MCHists)]
     if xlabel:
@@ -272,16 +329,28 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         [MCHist.GetXaxis().SetRange(x_low, x_high) for MCHist in MCHists]
         DataHist.GetXaxis().SetRange(x_low, x_high)
 
-    legend = ROOT.TLegend(0.60, 0.65, 0.92, 0.89)
+    if not bigger_legend:
+        legend = ROOT.TLegend(0.60, 0.65, 0.94, 0.89)
+    else:
+        legend = ROOT.TLegend(0.60, 0.65, 0.94, 0.89)
+        legend.SetNColumns(2)
+    legend.SetTextSize(text_size)
+    if skip_ratio:
+        legend.SetTextSize(text_size * 0.8)
     legend.SetBorderSize(0)
     toGlobalScope(legend)
 
-
-    top_pad = ROOT.TPad("toppad" + str(CANVAS_COUNTER), "toppad" + str(CANVAS_COUNTER), 0, 0.3, 1, 1.0)
+    if not skip_ratio:
+        top_pad = ROOT.TPad("toppad" + str(CANVAS_COUNTER), "toppad" + str(CANVAS_COUNTER), 0, 0.3, 1, 1.0)
+    else:
+        top_pad = ROOT.TPad("toppad" + str(CANVAS_COUNTER), "toppad" + str(CANVAS_COUNTER), 0, 0.0, 1, 1.0)
     canvas.cd()
     top_pad.Draw()
     top_pad.cd()
-    top_pad.SetBottomMargin(0)
+    if not skip_ratio:
+        top_pad.SetBottomMargin(0)
+    else:
+        top_pad.SetBottomMargin(0.2)
 
     filename = MCHists[0].GetTitle() + "histogram"
 
@@ -298,12 +367,13 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
             if content < minimum_bin and content > 0.0:
                 minimum_bin = content
 
-        for bin in range(1, DataHist.GetNbinsX() + 1):
-            content = DataHist.GetBinContent(bin)
-            if content > maximum_bin:
-                maximum_bin = content
-            if content < minimum_bin and content > 0.0:
-                minimum_bin = content
+        if not skip_data:
+           for bin in range(1, DataHist.GetNbinsX() + 1):
+               content = DataHist.GetBinContent(bin)
+               if content > maximum_bin:
+                   maximum_bin = content
+               if content < minimum_bin and content > 0.0:
+                   minimum_bin = content
 
     if doLogy:
         filename += "logy"
@@ -324,8 +394,6 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         DataHist.SetMaximum(maximum_bin * 1.5)
         DataHist.SetMinimum(minimum_bin * 0.5)
 
-    [MCHist.GetYaxis().SetTitleOffset(1.3) for MCHist in MCHists]
-
     if ylabel:
         [MCHist.GetYaxis().SetTitle(ylabel) for MCHist in MCHists]
 
@@ -335,7 +403,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     for MCHist in MCHists[1:]:
         MCHist.Draw("SAME ][ HIST E")
         MCHist.Draw("SAME ][ HIST")
-    DataHist.Draw("SAME")
+    if not skip_data:
+        DataHist.Draw("SAME")
 
     hist_description = []
     for MCHist in MCHists:
@@ -348,7 +417,7 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         ndf = fit.GetNDF()
         prob = fit.GetProb()
         string = "#chi^2/ndf = {:1.3f}/{}      Prob = {:1.3f}".format(chisq, ndf, prob)
-        DrawText(0.6, 0.5, string, color = fit.GetLineColor(), size = 0.035)
+        DrawText(0.60, 0.5, string, color = fit.GetLineColor(), size = text_size)
 
     fit = DataHist.GetListOfFunctions().Last()
     if fit:
@@ -358,9 +427,9 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
        ndf = fit.GetNDF()
        prob = fit.GetProb()
        string = "#chi^2/ndf = {:1.3f}/{}      Prob = {:1.3f}".format(chisq, ndf, prob)
-       DrawText(0.6, 0.6, string, color = fit.GetLineColor(), size = 0.035)
+       DrawText(0.6, 0.6, string, color = fit.GetLineColor(), size = text_size)
 
-    legend.SetTextSize(0.04)
+    #legend.SetTextSize(0.04)
     for MCHist, MCKey in zip(MCHists, MCKeys):
         legend.AddEntry(MCHist, LegendLabels[MCKey])
     legend.AddEntry(DataHist, LegendLabels[DataKey])
@@ -368,12 +437,15 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
 
     if extra_description:
         if not type(extra_description) == list:
-            DrawText(extra_desx, extra_desy, extra_description)
+            DrawText(extra_desx, extra_desy, extra_description, size = text_size)
         else:
             top = extra_desy
             for descr in extra_description:
-                DrawText(extra_desx, top, descr)
-                top -= 0.08
+                DrawText(extra_desx, top, descr, size = text_size)
+                if not skip_ratio:
+                    top -= 0.10
+                else:
+                    top -= 0.07
 
     if doLogy:
         top_pad.SetLogy()
@@ -382,124 +454,133 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
 
     ROOT.gROOT.SetStyle("ATLAS")
     if foundAtlasPlots:
-        astyle.ATLASLabel(0.2, 0.87, "Internal")
+        x = 0.2
+        y = 0.85
+        ATLASLabel(x, y, "Internal", size = text_size)
     top_pad.Modified()
     top_pad.Update()
     toGlobalScope(top_pad)
 
     canvas.cd()
     bottom_pad = ROOT.TPad("botpad" + str(CANVAS_COUNTER), "botpad" + str(CANVAS_COUNTER), 0, 0.01, 1, 0.3)
-    canvas.cd()
-    if doLogx:
-        bottom_pad.SetLogx()
-    #bottom_pad.SetRightMargin(0.15)
-    bottom_pad.Draw()
-    bottom_pad.cd()
-    toGlobalScope(bottom_pad)
+    if not skip_ratio:
+       canvas.cd()
+       if doLogx:
+           bottom_pad.SetLogx()
+       #bottom_pad.SetRightMargin(0.15)
+       bottom_pad.Draw()
+       bottom_pad.cd()
+       toGlobalScope(bottom_pad)
 
-    counter = 0
-    for MCHist, MCKey in zip(MCHists, MCKeys):
-        counter += 1
-        data_ratio = DataHist.Clone("data_histogram" + str(counter))
-        data_ratio.Divide(MCHist)
-        data_ratio = cleanUpHistograms(data_ratio)
-        data_ratio.SetLineColor(COLOURS[MCKey])
+       counter = 0
+       for MCHist, MCKey in zip(MCHists, MCKeys):
+           counter += 1
+           if not invert_ratio:
+               data_ratio = DataHist.Clone("data_histogram" + str(counter))
+               data_ratio.Divide(MCHist)
+           else:
+               data_ratio = MCHist.Clone("data_histogram" + str(counter))
+               data_ratio.Divide(DataHist)
+           data_ratio = cleanUpHistograms(data_ratio)
+           data_ratio.SetLineColor(COLOURS[MCKey])
 
-        if counter == 1:
-            data_ratio.Draw("][ HIST E")
-            data_ratio.Draw("][ HIST SAME")
-        else:
-            data_ratio.Draw("][ HIST SAME E")
-            data_ratio.Draw("][ HIST SAME")
+           if counter == 1:
+               data_ratio.Draw("][ HIST E")
+               data_ratio.Draw("][ HIST SAME")
+           else:
+               data_ratio.Draw("][ HIST SAME E")
+               data_ratio.Draw("][ HIST SAME")
 
-        MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
-        variableLabel = MCHist.GetXaxis().GetTitle()
+           MCHist_label_size = MCHist.GetXaxis().GetLabelSize()
+           MCHist_xtitle_size = MCHist.GetXaxis().GetTitleSize()
+           MCHist_ytitle_size = MCHist.GetYaxis().GetTitleSize()
+           variableLabel = MCHist.GetXaxis().GetTitle()
 
-        data_ratio.GetYaxis().SetNdivisions(yTicksNumber)
+           data_ratio.GetYaxis().SetNdivisions(yTicksNumber)
 
-        if ratio_label == None:
-            data_ratio.GetYaxis().SetTitle("Data/MC")
-        else:
-            data_ratio.GetYaxis().SetTitle(ratio_label)
+           if ratio_label == None:
+               data_ratio.GetYaxis().SetTitle("Data/MC")
+           else:
+               data_ratio.GetYaxis().SetTitle(ratio_label)
 
-        scale_ratio = (top_pad.GetWh()*top_pad.GetAbsHNDC())/(bottom_pad.GetWh() * bottom_pad.GetAbsHNDC())
-        data_ratio.GetXaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
-        data_ratio.GetYaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
-        data_ratio.GetXaxis().SetTitle(variableLabel)
-        data_ratio.GetXaxis().SetTitleOffset(1.2)
-        data_ratio.SetMaximum(ratio_max - 0.0001)
-        data_ratio.SetMinimum(ratio_min + 0.0001)
-        data_ratio.GetXaxis().SetTitleSize(MCHist_label_size*scale_ratio)
-        data_ratio.GetYaxis().SetTitleSize(MCHist_label_size*scale_ratio)
-        data_ratio.GetYaxis().SetTitleOffset(title_offset/scale_ratio)
-        data_ratio.SetMaximum(ratio_max - 0.0001)
-        data_ratio.SetMinimum(ratio_min + 0.0001)
+           scale_ratio = (top_pad.GetWh()*top_pad.GetAbsHNDC())/(bottom_pad.GetWh() * bottom_pad.GetAbsHNDC())
+           data_ratio.GetXaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
+           data_ratio.GetYaxis().SetLabelSize(MCHist_label_size*(scale_ratio))
+           data_ratio.GetXaxis().SetTitle(variableLabel)
+           data_ratio.GetXaxis().SetTitleOffset(title_offset)
+           data_ratio.SetMaximum(ratio_max - 0.0001)
+           data_ratio.SetMinimum(ratio_min + 0.0001)
+           data_ratio.GetXaxis().SetTitleSize(MCHist_xtitle_size*scale_ratio)
+           data_ratio.GetYaxis().SetTitleSize(MCHist_ytitle_size*scale_ratio)
+           data_ratio.GetYaxis().SetTitleOffset(title_offset/scale_ratio)
+           data_ratio.SetMaximum(ratio_max - 0.0001)
+           data_ratio.SetMinimum(ratio_min + 0.0001)
 
-        if counter == 1:
-            data_ratio.Draw("][ HIST E")
-            data_ratio.Draw("][ HIST SAME")
-        else:
-            data_ratio.Draw("SAME ][ HIST E")
-            data_ratio.Draw("SAME ][ HIST SAME")
+           if counter == 1:
+               data_ratio.Draw("][ HIST E")
+               data_ratio.Draw("][ HIST SAME")
+           else:
+               data_ratio.Draw("SAME ][ HIST E")
+               data_ratio.Draw("SAME ][ HIST SAME")
 
-        toGlobalScope(data_ratio)
+           toGlobalScope(data_ratio)
 
-        if xTicksNumber != None:
-            data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
+           if xTicksNumber != None:
+               data_ratio.GetXaxis().SetNdivisions(xTicksNumber)
 
-    ##Draw a set of solid and dotted lines on the ratio plot to guide the reader's eyes
-    straight_line = ROOT.TF1("line1", str(1.0) , -10e6, + 10e6)
-    straight_line.SetLineWidth(2)
-    straight_line.Draw("Same")
-    toGlobalScope(straight_line)
+       ##Draw a set of solid and dotted lines on the ratio plot to guide the reader's eyes
+       straight_line = ROOT.TF1("line1", str(1.0) , -10e6, + 10e6)
+       straight_line.SetLineWidth(2)
+       straight_line.Draw("Same")
+       toGlobalScope(straight_line)
 
-    straight_line_up = ROOT.TF1("line2",  str(1.0 + (2.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
-    straight_line_up.SetLineWidth(1)
-    straight_line_up.SetLineStyle(1)
-    straight_line_up.Draw("Same")
-    toGlobalScope(straight_line_up)
+       straight_line_up = ROOT.TF1("line2",  str(1.0 + (2.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
+       straight_line_up.SetLineWidth(1)
+       straight_line_up.SetLineStyle(1)
+       straight_line_up.Draw("Same")
+       toGlobalScope(straight_line_up)
 
-    straight_line_up2 = ROOT.TF1("line3",  str(1.0 + (1.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
-    straight_line_up2.SetLineWidth(1)
-    straight_line_up2.SetLineStyle(3)
-    straight_line_up2.Draw("Same")
-    toGlobalScope(straight_line_up2)
+       straight_line_up2 = ROOT.TF1("line3",  str(1.0 + (1.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
+       straight_line_up2.SetLineWidth(1)
+       straight_line_up2.SetLineStyle(3)
+       straight_line_up2.Draw("Same")
+       toGlobalScope(straight_line_up2)
 
-    straight_line_up3 = ROOT.TF1("line4",  str(1.0 + (3.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
-    straight_line_up3.SetLineWidth(1)
-    straight_line_up3.SetLineStyle(3)
-    straight_line_up3.Draw("Same")
-    toGlobalScope(straight_line_up3)
+       straight_line_up3 = ROOT.TF1("line4",  str(1.0 + (3.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
+       straight_line_up3.SetLineWidth(1)
+       straight_line_up3.SetLineStyle(3)
+       straight_line_up3.Draw("Same")
+       toGlobalScope(straight_line_up3)
 
-    straight_line_down3 = ROOT.TF1("line5",  str(1.0 - (3.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
-    straight_line_down3.SetLineWidth(1)
-    straight_line_down3.SetLineStyle(3)
-    straight_line_down3.Draw("Same")
-    toGlobalScope(straight_line_down3)
+       straight_line_down3 = ROOT.TF1("line5",  str(1.0 - (3.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
+       straight_line_down3.SetLineWidth(1)
+       straight_line_down3.SetLineStyle(3)
+       straight_line_down3.Draw("Same")
+       toGlobalScope(straight_line_down3)
 
-    straight_line_down = ROOT.TF1("line6",  str(1.0 - (2.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
-    straight_line_down.SetLineWidth(1)
-    straight_line_down.SetLineStyle(1)
-    straight_line_down.Draw("Same")
-    toGlobalScope(straight_line_down)
+       straight_line_down = ROOT.TF1("line6",  str(1.0 - (2.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
+       straight_line_down.SetLineWidth(1)
+       straight_line_down.SetLineStyle(1)
+       straight_line_down.Draw("Same")
+       toGlobalScope(straight_line_down)
 
-    straight_line_down2 = ROOT.TF1("line7",  str(1.0 - (1.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
-    straight_line_down2.SetLineWidth(1)
-    straight_line_down2.SetLineStyle(3)
-    straight_line_down2.Draw("Same")
-    toGlobalScope(straight_line_down2)
+       straight_line_down2 = ROOT.TF1("line7",  str(1.0 - (1.0 * (ratio_max - 1.0)/4)) , -10e6, + 10e6)
+       straight_line_down2.SetLineWidth(1)
+       straight_line_down2.SetLineStyle(3)
+       straight_line_down2.Draw("Same")
+       toGlobalScope(straight_line_down2)
 
-    canvas.cd()
-    bottom_pad.Modified()
-    bottom_pad.Update()
+       canvas.cd()
+       bottom_pad.Modified()
+       bottom_pad.Update()
 
-    bottom_pad.Draw()
-    bottom_pad.cd()
-    bottom_pad.SetTopMargin(0)
-    bottom_pad.SetBottomMargin(0.45)
+       bottom_pad.Draw()
+       bottom_pad.cd()
+       bottom_pad.SetTopMargin(0)
+       bottom_pad.SetBottomMargin(0.45)
 
-    bottom_pad.Modified()
-    bottom_pad.Update()
+       bottom_pad.Modified()
+       bottom_pad.Update()
 
     top_pad.Modified()
     top_pad.Update()
