@@ -1,5 +1,7 @@
 import ROOT
 import array
+import uproot as ur
+from histogram_manager import HistogramManager
 
 def scotts_rule(histogram):
     N = histogram.Integral()
@@ -7,9 +9,11 @@ def scotts_rule(histogram):
     width = (sigma)/(N**(1.0/3.0))
     return width
 
-def generate_eop_var(low, high):
-    eop = ROOT.RooRealVar("eop_{}".format(category_name), "eop_{}".format(category_name), range[0], range[1])
+def generate_eop_var(low, high, sub_ranges = {}):
+    eop = ROOT.RooRealVar("eop", "eop" ,low,high)
     eop.setRange("Full", low,high)
+    for r in sub_ranges:
+        eop.setRange(r, sub_ranges[r][0], sub_ranges[r][1])
     return eop
 
 def prepare_for_fit():
@@ -23,7 +27,7 @@ def prepare_for_fit():
     ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ## Better numerical integrator
 
 def generate_dcb(x):
-    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 125.0, 110.0, 140.0)
+    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 1.0, 0.0, 2.0)
     eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
     eop_alphaLo = ROOT.RooRealVar("eop_alphaLo", "eop_alphaLo", 1.0, 0.0, 100.0)
     eop_alphaHi = ROOT.RooRealVar("eop_alphaHi", "eop_alphaHi", 1.0, 0.0, 100.0)
@@ -34,18 +38,65 @@ def generate_dcb(x):
     return eop_model, var_list
 
 def generate_gaus(x):
-    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 125.0, 110.0, 140.0)
+    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 1.0, 0.0, 2.0)
     eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
     eop_model = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)",x,eop_mean,eop_sigma)
     var_list = [eop_mean, eop_sigma]
     return eop_model, var_list
 
 def generate_landau(x):
-    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 125.0, 110.0, 140.0)
+    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 1.0, 0.0, 2.0)
     eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
     eop_model = landau = RooLandau ('lx', 'lx', x, eop_mpv, eop_sigma)
     var_list = [eop_mpv, eop_sigma]
     return eop_model, var_list
+
+def do_fit(histograms):
+    for channel in histograms:
+        if channel != "LowMuData":
+            continue
+        print("Fitting the histogram in channel {}".format(channel))
+        to_fit = histograms[channel]
+        eop = generate_eop_var(-1.0, 3.0)
+        eop_hist = ROOT.RooDataHist("eop_var", "eop_var", ROOT.RooArgList(eop), to_fit)
+        model, variables = generate_gaus(eop)
+        result = model.fitTo(eop_hist)
+        raw_input()
+
+def test_fit(f):
+    histogram_base = "EOPDistribution"
+    selection_name = "MIPSelectionHadFracAbove70"
+
+    #get the binning vectors
+    rf = ROOT.TFile(f, "READ")
+
+    tree = rf.Get(selection_name + "BinningTree")
+    for bins in tree:
+        break
+
+    eta_bins_low = getattr(bins, selection_name+"EtaBinsLow")
+    eta_bins_high = getattr(bins, selection_name+"EtaBinsHigh")
+
+    p_bins_low_for_eta_bin = []
+    p_bins_high_for_eta_bin = []
+
+    #get all of the binning information that we need
+    for i in range(0, eta_bins_low.size()):
+        p_bins_low_for_eta_bin.append(getattr(bins, selection_name+"PBinsLow_Eta"+str(i)))
+        p_bins_high_for_eta_bin.append(getattr(bins, selection_name+"PBinsHigh_Eta"+str(i)))
+
+    HM = HistogramManager(f)
+
+    for i, eta_low, eta_high in zip(range(0, len(eta_bins_low)),eta_bins_low, eta_bins_high):
+        for j, p_low, p_high in zip(range(0, len(p_bins_low_for_eta_bin[i])),p_bins_low_for_eta_bin[i], p_bins_high_for_eta_bin[i]):
+            histogram_name = histogram_base + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
+            histograms = HM.getHistograms(histogram_name)
+            do_fit(histograms)
+
+if __name__ == "__main__":
+    f="pt_reweighted.root"
+    test_fit(f)
+
 
 def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=-1,eta_high=-1,p_low=-1,p_high=-1, refit=False, rebin=False, rebin_rule = None):
     '''
