@@ -4,14 +4,14 @@ import argparse
 import subprocess
 
 parser = argparse.ArgumentParser(description='check that all of the plotting jobs have finished running')
-parser.add_argument('--jobDir', '-jd', dest="jobDir", type=str, required=True, help='where to look for the jobs that ran')
+parser.add_argument('--job_dir', '-jd', dest="job_dir", type=str, required=True, help='where to look for the jobs that ran')
 parser.add_argument('--resub', '-r', dest="resub", required=False, action='store_true', help="resubmit the jobs")
 
 args = parser.parse_args()
-jobDir = args.jobDir
+job_dir = args.job_dir
 
 outputFiles = []
-for root, dirs, files in os.walk(jobDir+"/Output/", topdown=False):
+for root, dirs, files in os.walk(job_dir+"/Output/", topdown=False):
    for name in files:
       outputFiles.append(os.path.join(root, name))
 
@@ -42,7 +42,7 @@ for outputFile in outputFiles:
         print("the job with ID " + outputFile.split(".")[-1] + " didn't finish")
 
     job_number = outputFile.split(".")[-1]
-    has_file = os.path.isfile(jobDir + "_" + job_number + ".root")
+    has_file = os.path.isfile(job_dir + "_" + job_number + ".root")
     if not has_file:
         root_file_count += 1
 
@@ -53,41 +53,54 @@ else:
     print("This many root files don't exist " + str(root_file_count))
 
 if args.resub:
-    jobName = jobDir
-
-    leading_script = file("condor_" + jobName.split("/")[-1] + ".resub", "w")
-    leading_script.write("Universe = vanilla\n")
-    leading_script.write("Executable = condorSubmission/plot.sh\n")
-
+    jobname = job_dir.rstrip("/").split("/")[-1]
     #create the output directories for then job
-    if not os.path.exists(jobName):
-        os.makedirs(jobName)
-    if not os.path.exists(jobName+"/Output"):
-        os.makedirs(jobName+"/Output")
-    if not os.path.exists(jobName+"/Error"):
-        os.makedirs(jobName+"/Error")
-    if not os.path.exists(jobName+"/Log"):
-        os.makedirs(jobName+"/Log")
-    if not os.path.exists(jobName+"/Submission"):
-        os.makedirs(jobName+"/Submission")
-    submission_pickle_file = jobName + "/Submission/" + jobName + ".pickle"
+    if not os.path.exists(job_dir):
+        os.makedirs(job_dir)
+    if not os.path.exists(job_dir+"/Output"):
+        os.makedirs(job_dir+"/Output")
+    if not os.path.exists(job_dir+"/Error"):
+        os.makedirs(job_dir+"/Error")
+    if not os.path.exists(job_dir+"/Log"):
+        os.makedirs(job_dir+"/Log")
+    if not os.path.exists(job_dir+"/Submission"):
+        os.makedirs(job_dir+"/Submission")
+    original_condor_file = os.path.join(job_dir, "{}_scripts".format(jobname), "condor_{}.sub".format(jobname))
+    new_condor_file = os.path.join(job_dir, "{}_scripts".format(jobname), "condor_{}.resub".format(jobname))
 
-    leading_script.write("+ProjectName='atlas-eopplotting'\n")
-    leading_script.write('+JobFlavour = "testmatch"\n')
-    leading_script.write("should_transfer_files = YES\n")
-    leading_script.write("when_to_transfer_output = ON_Exit\n")
-    leading_script.write("transfer_output         = True\n")
-    leading_script.write("transfer_input_files    = CondorPythonLocal, PlottingTools,ReweightingHistograms, variables, HistogramFillingTools, selections, condorSubmission/submit.py ,calculation, FillingScript.py, " + submission_pickle_file + "\n")
-    leading_script.write("\n")
+    lines_to_keep = []
+    lines_to_rewrite = []
+    first_sub = False
+    with open(original_condor_file, "r") as f:
+        print("opened: {}".format(original_condor_file))
+        lines = f.readlines()
+        for i,l in enumerate(lines):
+            if "Arguments = " in l:
+                break
+            if "$(Process)" in l:
+                lines_to_rewrite.append(l)
+                continue
+            lines_to_keep.append(l)
 
-    for jobID in not_finished:
-        jobIDStr = str(jobID)
-        leading_script.write("transfer_output_files   = " + jobName + "_"+jobIDStr+".root\n")
-        leading_script.write("Error = " +jobName + "/Error/job."+jobIDStr+"\n")
-        leading_script.write("Output = " +jobName + "/Output/job."+jobIDStr+"\n")
-        leading_script.write("Log = "+jobName+"/Log/job."+jobIDStr+"\n")
-        leading_script.write("Arguments = "+ jobIDStr +" "  +  submission_pickle_file.split("/")[-1] + " " + jobName + "\n")
-        leading_script.write("Queue 1\n")
-        leading_script.write("\n")
+        one_argument_line = None
+        for i,l in enumerate(lines):
+            if "Argument" in l:
+                one_argument_line = l
+                break
+        for i in not_finished:
+            lines_to_keep.append("\n")
+            lines_to_keep.append(one_argument_line.replace("$(Process)", str(i)))
+            for extra_l in lines_to_rewrite:
+                lines_to_keep.append(extra_l.replace("$(Process)", str(i)))
+            lines_to_keep.append("Queue 1")
+            lines_to_keep.append("\n")
+
+    with open(new_condor_file, 'w') as f:
+        for l in lines_to_keep:
+            print("Writing: {}".format(l))
+            f.write(l)
+
+    print("Finished")
+    os.system("condor_submit {}".format(new_condor_file))
 
 
