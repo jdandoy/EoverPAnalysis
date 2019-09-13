@@ -172,7 +172,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         p_bins_low_for_eta_bin.append(getattr(bins, selection_name+"PBinsLow_Eta"+str(i)))
         p_bins_high_for_eta_bin.append(getattr(bins, selection_name+"PBinsHigh_Eta"+str(i)))
 
-    histograms_in_eta_bins = ["TrackPtSpectrum",\
+    histograms_in_eta_bins =      ["TrackPtSpectrum",\
                                    "TrackPSpectrum",\
                                    "TrackTruthPSpectrum",\
                                    "EOPProfileVsMomentum",\
@@ -284,7 +284,7 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             if "Profile" in histogram_name:
                 hist = ProjectProfiles(hist)
 
-            if "EnergyBkgProfileVsMomentum" in histogram_name:
+            if "BkgProfileVsMomentum" in histogram_name:
                 ratio_min =0.0
                 ratio_max =2.0
 
