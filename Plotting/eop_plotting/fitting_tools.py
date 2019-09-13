@@ -7,6 +7,45 @@ def scotts_rule(histogram):
     width = (sigma)/(N**(1.0/3.0))
     return width
 
+def generate_eop_var(low, high):
+    eop = ROOT.RooRealVar("eop_{}".format(category_name), "eop_{}".format(category_name), range[0], range[1])
+    eop.setRange("Full", low,high)
+    return eop
+
+def prepare_for_fit():
+    #minimize the output from roofit
+    ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.NumIntegration)
+    ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Fitting)
+    ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Minimization)
+    ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.InputArguments)
+    ROOT.RooMsgService.instance().getStream(1).removeTopic(ROOT.RooFit.Eval)
+    ROOT.RooMsgService.instance().setGlobalKillBelow(ROOT.RooFit.ERROR)
+    ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ## Better numerical integrator
+
+def generate_dcb(x):
+    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 125.0, 110.0, 140.0)
+    eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
+    eop_alphaLo = ROOT.RooRealVar("eop_alphaLo", "eop_alphaLo", 1.0, 0.0, 100.0)
+    eop_alphaHi = ROOT.RooRealVar("eop_alphaHi", "eop_alphaHi", 1.0, 0.0, 100.0)
+    eop_nLo = ROOT.RooRealVar("eop_nLo", "eop_nLo", 10.0, 0.0, 100.0)
+    eop_nHi = ROOT.RooRealVar("eop_nHi", "eop_nHi", 10.0, 0.0, 100.0)
+    eop_model = ROOT.RooTwoSidedCBShape("signal_model", "signal_model", x, eop_mean, eop_sigma, eop_alphaLo, eop_nLo, eop_alphaHi, eop_nHi)
+    var_list = [eop_mean, eop_sigma, eop_alphaLo, eop_alphaHi, eop_nLo, eop_nHi]
+    return eop_model, var_list
+
+def generate_gaus(x):
+    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 125.0, 110.0, 140.0)
+    eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
+    eop_model = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)",x,eop_mean,eop_sigma)
+    var_list = [eop_mean, eop_sigma]
+    return eop_model, var_list
+
+def generate_landau(x):
+    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 125.0, 110.0, 140.0)
+    eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
+    eop_model = landau = RooLandau ('lx', 'lx', x, eop_mpv, eop_sigma)
+    var_list = [eop_mpv, eop_sigma]
+    return eop_model, var_list
 
 def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=-1,eta_high=-1,p_low=-1,p_high=-1, refit=False, rebin=False, rebin_rule = None):
     '''
