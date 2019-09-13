@@ -94,13 +94,22 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
                                                   ylabel = "E/p",\
                                                   )
         from variables import cone_strings, total_energy_annulus_template
+        from math import pi
+        def annulus_area(low,high):
+            return pi * ((high ** 2) - (low ** 2))
         for (low, high) in zip(cone_strings[:-1], cone_strings[1:]):
             #this function calculates the energy in a cone from low to high
             func_e = lambda x, y = low, z = high : total_energy_annulus_template(x,y,z)
             func_e.__name__ = "energy_in_cone_{}_{}".format(low, high)
+            #this function calculates the energy in a cone from low to high
+            func_e_area = lambda x, y = low, z = high, l=low, h=high : total_energy_annulus_template(x,y,z)/(annulus_area(float(l)/1000.0, float(h)/1000.0))
+            func_e_area.__name__ = "energy_in_cone_area_{}_{}".format(low, high)
             #this function calculates the eop in a cone from low to high
             func_eop = lambda x, y = low, z = high : total_energy_annulus_template(x,y,z)/x["trk_p"]
             func_eop.__name__ = "eop_in_cone_{}_{}".format(low, high)
+            #this function calculates the eop in a cone from low to high
+            func_eop_area = lambda x, y = low, z = high, l=low, h=high : (total_energy_annulus_template(x,y,z)/x["trk_p"])/(annulus_area(float(l)/1000.0, float(h)/1000.0))
+            func_eop_area.__name__ = "eop_in_cone_area_{}_{}".format(low, high)
 
             #define the calculation and the branches that we need for this
             branches = ["trk_ClusterEnergy_EM_{}".format(low), "trk_ClusterEnergy_HAD_{}".format(low)]
@@ -112,8 +121,10 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
             branches = clean_branches
             from calculation import Calculation
             calc_cone_e = Calculation(func_e, branches)
+            calc_cone_e_area = Calculation(func_e_area, branches)
             branches = branches + ["trk_p"]
             calc_cone_eop = Calculation(func_eop, branches)
+            calc_cone_eop_area = Calculation(func_eop_area, branches)
 
             #book the histograms
             low_descr = float(low)/10.0
@@ -138,6 +149,31 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
                                                       bins = p_bins,\
                                                       xlabel ="P[GeV]",\
                                                       ylabel = "<E_{r#in[" + "{},{}".format(low_descr, high_descr) + "]}/p>",\
+                                                      )
+
+            #book the histograms
+            low_descr = float(low)/10.0
+            high_descr = float(high)/10.0
+            histogram_name = "EnergyAnnulusProfileVsMomentum_{}_{}_Area".format(low, high)
+            histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+            hist_filler.book_tprofile_fill(histogram_name,\
+                                                      calc_trkP,\
+                                                      calc_cone_e_area,\
+                                                      selections = selections,\
+                                                      bins = p_bins,\
+                                                      xlabel ="P[GeV]",\
+                                                      ylabel = "<E_{r#in[" + "{},{}".format(low_descr, high_descr) + "]}>/Area [GeV]",\
+                                                      )
+
+            histogram_name = "EOPProfileVsMomentum_{}_{}_Area".format(low, high)
+            histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+            hist_filler.book_tprofile_fill(histogram_name,\
+                                                      calc_trkP,\
+                                                      calc_cone_eop_area,\
+                                                      selections = selections,\
+                                                      bins = p_bins,\
+                                                      xlabel ="P[GeV]",\
+                                                      ylabel = "<E_{r#in[" + "{},{}".format(low_descr, high_descr) + "]}/p>/ Area",\
                                                       )
 
         histogram_name = "EnergyAnulusProfileVsMomentum"
