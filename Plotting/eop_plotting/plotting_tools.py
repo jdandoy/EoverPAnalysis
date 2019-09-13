@@ -330,13 +330,13 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         DataHist.GetXaxis().SetRange(x_low, x_high)
 
     if not bigger_legend:
-        legend = ROOT.TLegend(0.60, 0.65, 0.94, 0.89)
+        legend = ROOT.TLegend(0.58, 0.65, 0.94, 0.89)
     else:
-        legend = ROOT.TLegend(0.60, 0.65, 0.94, 0.89)
+        legend = ROOT.TLegend(0.58, 0.65, 0.94, 0.89)
         legend.SetNColumns(2)
     legend.SetTextSize(text_size)
     if skip_ratio:
-        legend.SetTextSize(text_size * 0.8)
+        legend.SetTextSize(text_size * 0.7)
     legend.SetBorderSize(0)
     toGlobalScope(legend)
 
