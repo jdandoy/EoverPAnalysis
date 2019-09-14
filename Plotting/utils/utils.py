@@ -10,7 +10,7 @@ dir_identified="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v01_secondaries/"
 directories = {}
 directories["inclusive"] = dir_inclusive
 directories["test"] = dir_inclusive
-directories["indentified"] = dir_identified
+directories["identified"] = dir_identified
 
 # a dictionary to store all of the filenames for each channel
 inclusive_files = {}
@@ -88,7 +88,18 @@ inclusive_files["PythiaJetJetHardScatterTightIso"] = [\
 #"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
 #"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
 #"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
-indentified_files = {}
+identified_files = {}
+identified_files["LowMuData"] = [\
+"user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_ANALYSIS.root",\
+"user.luadamek.data17_13TeV.00341312.physics_MinBias.calibhits_v01_ANALYSIS.root",\
+"user.luadamek.data17_13TeV.00341419.physics_MinBias.calibhits_v01_ANALYSIS.root",\
+"user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_ANALYSIS.root",\
+"user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_ANALYSIS.root",\
+"user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_ANALYSIS.root"]
+identified_files["PythiaJetJet"] = [\
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_ANALYSIS.root",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_ANALYSIS.root",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_ANALYSIS.root"]
 
 files = {}
 files["inclusive"] = inclusive_files
@@ -96,7 +107,7 @@ files["test"] = {"PythiaJetJet":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_
                  "SinglePion":["user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist"],\
                  "LowMuData":["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist"],\
                 }
-files["indentified"] = indentified_files 
+files["identified"] = identified_files 
 
 def get_files(flavour):
     '''
