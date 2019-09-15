@@ -50,6 +50,16 @@ histogram_name_base_down = "EnergyBkgDownProfileVsMomentum__{}_Eta_{}"
 selection = "MIPSelectionHadFracAbove70"
 bins = range(0, 5)
 
+#get the binning vectors
+rf = ROOT.TFile(filename, "READ")
+
+tree = rf.Get(selection + "BinningTree")
+for el in tree:
+    break
+
+eta_bins_low = getattr(el, selection+"EtaBinsLow")
+eta_bins_high = getattr(el, selection+"EtaBinsHigh")
+
 from variables import cone_strings
 
 for i in bins:
@@ -70,7 +80,7 @@ for i in bins:
        these_DataKey = "nominal"
        to_plot = ProjectProfiles(to_plot)
        these_channelLabels = {"nominal":"Nominal", "up":"Outer Annulus", "down":"Inner Annulus"}
-       description = base_description + ["MIP Selection"]
+       description = base_description + ["MIP Selection"] + ["{} < |#eta| < {}".format(eta_bins_low[i], eta_bins_high[i])]
        DataVsMC1 = DrawDataVsMC(to_plot,\
                                these_channelLabels,\
                                MCKeys = these_MCKeys,\
@@ -91,10 +101,10 @@ for i in bins:
     base = "EOPProfileVsMomentum_{}_{}" +"__" + selection + "_Eta_"+str(i)
     nominal = "EOPProfileVsMomentum"  +"__" + selection + "_Eta_"+str(i)
     other_keys = []
-    i = 0
+    j = 0
     for low,high in zip(cone_strings[:-1], cone_strings[1:]):
-        i += 1
-        if i == 9:
+        j += 1
+        if j == 9:
             break
         histogram_name = base.format(low, high)
         key = "{}_{}".format(low,high)
@@ -135,11 +145,69 @@ for i in bins:
                                extra_description = description)
         DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}Cones.png".format(channel))
 
+    hist_dict = {}
+    base = "EOPProfileVsMomentum_{}_{}_Area" +"__" + selection + "_Eta_"+str(i)
+    nominal = "EOPProfileVsMomentum"  +"__" + selection + "_Eta_"+str(i)
+    other_keys = []
+    j = 0
+    for low,high in zip(cone_strings[:-1], cone_strings[1:]):
+        j += 1
+        if j == 9:
+            break
+        histogram_name = base.format(low, high)
+        key = "{}_{}".format(low,high)
+        other_keys.append(key)
+        hist_dict[key] = HM.getHistograms(histogram_name)
+
+    hist_dict["nominal"] = HM.getHistograms(nominal)
+
+    for channel in ["LowMuData", "PythiaJetJet"]:
+        to_plot = {}
+        for key in hist_dict:
+            to_plot[key] = hist_dict[key][channel]
+            these_MCKeys = other_keys
+            these_DataKey = "nominal"
+            these_channelLabels = {"nominal":"Nominal"}
+            for key in these_MCKeys:
+                low, high = key.split("_")
+                low, high = int(low), int(high)
+                low = float(low)/1000.0
+                high = float(high)/1000.0
+                these_channelLabels[key] = "["+str(low)+","+str(high)+"]"
+        to_plot = ProjectProfiles(to_plot)
+        DataVsMC1 = DrawDataVsMC(to_plot,\
+                               these_channelLabels,\
+                               MCKeys = these_MCKeys,\
+                               DataKey = these_DataKey,\
+                               ratio_min=0.0,\
+                               ratio_max=1.0,\
+                               doLogx=True,\
+                               doLogy=False,\
+                               xlabel="P [GeV]",\
+                               ylabel="<E/p>/Area",\
+                               ratio_label = "Ann./Nom.",\
+                               invert_ratio = True,\
+                               skip_ratio = True,\
+                               bigger_legend = True,\
+                               skip_data = True,\
+                               extra_description = description)
+        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}Cones.png".format(channel))
+
 histogram_name_base = "EnergyBigBkgProfileVsMomentum__{}_Eta_{}"
 histogram_name_base_up = "EnergyBigBkgUpProfileVsMomentum__{}_Eta_{}"
 histogram_name_base_down = "EnergyBigBkgDownProfileVsMomentum__{}_Eta_{}"
 selection = "20TRTHitsNonZeroEnergy"
 bins = range(0, 5)
+
+#get the binning vectors
+rf = ROOT.TFile(filename, "READ")
+
+tree = rf.Get(selection + "BinningTree")
+for el in tree:
+    break
+
+eta_bins_low = getattr(el, selection+"EtaBinsLow")
+eta_bins_high = getattr(el, selection+"EtaBinsHigh")
 
 for i in bins:
     histogram_name = histogram_name_base.format(selection, i)
@@ -161,7 +229,7 @@ for i in bins:
        to_plot = ProjectProfiles(to_plot)
 
        these_channelLabels = {"nominal":"Nominal", "up":"Outer Annulus", "down":"Inner Annulus"}
-       description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"]
+       description = base_description + ["E_{TOTAL} != 0.0", "N_{TRT} >= 20", "Tight Isolation"] + ["{} < |#eta| < {}".format(eta_bins_low[i], eta_bins_high[i])]
        DataVsMC1 = DrawDataVsMC(to_plot,\
                                these_channelLabels,\
                                MCKeys = these_MCKeys,\
@@ -182,10 +250,10 @@ for i in bins:
     base = "EOPProfileVsMomentum_{}_{}" +"__" + selection + "_Eta_"+str(i)
     nominal = "EOPProfileVsMomentum"  +"__" + selection + "_Eta_"+str(i)
     other_keys = []
-    i = 0
+    j = 0
     for low,high in zip(cone_strings[:-1], cone_strings[1:]):
-        i += 1
-        if i == 9:
+        j += 1
+        if j == 9:
             break
         histogram_name = base.format(low, high)
         key = "{}_{}".format(low,high)
@@ -217,6 +285,53 @@ for i in bins:
                                doLogy=False,\
                                xlabel="P [GeV]",\
                                ylabel="<E/p>",\
+                               ratio_label = "Ann./Nom.",\
+                               invert_ratio = True,\
+                               skip_ratio = True,\
+                               bigger_legend = True,\
+                               skip_data = True,\
+                               extra_description = description)
+        DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}Cones.png".format(channel))
+
+    hist_dict = {}
+    base = "EOPProfileVsMomentum_{}_{}_Area" +"__" + selection + "_Eta_"+str(i)
+    nominal = "EOPProfileVsMomentum"  +"__" + selection + "_Eta_"+str(i)
+    other_keys = []
+    j = 0
+    for low,high in zip(cone_strings[:-1], cone_strings[1:]):
+        j += 1
+        if j == 9:
+            break
+        histogram_name = base.format(low, high)
+        key = "{}_{}".format(low,high)
+        other_keys.append(key)
+        hist_dict[key] = HM.getHistograms(histogram_name)
+    hist_dict["nominal"] = HM.getHistograms(nominal)
+
+    for channel in ["LowMuDataTightIso", "PythiaJetJetTightIso"]:
+        to_plot = {}
+        to_plot = ProjectProfiles(to_plot)
+        for key in hist_dict:
+            to_plot[key] = hist_dict[key][channel]
+            these_MCKeys = other_keys
+            these_DataKey = "nominal"
+            these_channelLabels = {"nominal":"Nominal"}
+            for key in these_MCKeys:
+                low, high = key.split("_")
+                low, high = int(low), int(high)
+                low = float(low)/1000.0
+                high = float(high)/1000.0
+                these_channelLabels[key] = "["+str(low)+","+str(high)+"]"
+        DataVsMC1 = DrawDataVsMC(to_plot,\
+                               these_channelLabels,\
+                               MCKeys = these_MCKeys,\
+                               DataKey = these_DataKey,\
+                               ratio_min=0.0,\
+                               ratio_max=1.0,\
+                               doLogx=True,\
+                               doLogy=False,\
+                               xlabel="P [GeV]",\
+                               ylabel="<E/p>/Area",\
                                ratio_label = "Ann./Nom.",\
                                invert_ratio = True,\
                                skip_ratio = True,\
