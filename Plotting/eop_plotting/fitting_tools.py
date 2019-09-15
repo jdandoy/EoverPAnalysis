@@ -12,6 +12,7 @@ def scotts_rule(histogram):
 def generate_eop_var(low, high, sub_ranges = {}):
     eop = ROOT.RooRealVar("eop", "eop" ,low,high)
     eop.setRange("Full", low,high)
+    eop.setRange("Fit", 0.15, 1.2)
     for r in sub_ranges:
         eop.setRange(r, sub_ranges[r][0], sub_ranges[r][1])
     return eop
@@ -59,8 +60,80 @@ def do_fit(histograms):
         to_fit = histograms[channel]
         eop = generate_eop_var(-1.0, 3.0)
         eop_hist = ROOT.RooDataHist("eop_var", "eop_var", ROOT.RooArgList(eop), to_fit)
+        mpv = -999
+        mpv_entries = -999
+        mpv_bin = -999
+        sigma_up = -999
+        sigma_down = -999
+
+        #find the 10 bins with the highest average mpv
+        bins = [i for i in range(1, 10)]
+        for bin in range(5,to_fit.GetNbinsX()+1):
+            print("for bin {} looking at bins {}".format(bin, bins))
+            points = [to_fit.GetBinContent(b) for b in bins]
+            average = sum(points)/float(len(points))
+            if average > mpv_entries:
+                mpv_bin = bins[4]
+                mpv_entries = average
+                mpv = to_fit.GetBinCenter(mpv_bin)
+            bins = bins[1:] + [bin + 5]
+
+        #find the integral for eop's below the mpv
+        integral_left = to_fit.Integral(1, mpv_bin)
+
+        #find the 68% quantile below the mpv
+        lower_count = 0
+        for lower_bin in range(mpv_bin-1, 0, -1):
+            lower_count += to_fit.GetBinContent(lower_bin)
+            if lower_count > (1.0 - 0.16) * integral_left:
+                break
+        lower_bin = lower_bin
+        lower_content = to_fit.GetBinContent(lower_bin)
+
+        #find the bin above the mpv that has the same number of entries as the lower bin at the 68% quantile
+        up_bin = 0
+        for upper_bin in range(mpv_bin +1, to_fit.GetNbinsX()+1):
+             if to_fit.GetBinContent(upper_bin) < lower_content:
+                 break
+             up_bin = upper_bin
+        upper_bin = up_bin
+
+#       print("Integral {}".format(integral))
+#       bins = [i for i in range(1, 10)]
+#       for bin in range(5, to_fit.GetNbinsX()+1):
+#           #skip those bins around the peak
+#           print("for bin {} looking at bins {}".format(bin, bins))
+#           points = [to_fit.GetBinContent(b) for b in bins]
+#           average = sum(points)/float(len(points))
+#           lower_count += to_fit.GetBinContent(bin)
+#           if lower_count > 0.16 * integral and sigma_down < -100:
+#               sigma_down = to_fit.GetBinCenter(bin)
+#           #if abs(average - mpv_entries)/mpv_entries < 0.01:
+#           #    bins = bins[1:] + [bin + 5]
+#           #    continue
+#           if sigma_down > -100:
+#               upper_count += to_fit.GetBinContent(bin)
+#           if upper_count > (1.0 - 0.16) * integral and sigma_up < -100:
+#               sigma_up = to_fit.GetBinCenter(bin)
+#           bins = bins[1:] + [bin + 5]
+
+        #do the fit in this range.
+        sigma_up = to_fit.GetBinCenter(upper_bin)
+        sigma_down = to_fit.GetBinCenter(lower_bin)
+        eop.setRange("Fit", sigma_down, sigma_up)
+        print(integral_left)
+        print("MPV: {}".format(mpv))
+        print("Fitting in range [{},{}]".format(sigma_down, sigma_up))
+        raw_input()
         model, variables = generate_gaus(eop)
-        result = model.fitTo(eop_hist)
+        for var in variables:
+            if "mean" in var.GetName():
+                var.setVal(mpv)
+        result = model.fitTo(eop_hist, ROOT.RooFit.Range("Fit"))
+        f=eop.frame()
+        eop_hist.plotOn(f)
+        model.plotOn(f)
+        f.Draw()
         raw_input()
 
 def test_fit(f):
