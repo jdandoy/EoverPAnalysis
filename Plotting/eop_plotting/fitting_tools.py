@@ -2,6 +2,7 @@ import ROOT
 import array
 import uproot as ur
 from histogram_manager import HistogramManager
+from plotting_tools import DrawDataVsMC
 
 def scotts_rule(histogram):
     N = histogram.Integral()
@@ -12,7 +13,6 @@ def scotts_rule(histogram):
 def generate_eop_var(low, high, sub_ranges = {}):
     eop = ROOT.RooRealVar("eop", "eop" ,low,high)
     eop.setRange("Full", low,high)
-    eop.setRange("Fit", 0.15, 1.2)
     for r in sub_ranges:
         eop.setRange(r, sub_ranges[r][0], sub_ranges[r][1])
     return eop
@@ -28,33 +28,50 @@ def prepare_for_fit():
     ROOT.RooAbsReal.defaultIntegratorConfig().method1D().setLabel("RooAdaptiveGaussKronrodIntegrator1D")  ## Better numerical integrator
 
 def generate_dcb(x):
-    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 1.0, 0.0, 2.0)
-    eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
-    eop_alphaLo = ROOT.RooRealVar("eop_alphaLo", "eop_alphaLo", 1.0, 0.0, 100.0)
-    eop_alphaHi = ROOT.RooRealVar("eop_alphaHi", "eop_alphaHi", 1.0, 0.0, 100.0)
-    eop_nLo = ROOT.RooRealVar("eop_nLo", "eop_nLo", 10.0, 0.0, 100.0)
-    eop_nHi = ROOT.RooRealVar("eop_nHi", "eop_nHi", 10.0, 0.0, 100.0)
-    eop_model = ROOT.RooTwoSidedCBShape("signal_model", "signal_model", x, eop_mean, eop_sigma, eop_alphaLo, eop_nLo, eop_alphaHi, eop_nHi)
-    var_list = [eop_mean, eop_sigma, eop_alphaLo, eop_alphaHi, eop_nLo, eop_nHi]
-    return eop_model, var_list
+    eop_gaus_mean = ROOT.RooRealVar("eop_gaus_mean", "eop_gaus_mean", 1.0, 0.0, 2.0)
+    eop_gaus_sigma = ROOT.RooRealVar("eop_gaus_sigma", "eop_gaus_sigma", 0.1, 0.0, 100.0)
+    eop_gaus_alphaLo = ROOT.RooRealVar("eop_gaus_alphaLo", "eop_gaus_alphaLo", 1.0, 0.0, 100.0)
+    eop_gaus_alphaHi = ROOT.RooRealVar("eop_gaus_alphaHi", "eop_gaus_alphaHi", 1.0, 0.0, 100.0)
+    eop_gaus_nLo = ROOT.RooRealVar("eop_gaus_nLo", "eop_gaus_nLo", 10.0, 0.0, 100.0)
+    eop_gaus_nHi = ROOT.RooRealVar("eop_gaus_nHi", "eop_gaus_nHi", 10.0, 0.0, 100.0)
+    eop_gaus_model = ROOT.RooTwoSidedCBShape("signal_model", "signal_model", x, eop_gaus_mean, eop_gaus_sigma, eop_gaus_alphaLo, eop_gaus_nLo, eop_gaus_alphaHi, eop_gaus_nHi)
+    var_list = [eop_gaus_mean, eop_gaus_sigma, eop_gaus_alphaLo, eop_gaus_alphaHi, eop_gaus_nLo, eop_gaus_nHi]
+    return eop_gaus_model, var_list
+
+keep_alive = []
+
+def generate_landau_gaus(x):
+    gaus, gaus_vars = generate_gaus(x)
+    landau, landau_vars = generate_landau(x)
+    lxg = ROOT.RooFFTConvPdf("lxg","landau (X) gauss",x,landau,gaus)
+    keep_alive.append(gaus)
+    keep_alive.append(landau)
+    for var in gaus_vars:
+        if "mean" in var.GetName():
+            var.setVal(0.0)
+            var.setConstant(True)
+    return lxg, gaus_vars + landau_vars
 
 def generate_gaus(x):
-    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 1.0, 0.0, 2.0)
-    eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
-    eop_model = ROOT.RooGaussian("gauss","gauss(x,mean,sigma)",x,eop_mean,eop_sigma)
-    var_list = [eop_mean, eop_sigma]
-    return eop_model, var_list
+    eop_gaus_mean = ROOT.RooRealVar("eop_gaus_mean", "eop_gaus_mean", 0.0, 0.0, 2.0)
+    eop_gaus_sigma = ROOT.RooRealVar("eop_gaus_sigma", "eop_gaus_sigma", 0.1, 0.0, 1.0)
+    eop_gaus_model = ROOT.RooGaussian("gaus","gaus(x,mean,sigma)",x,eop_gaus_mean,eop_gaus_sigma)
+    var_list = [eop_gaus_mean, eop_gaus_sigma]
+    return eop_gaus_model, var_list
 
 def generate_landau(x):
-    eop_mean = ROOT.RooRealVar("eop_mean", "eop_mean", 1.0, 0.0, 2.0)
-    eop_sigma = ROOT.RooRealVar("eop_sigma", "eop_sigma", 1.0, 0.0, 100.0)
-    eop_model = landau = RooLandau ('lx', 'lx', x, eop_mpv, eop_sigma)
-    var_list = [eop_mpv, eop_sigma]
-    return eop_model, var_list
+    eop_landau_mpv = ROOT.RooRealVar("eop_landau_mean", "eop_landau_mean", 0.0, 0.0, 1.3)
+    eop_landau_sigma = ROOT.RooRealVar("eop_landau_sigma", "eop_landau_sigma", 0.1, 0.0, 1.0)
+    eop_landau_model = ROOT.RooLandau('lx', 'lx', x, eop_landau_mpv, eop_landau_sigma)
+    var_list = [eop_landau_mpv, eop_landau_sigma]
+    return eop_landau_model, var_list
 
-def do_fit(histograms):
+def do_fit(histograms, function="gaus"):
+    mpvs = {}
+    mpv_errs = {}
+    fit_results = {}
     for channel in histograms:
-        if channel != "LowMuData":
+        if channel != "LowMuData" and channel != "PythiaJetJet":
             continue
         print("Fitting the histogram in channel {}".format(channel))
         to_fit = histograms[channel]
@@ -85,7 +102,7 @@ def do_fit(histograms):
         lower_count = 0
         for lower_bin in range(mpv_bin-1, 0, -1):
             lower_count += to_fit.GetBinContent(lower_bin)
-            if lower_count > (1.0 - 0.16) * integral_left:
+            if lower_count > (1.0 - 0.20) * integral_left:
                 break
         lower_bin = lower_bin
         lower_content = to_fit.GetBinContent(lower_bin)
@@ -93,7 +110,7 @@ def do_fit(histograms):
         #find the bin above the mpv that has the same number of entries as the lower bin at the 68% quantile
         up_bin = 0
         for upper_bin in range(mpv_bin +1, to_fit.GetNbinsX()+1):
-             if to_fit.GetBinContent(upper_bin) < lower_content:
+             if to_fit.GetBinContent(upper_bin) <=  lower_content:
                  break
              up_bin = upper_bin
         upper_bin = up_bin
@@ -124,21 +141,33 @@ def do_fit(histograms):
         print(integral_left)
         print("MPV: {}".format(mpv))
         print("Fitting in range [{},{}]".format(sigma_down, sigma_up))
-        raw_input()
-        model, variables = generate_gaus(eop)
+        if function == "gaus":
+            model, variables = generate_gaus(eop)
+        elif function == "landau":
+            model, variables = generate_landau(eop)
+        elif function == "landauxgaus" or function == "gausxlandau":
+            model_variables = generate_landau_gaus(eop)
+
         for var in variables:
             if "mean" in var.GetName():
                 var.setVal(mpv)
+        print(model)
+        prepare_for_fit()
         result = model.fitTo(eop_hist, ROOT.RooFit.Range("Fit"))
         f=eop.frame()
         eop_hist.plotOn(f)
         model.plotOn(f)
         f.Draw()
-        raw_input()
 
-def test_fit(f):
-    histogram_base = "EOPDistribution"
-    selection_name = "MIPSelectionHadFracAbove70"
+        for var in variables:
+            if "mean" in var.GetName():
+                mpvs[channel]=var.getVal()
+                mpv_errs[channel]=var.getError()
+        fit_results[channel]=result
+
+    return mpvs, mpv_errs, fit_results
+
+def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelectionHadFracAbove70", function = "gaus"):
 
     #get the binning vectors
     rf = ROOT.TFile(f, "READ")
@@ -159,16 +188,59 @@ def test_fit(f):
         p_bins_high_for_eta_bin.append(getattr(bins, selection_name+"PBinsHigh_Eta"+str(i)))
 
     HM = HistogramManager(f)
-
+    histograms_in_eta_bin = []
     for i, eta_low, eta_high in zip(range(0, len(eta_bins_low)),eta_bins_low, eta_bins_high):
+        mpvs = {}
+        mpv_errs = {}
         for j, p_low, p_high in zip(range(0, len(p_bins_low_for_eta_bin[i])),p_bins_low_for_eta_bin[i], p_bins_high_for_eta_bin[i]):
             histogram_name = histogram_base + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
             histograms = HM.getHistograms(histogram_name)
-            do_fit(histograms)
+            mpv, mpv_err, fit_result = do_fit(histograms, function = function)
+            for channel in mpv:
+               if channel not in mpvs:
+                   mpvs[channel]=[]
+                   mpv_errs[channel]=[]
+               mpvs[channel].append(mpv[channel])
+               mpv_errs[channel].append(mpv_err[channel])
+        hist_name = histogram_base + "{}_{}_".format(function, "fit") + selection_name + "_Eta_" + str(i)
+
+        bins = [b for b in p_bins_low_for_eta_bin[i]] + [p_bins_high_for_eta_bin[i][-1]]
+        bin_array = array.array('d', bins)
+
+        histograms = {}
+        for channel in mpvs:
+            histograms[channel] = ROOT.TH1D(hist_name + channel, hist_name + channel, len(bins)-1, bin_array)
+            for i in range(0, len(mpvs[channel])):
+                histograms[channel].SetBinContent(i+1, mpvs[channel][i])
+                histograms[channel].SetBinError(i+1, mpv_errs[channel][i])
+
+        MCKeys = ["PythiaJetJet"]
+        DataKey="LowMuData"
+        base_description = ["P_{T} Reweighted"]
+        description = base_description + ["MIP Selection", "{:.1f} < |#eta| < {:.1f}".format(eta_low, eta_high)]
+        channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "#splitline{Pythia8}{MinBias and Dijet}", DataKey: "2017 Low-<#mu> Data", "PythiaJetJetPions    Reweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched", "PythiaJetJetTightIso": "#splitline{Pythia8}{MinBias and D    ijet}", "LowMuDataTightIso":"2017 Low-<#mu> Data"}
+        ratio_min = 0.9
+        ratio_max = 1.1
+        #draw the fit results as a set of histograms
+        canvas = DataVsMC1 = DrawDataVsMC(histograms,\
+                       channelLabels,\
+                       MCKeys = MCKeys,\
+                       ratio_min = ratio_min,\
+                       ratio_max = ratio_max,\
+                       doLogy=False,\
+                       doLogx=True,\
+                       ylabel = "MPV(E/P)",\
+                       DataKey=DataKey,\
+                       extra_description = description)[0]
+
+        canvas_name = hist_name + "_"  + selection_name + "_Eta_" + str(i) + ".png"
+        canvas.Print(canvas_name)
+        canvas.Close()
 
 if __name__ == "__main__":
     f="pt_reweighted.root"
-    test_fit(f)
+    for selection_name in ["MIPSelectionHadFracAbove70", "20TRTHitsNonZeroEnergy"]:
+        test_fit(f, selection_name = selection_name)
 
 
 def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=-1,eta_high=-1,p_low=-1,p_high=-1, refit=False, rebin=False, rebin_rule = None):
