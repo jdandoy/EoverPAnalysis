@@ -39,7 +39,6 @@ def generate_dcb(x):
     return eop_gaus_model, var_list
 
 keep_alive = []
-
 def generate_landau_gaus(x):
     gaus, gaus_vars = generate_gaus(x)
     landau, landau_vars = generate_landau(x)
@@ -52,21 +51,53 @@ def generate_landau_gaus(x):
             var.setConstant(True)
     return lxg, gaus_vars + landau_vars
 
-def generate_gaus(x):
-    eop_gaus_mean = ROOT.RooRealVar("eop_gaus_mean", "eop_gaus_mean", 0.0, 0.0, 2.0)
-    eop_gaus_sigma = ROOT.RooRealVar("eop_gaus_sigma", "eop_gaus_sigma", 0.1, 0.0, 1.0)
-    eop_gaus_model = ROOT.RooGaussian("gaus","gaus(x,mean,sigma)",x,eop_gaus_mean,eop_gaus_sigma)
+def generate_gaus(x, extra_str = ""):
+    eop_gaus_mean = ROOT.RooRealVar("eop_gaus_mean{}".format(extra_str), "eop_gaus_mean{}".format(extra_str), 0.0, 0.0, 5.0)
+    eop_gaus_sigma = ROOT.RooRealVar("eop_gaus_sigma{}".format(extra_str), "eop_gaus_sigma{}".format(extra_str), 0.1, 0.0, 5.0)
+    eop_gaus_model = ROOT.RooGaussian("gaus{}".format(extra_str),"gaus(x,mean,sigma){}".format(extra_str),x,eop_gaus_mean,eop_gaus_sigma)
     var_list = [eop_gaus_mean, eop_gaus_sigma]
     return eop_gaus_model, var_list
 
 def generate_landau(x):
     eop_landau_mpv = ROOT.RooRealVar("eop_landau_mean", "eop_landau_mean", 0.0, 0.0, 1.3)
     eop_landau_sigma = ROOT.RooRealVar("eop_landau_sigma", "eop_landau_sigma", 0.1, 0.0, 1.0)
-    eop_landau_model = ROOT.RooLandau('lx', 'lx', x, eop_landau_mpv, eop_landau_sigma)
+    eop_landau_model = ROOT.RooLandau('landau', 'landau', x, eop_landau_mpv, eop_landau_sigma)
     var_list = [eop_landau_mpv, eop_landau_sigma]
     return eop_landau_model, var_list
 
-def do_fit(histograms, function="gaus"):
+def generate_two_gaus(x):
+    gaus_one, vars_one = generate_gaus(x, extra_str="one")
+    gaus_two, vars_two = generate_gaus(x, extra_str="two")
+    for var in vars_one:
+        if "mean" in var.GetName():
+            var.setVal(0.5)
+    for var in vars_two:
+        if "mean" in var.GetName():
+            var.setVal(0.7)
+    coeff = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
+    keep_alive.append(coeff)
+    keep_alive.append(gaus_one)
+    keep_alive.append(gaus_two)
+    pdf = ROOT.RooAddPdf("twogauss", "twogauss", gaus_one, gaus_two, coeff)
+    return pdf,vars_one + vars_two + [coeff]
+
+def generate_landau_plus_gaus(x):
+    gaus, vars_one = generate_gaus(x, extra_str="one")
+    landau, vars_two = generate_landau(x)
+    for var in vars_one:
+        if "mean" in var.GetName():
+            var.setVal(0.5)
+    for var in vars_two:
+        if "mean" in var.GetName():
+            var.setVal(0.7)
+    coeff = ROOT.RooRealVar("frac", "frac", 0.5, 0.0, 1.0)
+    keep_alive.append(coeff)
+    keep_alive.append(landau)
+    keep_alive.append(gaus)
+    pdf = ROOT.RooAddPdf("landau+gauss", "landau+gauss", gaus, landau, coeff)
+    return pdf,vars_one + vars_two + [coeff]
+
+def do_fit(histograms, function="gaus", extra_str = ""):
     mpvs = {}
     mpv_errs = {}
     fit_results = {}
@@ -75,7 +106,9 @@ def do_fit(histograms, function="gaus"):
             continue
         print("Fitting the histogram in channel {}".format(channel))
         to_fit = histograms[channel]
-        eop = generate_eop_var(-1.0, 3.0)
+        low = 0.0
+        high = 2.0
+        eop = generate_eop_var(0.0, 2.0)
         eop_hist = ROOT.RooDataHist("eop_var", "eop_var", ROOT.RooArgList(eop), to_fit)
         mpv = -999
         mpv_entries = -999
@@ -85,7 +118,7 @@ def do_fit(histograms, function="gaus"):
 
         #find the 10 bins with the highest average mpv
         bins = [i for i in range(1, 10)]
-        for bin in range(5,to_fit.GetNbinsX()+1):
+        for bin in range(5,to_fit.GetNbinsX()-5):
             print("for bin {} looking at bins {}".format(bin, bins))
             points = [to_fit.GetBinContent(b) for b in bins]
             average = sum(points)/float(len(points))
@@ -95,75 +128,138 @@ def do_fit(histograms, function="gaus"):
                 mpv = to_fit.GetBinCenter(mpv_bin)
             bins = bins[1:] + [bin + 5]
 
-        #find the integral for eop's below the mpv
-        integral_left = to_fit.Integral(1, mpv_bin)
+        low_limit = to_fit.FindBin(0.1)
+        if to_fit.Integral() > 2000:
+            #find the integral for eop's below the mpv
+            integral_left = to_fit.Integral(low_limit, mpv_bin)
+            print("integral left {}".format(integral_left))
 
-        #find the 68% quantile below the mpv
-        lower_count = 0
-        for lower_bin in range(mpv_bin-1, 0, -1):
-            lower_count += to_fit.GetBinContent(lower_bin)
-            if lower_count > (1.0 - 0.20) * integral_left:
-                break
-        lower_bin = lower_bin
-        lower_content = to_fit.GetBinContent(lower_bin)
+            #find the 68% quantile below the mpv
+            lower_count = 0
+            lower_bin = 0
+            for lower_bin in range(mpv_bin-1, low_limit, -1):
+                lower_count += to_fit.GetBinContent(lower_bin)
+                if lower_count > (1.0 - 0.1) * integral_left:
+                    break
+            lower_content = to_fit.GetBinContent(lower_bin)
 
-        #find the bin above the mpv that has the same number of entries as the lower bin at the 68% quantile
-        up_bin = 0
-        for upper_bin in range(mpv_bin +1, to_fit.GetNbinsX()+1):
-             if to_fit.GetBinContent(upper_bin) <=  lower_content:
-                 break
-             up_bin = upper_bin
-        upper_bin = up_bin
-
-#       print("Integral {}".format(integral))
-#       bins = [i for i in range(1, 10)]
-#       for bin in range(5, to_fit.GetNbinsX()+1):
-#           #skip those bins around the peak
-#           print("for bin {} looking at bins {}".format(bin, bins))
-#           points = [to_fit.GetBinContent(b) for b in bins]
-#           average = sum(points)/float(len(points))
-#           lower_count += to_fit.GetBinContent(bin)
-#           if lower_count > 0.16 * integral and sigma_down < -100:
-#               sigma_down = to_fit.GetBinCenter(bin)
-#           #if abs(average - mpv_entries)/mpv_entries < 0.01:
-#           #    bins = bins[1:] + [bin + 5]
-#           #    continue
-#           if sigma_down > -100:
-#               upper_count += to_fit.GetBinContent(bin)
-#           if upper_count > (1.0 - 0.16) * integral and sigma_up < -100:
-#               sigma_up = to_fit.GetBinCenter(bin)
-#           bins = bins[1:] + [bin + 5]
+            #find the bin above the mpv that has the same number of entries as the lower bin at the 68% quantile
+            up_bin = 0
+            max_bin = mpv_bin +1
+            for upper_bin in range(mpv_bin +1, to_fit.GetNbinsX()+1):
+                 if to_fit.GetBinCenter(upper_bin) > high:
+                     continue
+                 max_bin += 1
+                 print("{} {}".format(upper_bin, max_bin))
+                 if to_fit.GetBinContent(upper_bin) <=  lower_content:
+                     break
+                 up_bin = upper_bin
+            upper_bin = up_bin
+            if upper_bin == 0:
+                upper_bin = max_bin
+        else:
+            function = "gaus"
+            mean = to_fit.GetMean()
+            sig = to_fit.GetRMS()
+            upper_bin = to_fit.FindBin( mean + sig)
+            lower_bin = to_fit.FindBin(mean-sig)
 
         #do the fit in this range.
         sigma_up = to_fit.GetBinCenter(upper_bin)
         sigma_down = to_fit.GetBinCenter(lower_bin)
         eop.setRange("Fit", sigma_down, sigma_up)
-        print(integral_left)
         print("MPV: {}".format(mpv))
         print("Fitting in range [{},{}]".format(sigma_down, sigma_up))
         if function == "gaus":
             model, variables = generate_gaus(eop)
+        if function == "two_gaus":
+            model, variables = generate_two_gaus(eop)
         elif function == "landau":
             model, variables = generate_landau(eop)
+        elif function == "dcb":
+            model, variables = generate_dcb(eop)
         elif function == "landauxgaus" or function == "gausxlandau":
-            model_variables = generate_landau_gaus(eop)
+            model, variables = generate_landau_gaus(eop)
+        elif function == "landau+gaus" or function == "gaus+landau":
+             model, variables = generate_landau_plus_gaus(eop)
 
         for var in variables:
             if "mean" in var.GetName():
                 var.setVal(mpv)
+                break
+
         print(model)
         prepare_for_fit()
-        result = model.fitTo(eop_hist, ROOT.RooFit.Range("Fit"))
-        f=eop.frame()
-        eop_hist.plotOn(f)
-        model.plotOn(f)
-        f.Draw()
-
+        result = model.fitTo(eop_hist, ROOT.RooFit.Range("Fit"), ROOT.RooFit.Save(True))
         for var in variables:
             if "mean" in var.GetName():
                 mpvs[channel]=var.getVal()
                 mpv_errs[channel]=var.getError()
         fit_results[channel]=result
+
+        #draw the fit
+        c = ROOT.TCanvas("canv", "canv")
+        c.Draw()
+
+        top = ROOT.TPad("top", "top", 0.0, 0.3, 1.0, 1.0)
+        top.SetLeftMargin(0.15)
+        top.SetBottomMargin(0.0)
+        top.Draw()
+        top.cd()
+
+        f=eop.frame()
+        eop_hist.plotOn(f)
+        model.plotOn(f)
+        pull = f.pullHist()
+        model.plotOn(f, ROOT.RooFit.Components("gausone"), ROOT.RooFit.LineStyle(ROOT.kDashed))
+        model.plotOn(f, ROOT.RooFit.Components("landau"), ROOT.RooFit.LineStyle(ROOT.kDashed))
+        model.plotOn(f, ROOT.RooFit.Components("gaustwo"), ROOT.RooFit.LineStyle(ROOT.kDashed))
+        f.Draw()
+
+        f.GetXaxis().SetTitleFont(43)
+        f.GetXaxis().SetTitleSize(25)
+        f.GetXaxis().SetTitleOffset(1.0)
+        f.GetXaxis().SetLabelSize(20)
+        f.GetXaxis().SetLabelFont(43)
+        f.GetYaxis().SetLabelSize(13)
+        f.GetYaxis().SetLabelFont(43)
+        f.GetYaxis().SetTitleSize(20)
+        f.GetYaxis().SetTitleFont(43)
+
+        pull.SetMarkerSize(0.3)
+        bottom=ROOT.TPad("bottom", "bottom", 0.0, 0.0, 1.0, 0.3)
+        bottom.SetBottomMargin(0.4)
+        bottom.SetLeftMargin(0.15)
+        bottom.SetTopMargin(0.0)
+        c.cd()
+        bottom.Draw()
+        bottom.cd()
+        frame2 = eop.frame()
+        frame2.addPlotable(pull, "P")
+        frame2.Draw()
+        frame2.GetXaxis().SetTitle("E/P")
+        frame2.GetYaxis().SetTitle("#frac{fit - data}/{#sigma_{data}}")
+        frame2.GetXaxis().SetTitleFont(43)
+        frame2.GetXaxis().SetTitleSize(25)
+        frame2.GetXaxis().SetTitleOffset(2.7)
+        frame2.GetXaxis().SetLabelSize(20)
+        frame2.GetXaxis().SetLabelFont(43)
+        frame2.GetYaxis().SetLabelSize(13)
+        frame2.GetYaxis().SetLabelFont(43)
+        frame2.GetYaxis().SetTitleSize(20)
+        frame2.GetYaxis().SetTitleFont(43)
+
+        bottom.Update()
+        bottom.Modified()
+
+        c.Update()
+        c.Modified()
+        if extra_str != "":
+           c.Print("{}_fit_plot.png".format(extra_str))
+        top.Close()
+        bottom.Close()
+        c.Close()
+
 
     return mpvs, mpv_errs, fit_results
 
@@ -195,7 +291,7 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
         for j, p_low, p_high in zip(range(0, len(p_bins_low_for_eta_bin[i])),p_bins_low_for_eta_bin[i], p_bins_high_for_eta_bin[i]):
             histogram_name = histogram_base + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
             histograms = HM.getHistograms(histogram_name)
-            mpv, mpv_err, fit_result = do_fit(histograms, function = function)
+            mpv, mpv_err, fit_result = do_fit(histograms, function = function, extra_str = "Eta_{}_P_{}_{}".format(i,j, selection_name))
             for channel in mpv:
                if channel not in mpvs:
                    mpvs[channel]=[]
@@ -219,8 +315,8 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
         base_description = ["P_{T} Reweighted"]
         description = base_description + ["MIP Selection", "{:.1f} < |#eta| < {:.1f}".format(eta_low, eta_high)]
         channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "#splitline{Pythia8}{MinBias and Dijet}", DataKey: "2017 Low-<#mu> Data", "PythiaJetJetPions    Reweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched", "PythiaJetJetTightIso": "#splitline{Pythia8}{MinBias and D    ijet}", "LowMuDataTightIso":"2017 Low-<#mu> Data"}
-        ratio_min = 0.9
-        ratio_max = 1.1
+        ratio_min = 0.8
+        ratio_max = 1.2
         #draw the fit results as a set of histograms
         canvas = DataVsMC1 = DrawDataVsMC(histograms,\
                        channelLabels,\
@@ -230,6 +326,7 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
                        doLogy=False,\
                        doLogx=True,\
                        ylabel = "MPV(E/P)",\
+                       xlabel = "P [GeV]",\
                        DataKey=DataKey,\
                        extra_description = description)[0]
 
@@ -240,7 +337,7 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
 if __name__ == "__main__":
     f="pt_reweighted.root"
     for selection_name in ["MIPSelectionHadFracAbove70", "20TRTHitsNonZeroEnergy"]:
-        test_fit(f, selection_name = selection_name)
+        test_fit(f, selection_name = selection_name, function="landau+gaus")
 
 
 def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=-1,eta_high=-1,p_low=-1,p_high=-1, refit=False, rebin=False, rebin_rule = None):
