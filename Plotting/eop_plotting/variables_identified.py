@@ -1,12 +1,19 @@
-from calculation import Calculation
+from calculation import Calculation, CalculationDataMC, WeightCalculation
+import numpy as np
 
-def weight(vertex):
-    return vertex["mcWeight"]
-calc_weight = Calculation(weight, ["mcWeight"])
+def weight(vertex, isData):
+    if not isData:
+        return vertex["mcWeight"]
+    return np.ones(len(vertex))
+calc_weight = WeightCalculation(weight, ["mcWeight"])
 
 def vertex_mass(vertex):
     return vertex["vertex_mass"]
 calc_vertex_mass = Calculation(vertex_mass, ["vertex_mass"])
+
+def vertex_count(vertex):
+    return np.ones(len(vertex)) * 0.5
+calc_vertex_count = Calculation(vertex_count, [])
 
 def vertex_chiSquared(vertex):
     return vertex["vertex_chiSquared"]

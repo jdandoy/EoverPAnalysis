@@ -22,7 +22,44 @@ def write_histograms(histogram_dictionary, outFile):
 #This is a script that fills the histograms for
 def fill_histograms(hist_filler, outputRootFileName):
 
+    from variables_identified import calc_vertex_mass, calc_vertex_Rxy, calc_weight, calc_vertex_count
+    hist_filler.weight_calculator = calc_weight
+
+    histogram_name = "VertexCount"
+    selections = []
+    trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
+                                                         calc_vertex_count,\
+                                                         selections = selections,\
+                                                         bins = 1,\
+                                                         range_low = -0.5,\
+                                                         range_high = +0.5,\
+                                                         xlabel ='Always 0',\
+                                                         ylabel = 'Number of vertices')
+
+    histogram_name = "KsVertexMass"
+    selections = []
+    trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
+                                                         calc_vertex_mass,\
+                                                         selections = selections,\
+                                                         bins = 100,\
+                                                         range_low = 480.0,\
+                                                         range_high = 520.0,\
+                                                         xlabel ='M [GeV]',\
+                                                         ylabel = 'Number of vertices')
+
+    histogram_name = "vertex_Rxy"
+    selections = []
+    trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
+                                                         calc_vertex_Rxy,\
+                                                         selections = selections,\
+                                                         bins = 500,\
+                                                         range_low = 0.0,\
+                                                         range_high = 500.0,\
+                                                         xlabel ='rxy [mm]',\
+                                                         ylabel = 'Number of vertices')
+
     histograms = hist_filler.DumpHistograms()
+    outFile = ROOT.TFile(outputRootFileName, "RECREATE")
     for histogram_name in histograms:
         write_histograms(histograms[histogram_name], outFile)
 
