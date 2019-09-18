@@ -3,6 +3,7 @@ import array
 import uproot as ur
 from histogram_manager import HistogramManager
 from plotting_tools import DrawDataVsMC
+import numpy as np
 
 def scotts_rule(histogram):
     N = histogram.Integral()
@@ -97,7 +98,42 @@ def generate_landau_plus_gaus(x):
     pdf = ROOT.RooAddPdf("landau+gauss", "landau+gauss", gaus, landau, coeff)
     return pdf,vars_one + vars_two + [coeff]
 
-def do_fit(histograms, function="gaus", extra_str = ""):
+def montecarlo_uncertainties(model, variables, x_var, minimum, maximum):
+    print("Using random sampling to estimate uncertainties")
+
+    original_values = []
+    original_errors = []
+    for var in variables:
+        original_values.append(var.getVal())
+        original_errors.append(var.getError())
+    original_values = np.array(original_values)
+    original_errors = np.array(original_errors)
+
+    f = model.asTF( ROOT.RooArgList(x_var) )
+    original_xmax = f.GetMaximumX()
+
+    montecarlo_maxima = []
+    for montecarlo_round in range(0, 10000):
+        if montecarlo_round % 1000 == 0: 
+            print("Bootstrap round {}".format(montecarlo_round))
+        random_vals = np.random.normal(size=len(original_values))
+        new_values = original_values + random_vals * original_errors #randomly sample the uncertainties on the parameters
+        #set the values
+        [variables[i].setVal(v) for i,v in enumerate(new_values)]
+        #find the maximum
+        f = model.asTF( ROOT.RooArgList(x_var) )
+        xmax = f.GetMaximumX()
+        montecarlo_maxima.append(xmax)
+
+    montecarlo_maxima = np.array(montecarlo_maxima)
+    print("The mean was {}".format(np.mean(montecarlo_maxima)))
+    print("The original max was {}".format(original_xmax))
+    print("The std dev was {}".format(np.std(montecarlo_maxima)))
+
+    return original_xmax, np.std(montecarlo_maxima)
+
+
+def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = False):
     mpvs = {}
     mpv_errs = {}
     fit_results = {}
@@ -191,11 +227,15 @@ def do_fit(histograms, function="gaus", extra_str = ""):
         print(model)
         prepare_for_fit()
         result = model.fitTo(eop_hist, ROOT.RooFit.Range("Fit"), ROOT.RooFit.Save(True))
-        for var in variables:
-            if "mean" in var.GetName():
-                mpvs[channel]=var.getVal()
-                mpv_errs[channel]=var.getError()
         fit_results[channel]=result
+
+        if not montecarlo_errors:
+            for var in variables:
+                if "mean" in var.GetName():
+                    mpvs[channel]=var.getVal()
+                    mpv_errs[channel]=var.getError()
+        else:
+            mpvs[channel], mpv_errs[channel]=montecarlo_uncertainties(model, variables,eop, low, high)
 
         #draw the fit
         c = ROOT.TCanvas("canv", "canv")
@@ -260,10 +300,9 @@ def do_fit(histograms, function="gaus", extra_str = ""):
         bottom.Close()
         c.Close()
 
-
     return mpvs, mpv_errs, fit_results
 
-def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelectionHadFracAbove70", function = "gaus"):
+def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelectionHadFracAbove70", function = "gaus", montecarlo_errors = True):
 
     #get the binning vectors
     rf = ROOT.TFile(f, "READ")
@@ -291,7 +330,7 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
         for j, p_low, p_high in zip(range(0, len(p_bins_low_for_eta_bin[i])),p_bins_low_for_eta_bin[i], p_bins_high_for_eta_bin[i]):
             histogram_name = histogram_base + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
             histograms = HM.getHistograms(histogram_name)
-            mpv, mpv_err, fit_result = do_fit(histograms, function = function, extra_str = "Eta_{}_P_{}_{}".format(i,j, selection_name))
+            mpv, mpv_err, fit_result = do_fit(histograms, function = function, extra_str = "Eta_{}_P_{}_{}".format(i,j, selection_name), montecarlo_errors = montecarlo_errors)
             for channel in mpv:
                if channel not in mpvs:
                    mpvs[channel]=[]
