@@ -108,6 +108,9 @@ class HistogramFiller:
     def create_subchannel_for_channel(self, subchannel, channel, selections):
         assert subchannel not in self.subchannels
         assert subchannel not in self.channels
+        if channel not in self.channels:
+            print("WARNING! Couldn't find the channel {} for subchannel {}".format(channel, subchannel))
+            return
         self.subchannels[subchannel] = {}
         self.subchannels[subchannel]["original_channel"] = channel
         self.subchannels[subchannel]["selections"] = selections

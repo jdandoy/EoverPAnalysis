@@ -11,6 +11,19 @@ directories = {}
 directories["inclusive"] = dir_inclusive
 directories["test"] = dir_inclusive
 directories["identified"] = dir_identified
+directories["inclusive_hadiso"] = dir_inclusive
+
+inclusive_hadiso_files = {}
+inclusive_hadiso_files["LowMuData"] = ["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist",\
+"user.luadamek.data17_13TeV.00341312.physics_MinBias.calibhits_v01_hist",\
+"user.luadamek.data17_13TeV.00341419.physics_MinBias.calibhits_v01_hist",\
+"user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_hist",\
+"user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_hist",\
+"user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_hist"]
+inclusive_hadiso_files["PythiaJetJet"] = [\
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
 
 # a dictionary to store all of the filenames for each channel
 inclusive_files = {}
@@ -33,6 +46,10 @@ inclusive_files["SinglePionTightIso"] = [\
 "user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist",\
 "user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist"]
 inclusive_files["PythiaJetJet"] = [\
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+inclusive_files["PythiaJetJetTightIso"] = [\
 "user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
 "user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
 "user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
@@ -108,6 +125,7 @@ files["test"] = {"PythiaJetJet":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_
                  "LowMuData":["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist"],\
                 }
 files["identified"] = identified_files 
+files["inclusive_hadiso"] = inclusive_hadiso_files 
 
 def get_files(flavour):
     '''

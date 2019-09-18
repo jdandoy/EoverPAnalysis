@@ -11,6 +11,10 @@ def TightIso(trk):
     return trk["trk_nearest_dR_EM"] > 0.55
 sel_TightIso = Calculation(TightIso, ["trk_nearest_dR_EM"])
 
+def HadIso(trk):
+    return trk["trk_nearest_dR_HAD"] > 0.4
+sel_HadIso = Calculation(HadIso, ["trk_nearest_dR_HAD"])
+
 def hasHADExtrapolation(trk):
     return (trk["trk_phiHEC1"] > -100) | (trk["trk_phiTileBar2"] > -100) | (trk["trk_phiTileExt1"] > -100)
 branches =["trk_phiHEC1", "trk_phiTileBar2", "trk_phiTileExt1"]

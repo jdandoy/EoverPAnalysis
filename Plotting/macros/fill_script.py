@@ -52,6 +52,7 @@ sel_TightIso = [sel_TightIso]
 def fill_histograms(hist_filler, outputRootFileName):
     #import thje variables that we want to plot
     from variables import calc_trkNearestNeighbourEM2, calc_trkP, calc_EOP, calc_trkPt, calc_trkAverageMu, calc_trkEtaID, calc_trkEtaECAL, calc_trkNPV2, calc_trkCount, calc_trkNClusters, calc_trkNClusters_EM, calc_trkNClusters_HAD, calc_trkNClusters_emlike, calc_trkNClusters_hadlike, calc_TruthMomentum
+    from selections import sel_HadIso
 
     hist_filler.apply_selection_for_channel("LowMuDataTightIso", sel_TightIso) #Tighter isolation requirement
     hist_filler.apply_selection_for_channel("PythiaJetJetTightIso", sel_TightIso) #Tighter isolation requirement
@@ -100,6 +101,8 @@ def fill_histograms(hist_filler, outputRootFileName):
     #hist_filler.weight_calculator.add_reweight_histogram("PythiaJetJetHardScatterTightIso", calc_trkNPV2, hist, selection = [sel_Event])
 
 
+    hist_filler.create_subchannel_for_channel("LowMuDataHadIso","LowMuData", [sel_HadIso]) #Tighter isolation requirement
+    hist_filler.create_subchannel_for_channel("PythiaJetJetHadIso","PythiaJetJet", [sel_HadIso]) #Tighter isolation requirement
     hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterPionPos", "PythiaJetJetHardScatter", pion_pos_selections)
     hist_filler.create_subchannel_for_channel("PythiaJetJetHardScatterPionNeg", "PythiaJetJetHardScatter", pion_neg_selections)
 
