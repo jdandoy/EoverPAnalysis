@@ -130,6 +130,9 @@ def montecarlo_uncertainties(model, variables, x_var, minimum, maximum):
     print("The original max was {}".format(original_xmax))
     print("The std dev was {}".format(np.std(montecarlo_maxima)))
 
+    #reset the variables to their origin values
+    [variables[i].setVal(v) for i,v in enumerate(original_values)]
+
     return original_xmax, np.std(montecarlo_maxima)
 
 
