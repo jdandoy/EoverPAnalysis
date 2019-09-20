@@ -12,7 +12,7 @@ def vertex_mass(vertex):
 calc_vertex_mass = Calculation(vertex_mass, ["vertex_mass"])
 
 def vertex_count(vertex):
-    return np.ones(len(vertex)) * 0.5
+    return np.ones(len(vertex)) * 0.0
 calc_vertex_count = Calculation(vertex_count, [])
 
 def vertex_chiSquared(vertex):

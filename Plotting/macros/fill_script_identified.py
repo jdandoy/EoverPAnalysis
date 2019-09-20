@@ -47,14 +47,36 @@ def fill_histograms(hist_filler, outputRootFileName):
                                                          xlabel ='M [GeV]',\
                                                          ylabel = 'Number of vertices')
 
+    histogram_name = "PhiVertexMass"
+    selections = []
+    trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
+                                                         calc_vertex_mass,\
+                                                         selections = selections,\
+                                                         bins = 100,\
+                                                         range_low = 987.354,\
+                                                         range_high = 1200.0,\
+                                                         xlabel ='M [GeV]',\
+                                                         ylabel = 'Number of vertices')
+
+    histogram_name = "LambdaVertexMass"
+    selections = []
+    trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
+                                                         calc_vertex_mass,\
+                                                         selections = selections,\
+                                                         bins = 100,\
+                                                         range_low = 1105.0,\
+                                                         range_high = 1125.0,\
+                                                         xlabel ='M [GeV]',\
+                                                         ylabel = 'Number of vertices')
+
     histogram_name = "vertex_Rxy"
     selections = []
     trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
                                                          calc_vertex_Rxy,\
                                                          selections = selections,\
-                                                         bins = 500,\
+                                                         bins = 110,\
                                                          range_low = 0.0,\
-                                                         range_high = 500.0,\
+                                                         range_high = 40.0,\
                                                          xlabel ='rxy [mm]',\
                                                          ylabel = 'Number of vertices')
 
