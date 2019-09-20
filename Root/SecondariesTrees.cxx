@@ -8,6 +8,7 @@
 #include "AsgTools/MessageCheck.h"
 #include "EoverPAnalysis/SecondariesTrees.h"
 #include "EoverPAnalysis/EnergySumHelper.h"
+#include "xAODAnaHelpers/HelperFunctions.h"
 
 #include <EventLoop/Job.h>
 #include <EventLoop/StatusCode.h>
@@ -33,6 +34,8 @@
 #include "xAODTruth/TruthParticleContainer.h"
 #include "xAODEventInfo/EventInfo.h"
 
+
+
 SecondariesTrees :: SecondariesTrees (const std::string& name,
 					  ISvcLocator *pSvcLocator)
   : EL::AnaAlgorithm (name, pSvcLocator)
@@ -46,7 +49,7 @@ SecondariesTrees :: SecondariesTrees (const std::string& name,
   declareProperty( "MessageFrequency", m_MessageFrequency = 1000,
 		   "Frequency of debug messages" );
 
-  declareProperty( "VertexContainer", m_VertexContainer = "PrimaryVertices",
+  declareProperty( "VertexContainer", m_VertexContainer = "CandidateVertices",
                    "Input vertex container?" );
 
   declareProperty( "TrackContainer", m_TrackContainer = "InDetTrackParticlesLoose",
@@ -65,9 +68,23 @@ SecondariesTrees :: ~SecondariesTrees()
   //delete m_jetPt;
 }
 
+typedef ElementLink<xAOD::TruthParticleContainer> TruthLink_t;
+static SG::AuxElement::Accessor<TruthLink_t> LINKTOTRUTH("truthParticleLink");
+const xAOD::TruthParticle* SecondariesTrees :: getTruthPtr(const xAOD::TrackParticle* trackParticle) {
+      const xAOD::TruthParticle *result = nullptr;
+        if ( LINKTOTRUTH.isAvailable(*trackParticle) ) {
+                const TruthLink_t link = trackParticle->auxdata<TruthLink_t>("truthParticleLink");
+                    if ( link.isValid() ) {
+                              result = *link;
+                                  }
+                      }
+          return result;
+}
+
 StatusCode SecondariesTrees :: initialize ()
 {
   m_event = wk()->xaodEvent();
+  m_store = wk()->xaodStore();
 
   // Histogram booking
 
@@ -86,12 +103,18 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("weight",&m_weight);
   t->Branch("mcWeight",&m_mcWeight);
   t->Branch("mu",&m_mu);
-  t->Branch("npv",&m_npv);
+  t->Branch("n_candidates",&m_n_candidates);
   
   t->Branch("vertex_N",&m_vertex_N);
   t->Branch("vertex_pt",&m_vertex_pt);
   t->Branch("vertex_eta",&m_vertex_eta);
   t->Branch("vertex_phi",&m_vertex_phi);
+  t->Branch("vertex_x",&m_vertex_x);
+  t->Branch("vertex_y",&m_vertex_y);
+  t->Branch("vertex_z",&m_vertex_z);
+  t->Branch("primary_vertex_x",&m_primary_vertex_x);
+  t->Branch("primary_vertex_y",&m_primary_vertex_y);
+  t->Branch("primary_vertex_z",&m_primary_vertex_z);
   t->Branch("vertex_mass",&m_vertex_mass);
   t->Branch("vertex_massErr",&m_vertex_massErr);
   t->Branch("vertex_Rxy",&m_vertex_Rxy);
@@ -276,16 +299,21 @@ StatusCode SecondariesTrees :: execute ()
   if(debug) std::cout << "SecondariesTrees :: execute()\tProcessing event " << count << ". "  << std::endl;
 
   // NPV and mu
-  int npv = 0;
-  const xAOD::VertexContainer* PrimaryVertices = 0;
-  m_event->retrieve(PrimaryVertices,m_VertexContainer.Data());
-  for(const auto vertex : *PrimaryVertices)
+  int n_candidates = 0;
+  const xAOD::VertexContainer* CandidateVertices = 0;
+  m_event->retrieve(CandidateVertices,m_VertexContainer.Data());
+  for(const auto vertex : *CandidateVertices)
     if(vertex->trackParticleLinks().size() >= 2)
-      npv++;  
-  m_npv = npv;
-  m_vertex_N = npv;
+      n_candidates++;  
+  m_n_candidates = n_candidates;
+  m_vertex_N = n_candidates;
 
-  if(debug) std::cout << "SecondariesTrees :: execute()\t" << npv << " primary vertices!" << std::endl; 
+  if(debug) std::cout << "SecondariesTrees :: execute()\t" << n_candidates << " primary vertices!" << std::endl; 
+
+  //get the primary vertex
+  const xAOD::VertexContainer *vtxs(nullptr);
+  ANA_CHECK( HelperFunctions::retrieve(vtxs, "PrimaryVertices", m_event, m_store) );
+  const xAOD::Vertex *pvx = HelperFunctions::getPrimaryVertex(vtxs, msg());
 
   // Track particles
   const xAOD::TrackParticleContainer* TrackParticles = 0;
@@ -331,13 +359,19 @@ StatusCode SecondariesTrees :: execute ()
       m_weight = weight;
     }
   
-  for(const auto vertex : *PrimaryVertices)
+  for(const auto vertex : *CandidateVertices)
     {
       //std::cout << vertex->trackParticleLinks().size() << " tracks on vertex" << std::endl;         
       TLorentzVector tlv_vertex;
       if(vertex->trackParticleLinks().size()!=2) continue;
       else
 	  {
+      m_vertex_x = vertex->x();
+      m_vertex_y = vertex->y();
+      m_vertex_z = vertex->z();
+      m_primary_vertex_x = pvx->x();
+      m_primary_vertex_y = pvx->y();
+      m_primary_vertex_z = pvx->z();
 	  //This is the track pT, and coordinates of the track in the ID	  	  	  
 	  trk1_pt = vertex->trackParticle(0)->pt()/1.e3;
 	  trk1_etaID = vertex->trackParticle(0)->eta();
@@ -398,6 +432,54 @@ StatusCode SecondariesTrees :: execute ()
       if( acc_iso1_HAD2.isAvailable(*vertex->trackParticle(1))) trk2_iso1_HAD2 = acc_iso1_HAD2(*vertex->trackParticle(1));
       if( acc_iso2_EM2.isAvailable(*vertex->trackParticle(1)))  trk2_iso2_EM2  = acc_iso2_EM2(*vertex->trackParticle(1));
       if( acc_iso2_HAD2.isAvailable(*vertex->trackParticle(1))) trk2_iso2_HAD2 = acc_iso2_HAD2(*vertex->trackParticle(1));
+
+      ///////////////////////////////////////TRUTH INFORMATION ////////////////////////////////////////////////////////////////
+      //reset the truth information
+      TLorentzVector truthPartVec;
+      trk1_truthPdgId = 0;
+      trk1_truthEnergy = -999.0;
+      trk1_truthP = -999.0;
+      trk1_truthProb = -1.0;
+      trk1_hasTruthParticle = 0;
+      static SG::AuxElement::ConstAccessor< float > tmpAcc("truthMatchProbability"); //What is the name of the truth match probabily cut variable?
+
+      //Get the truth match probability of the track
+      if (tmpAcc.isAvailable(*vertex->trackParticle(0))){
+          const xAOD::TruthParticle* truthPart = getTruthPtr(vertex->trackParticle(0));
+          trk1_truthProb = tmpAcc(*vertex->trackParticle(0));
+          //check if the track passes the truth match probaility cut
+          if (!truthPart) {trk1_hasTruthParticle = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
+          else { 
+              trk1_hasTruthParticle = 1;
+              trk1_truthPdgId = truthPart->pdgId();
+              trk1_truthEnergy = truthPart->e()/1000.0;
+              truthPartVec.SetPtEtaPhiE(truthPart->pt()/1000.0, truthPart->eta(), truthPart->phi(), truthPart->e()/1000.0);
+              trk1_truthP = truthPartVec.P()/1000.0;
+          }
+      }
+
+      ///////////////////////////////////////TRUTH INFORMATION ////////////////////////////////////////////////////////////////
+      //reset the truth information
+      trk2_truthPdgId = 0;
+      trk2_truthEnergy = -999.0;
+      trk2_truthP = -999.0;
+      trk2_truthProb = -1.0;
+      trk2_hasTruthParticle = 0;
+
+      //Get the truth match probability of the track
+      if (tmpAcc.isAvailable(*vertex->trackParticle(1))){
+          const xAOD::TruthParticle* truthPart = getTruthPtr(vertex->trackParticle(1));
+          trk2_truthProb = tmpAcc(*vertex->trackParticle(1));
+          //check if the track passes the truth match probaility cut
+          if (!truthPart) {trk2_hasTruthParticle = 0;} //there was a truth match, but the link is broken (or truth particle has energy < 100MeV!)
+          else { 
+              trk2_hasTruthParticle = 1;
+              trk2_truthPdgId = truthPart->pdgId();
+              trk2_truthEnergy = truthPart->e()/1000.0;
+              truthPartVec.SetPtEtaPhiE(truthPart->pt()/1000.0, truthPart->eta(), truthPart->phi(), truthPart->e()/1000.0);
+              trk2_truthP = truthPartVec.P()/1000.0;
+          }
+      }
 
       if(debug)
 	{

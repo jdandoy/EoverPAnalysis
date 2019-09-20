@@ -17,6 +17,9 @@
 #include "xAODRootAccess/Init.h"
 #include "xAODRootAccess/TEvent.h"
 
+#include "xAODTracking/TrackParticleContainer.h"
+#include "xAODTruth/TruthParticle.h"
+
 class SecondariesTrees : public EL::AnaAlgorithm
 {
  public:
@@ -26,8 +29,10 @@ class SecondariesTrees : public EL::AnaAlgorithm
   virtual StatusCode initialize () override;
   virtual StatusCode execute () override;
   virtual StatusCode finalize () override;
+  const xAOD::TruthParticle* getTruthPtr(const xAOD::TrackParticle* trackParticle); 
 
   xAOD::TEvent *m_event; //!
+  xAOD::TStore *m_store; //!
 
 
   // pileup reweighting
@@ -64,7 +69,7 @@ class SecondariesTrees : public EL::AnaAlgorithm
   Float_t m_mcWeight;
   Float_t m_weight;
   Float_t m_mu;
-  Int_t m_npv;
+  Int_t m_n_candidates;
   
   Int_t m_vertex_N;
   Float_t m_vertex_pt;
@@ -151,36 +156,13 @@ class SecondariesTrees : public EL::AnaAlgorithm
   float trk1_iso2_EM2;
   float trk1_iso2_HAD2;
 
-  float trk1_ClusterEnergy_EM_200;
-  float trk1_ClusterEnergy_EM_100;
-  float  trk1_ClusterEnergy_HAD_200;
-  float  trk1_ClusterEnergy_HAD_100;
-  //float  trk1_ClusterEnergy_Pos_Total_200;
-  //float  trk1_ClusterEnergy_Pos_Total_100;
-  //float  trk1_ClusterEnergy_Total_200;
-  //float  trk1_ClusterEnergy_Total_100;
+  float m_vertex_x;
+  float m_vertex_y;
+  float m_vertex_z;
+  float m_primary_vertex_x;
+  float m_primary_vertex_y;
+  float m_primary_vertex_z;
 
-  float trk1_LCWClusterEnergy_EM_200;
-  float trk1_LCWClusterEnergy_EM_100;
-  float trk1_LCWClusterEnergy_HAD_200;
-  float trk1_LCWClusterEnergy_HAD_100;
-  //float trk1_LCWClusterEnergy_Pos_Total_200;
-  //float trk1_LCWClusterEnergy_Pos_Total_100;
-  //float trk1_LCWClusterEnergy_Total_200;
-  //float trk1_LCWClusterEnergy_Total_100;
-
-  float trk1_CellEnergy_EM_200;
-  float trk1_CellEnergy_EM_100;
-  float trk1_CellEnergy_HAD_200;
-  float trk1_CellEnergy_HAD_100;
-  //float trk1_CellEnergy_Pos_Total_200;
-  //float trk1_CellEnergy_Pos_Total_100;
-  //float trk1_CellEnergy_Total_200;
-  //float trk1_CellEnergy_Total_100;
-  float trk1_CellEnergy_EM_nopresampler_100;
-  float trk1_CellEnergy_EM_nopresampler_200;
-  float trk1_CellEnergy_Total_nopresampler_100;
-  float trk1_CellEnergy_Total_nopresampler_200;
 
   // TRACK TWO
   float trk2_etaID;
@@ -233,36 +215,6 @@ class SecondariesTrees : public EL::AnaAlgorithm
   float trk2_iso2_EM2;
   float trk2_iso2_HAD2;
 
-  float trk2_ClusterEnergy_EM_200;
-  float trk2_ClusterEnergy_EM_100;
-  float  trk2_ClusterEnergy_HAD_200;
-  float  trk2_ClusterEnergy_HAD_100;
-  //float  trk2_ClusterEnergy_Pos_Total_200;
-  //float  trk2_ClusterEnergy_Pos_Total_100;
-  //float  trk2_ClusterEnergy_Total_200;
-  //float  trk2_ClusterEnergy_Total_100;
-
-  float trk2_LCWClusterEnergy_EM_200;
-  float trk2_LCWClusterEnergy_EM_100;
-  float trk2_LCWClusterEnergy_HAD_200;
-  float trk2_LCWClusterEnergy_HAD_100;
-  //float trk2_LCWClusterEnergy_Pos_Total_200;
-  //float trk2_LCWClusterEnergy_Pos_Total_100;
-  //float trk2_LCWClusterEnergy_Total_200;
-  //float trk2_LCWClusterEnergy_Total_100;
-
-  float trk2_CellEnergy_EM_200;
-  float trk2_CellEnergy_EM_100;
-  float trk2_CellEnergy_HAD_200;
-  float trk2_CellEnergy_HAD_100;
-  //float trk2_CellEnergy_Pos_Total_200;
-  //float trk2_CellEnergy_Pos_Total_100;
-  //float trk2_CellEnergy_Total_200;
-  //float trk2_CellEnergy_Total_100;
-  float trk2_CellEnergy_EM_nopresampler_100;
-  float trk2_CellEnergy_EM_nopresampler_200;
-  float trk2_CellEnergy_Total_nopresampler_100;
-  float trk2_CellEnergy_Total_nopresampler_200;
 };
 
 #endif
