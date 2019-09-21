@@ -136,6 +136,9 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("trk1_etaID", &trk1_etaID);
   t->Branch("trk1_phiID", &trk1_phiID);
   t->Branch("trk1_pt", &trk1_pt);
+  t->Branch("trk1_px", &trk1_px);
+  t->Branch("trk1_py", &trk1_py);
+  t->Branch("trk1_pz", &trk1_pz);
   t->Branch("trk1_d0", &trk1_d0);
   t->Branch("trk1_nTRT", &trk1_nTRT);
   t->Branch("trk1_charge", &trk1_charge);
@@ -178,6 +181,9 @@ StatusCode SecondariesTrees :: initialize ()
   t->Branch("trk2_etaID", &trk2_etaID);
   t->Branch("trk2_phiID", &trk2_phiID);
   t->Branch("trk2_pt", &trk2_pt);
+  t->Branch("trk2_px", &trk2_px);
+  t->Branch("trk2_py", &trk2_py);
+  t->Branch("trk2_pz", &trk2_pz);
   t->Branch("trk2_d0", &trk2_d0);
   t->Branch("trk2_nTRT", &trk2_nTRT);
   t->Branch("trk2_charge", &trk2_charge);
@@ -411,12 +417,20 @@ StatusCode SecondariesTrees :: execute ()
 			      trk1_etaID,
 			      trk1_phiID,
 			      trk1_m);
+
+      trk1_px = tlv_track1.Px();
+      trk1_py = tlv_track1.Py();
+      trk1_pz = tlv_track1.Pz();
       
       TLorentzVector tlv_track2;
       tlv_track2.SetPtEtaPhiM(trk2_pt,
                               trk2_etaID,
                               trk2_phiID,
                               trk2_m);
+
+      trk2_px = tlv_track2.Px();
+      trk2_py = tlv_track2.Py();
+      trk2_pz = tlv_track2.Pz();
 
       static SG::AuxElement::ConstAccessor< float > acc_iso1_EM2("dRToNearestTrackInEM");
       static SG::AuxElement::ConstAccessor< float > acc_iso1_HAD2("dRToNearestTrackInHAD");

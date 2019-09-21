@@ -121,6 +121,9 @@ class SecondariesTrees : public EL::AnaAlgorithm
   TLorentzVector trk1_truthPartVec;
 
   float trk1_pt;
+  float trk1_px;
+  float trk1_py;
+  float trk1_pz;
   float trk1_m;
   float trk1_p;
   float trk1_d0;
@@ -180,6 +183,9 @@ class SecondariesTrees : public EL::AnaAlgorithm
   TLorentzVector trk2_truthPartVec;
 
   float trk2_pt;
+  float trk2_px;
+  float trk2_py;
+  float trk2_pz;
   float trk2_m;
   float trk2_p;
   float trk2_d0;
