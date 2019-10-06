@@ -62,4 +62,7 @@ def cos_theta(vertex):
     cos_theta[non_zero] = numerator[non_zero] / (mag_pv[non_zero] * mag_v[non_zero])
     return cos_theta
 
-calc_cos_theta = Calculation(cos_theta, ["primary_vertex_{}".format(x) for x in ["x", "y","z"]] + ["vertex_{}".format(x) for x in ["x", "y","z"]] + ["trk1_{}".format(x) for x in ["px", "py","pz"]] + ["trk2_{}".format(x) for x in ["px", "py", "pz"]])
+calc_cos_theta = Calculation(cos_theta, ["primary_vertex_{}".format(x) for x in ["x", "y","z"]]\
+        + ["vertex_{}".format(x) for x in ["x", "y","z"]] \
+        + ["trk1_{}".format(x) for x in ["px", "py","pz"]]\
+        + ["trk2_{}".format(x) for x in ["px", "py", "pz"]])
