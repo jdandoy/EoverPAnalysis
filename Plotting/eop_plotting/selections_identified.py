@@ -10,3 +10,12 @@ from variables_identified import calc_cos_theta
 def tight_cos_theta(vertex):
     return calc_cos_theta.eval(vertex) > 0.999
 sel_tight_cos_theta = Calculation(tight_cos_theta, calc_cos_theta.branches)
+
+def rxy(vertex):
+    return (vertex["vertex_Rxy"] < 450) & (vertex["vertex_Rxy"] > 4.0)
+sel_rxy = Calculation(rxy, ["vertex_Rxy"])
+
+def pt(vertex):
+    return (vertex["vertex_pt"] > 0.1)
+sel_pt = Calculation(pt, ["vertex_pt"])
+

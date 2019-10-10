@@ -25,9 +25,9 @@ def fill_histograms(hist_filler, outputRootFileName):
     from variables_identified import calc_vertex_mass, calc_vertex_Rxy, calc_weight, calc_vertex_count, calc_cos_theta, calc_vertex_pt
     hist_filler.weight_calculator = calc_weight
 
-    from selections_identified import sel_tight_cos_theta, sel_chi_square_fifteen
+    from selections_identified import sel_tight_cos_theta, sel_chi_square_fifteen, sel_rxy, sel_pt
 
-    for selections in [[], [sel_tight_cos_theta, sel_chi_square_fifteen]]:
+    for selections in [[], [sel_tight_cos_theta, sel_chi_square_fifteen, sel_rxy, sel_pt]]:
        descriptor = "_".join([sel.name for sel in selections])
        histogram_name = "VertexCount" + descriptor
        trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
@@ -75,7 +75,7 @@ def fill_histograms(hist_filler, outputRootFileName):
                                                             selections = selections,\
                                                             bins = 110,\
                                                             range_low = 0.0,\
-                                                            range_high = 40.0,\
+                                                            range_high = 800.0\
                                                             xlabel ='rxy [mm]',\
                                                             ylabel = 'Number of Vertices')
 
@@ -99,9 +99,9 @@ def fill_histograms(hist_filler, outputRootFileName):
                                        xlabel = 'cos(#theta)',\
                                        ylabel = 'Number of Vertices')
 
-       histograms = hist_filler.DumpHistograms()
-       outFile = ROOT.TFile(outputRootFileName, "RECREATE")
-       for histogram_name in histograms:
-           write_histograms(histograms[histogram_name], outFile)
+    histograms = hist_filler.DumpHistograms()
+    outFile = ROOT.TFile(outputRootFileName, "RECREATE")
+    for histogram_name in histograms:
+        write_histograms(histograms[histogram_name], outFile)
 
     print("THEJOBFINISHED!")
