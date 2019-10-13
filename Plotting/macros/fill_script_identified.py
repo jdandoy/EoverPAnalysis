@@ -25,9 +25,11 @@ def fill_histograms(hist_filler, outputRootFileName):
     from variables_identified import calc_vertex_mass, calc_vertex_Rxy, calc_weight, calc_vertex_count, calc_cos_theta, calc_vertex_pt
     hist_filler.weight_calculator = calc_weight
 
-    from selections_identified import sel_tight_cos_theta, sel_chi_square_fifteen, sel_rxy, sel_pt
+    from selections_identified import sel_tight_cos_theta_ks, sel_chi_square_fifteen, sel_rxy_ks, sel_pt_ks
+    from selections_identified import sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda
 
-    for selections in [[], [sel_tight_cos_theta, sel_chi_square_fifteen, sel_rxy, sel_pt]]:
+    for selections in [[], [sel_tight_cos_theta_ks, sel_chi_square_fifteen, sel_rxy_ks, sel_pt_ks],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda]]:
        descriptor = "_".join([sel.name for sel in selections])
        histogram_name = "VertexCount" + descriptor
        trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
@@ -75,7 +77,7 @@ def fill_histograms(hist_filler, outputRootFileName):
                                                             selections = selections,\
                                                             bins = 110,\
                                                             range_low = 0.0,\
-                                                            range_high = 800.0\
+                                                            range_high = 800.0,\
                                                             xlabel ='rxy [mm]',\
                                                             ylabel = 'Number of Vertices')
 
