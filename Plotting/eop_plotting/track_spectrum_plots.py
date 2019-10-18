@@ -5,7 +5,7 @@ from math import pi
 import pickle
 import numpy as np
 from selections import EtaBin, PBin, sel_SubleadingTrack
-from variables import calc_trkP, calc_trkPt, calc_TruthMomentum
+from variables import calc_trkP, calc_trkPt, calc_TruthMomentum, calc_trkEta
 
 def create_spectrum_plots(hist_filler, base_selection, eta_ranges,  p_bins_for_eta_range, description):
     eta_count = -1
@@ -35,11 +35,23 @@ def create_spectrum_plots(hist_filler, base_selection, eta_ranges,  p_bins_for_e
         histogram_name = "TrackPSpectrum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
         hist_filler.book_histogram_fill(histogram_name,\
-                                           calc_trkPt,\
+                                           calc_trkP,\
                                            selections = selections,\
                                            bins = p_bins,\
                                            xlabel ="Track P [GeV]",\
                                            ylabel = "Number of Tracks")
+
+        ################################################################################
+        histogram_name = "2dTrackPSpectrumVsEta"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        hist_filler.book_2dhistogram_fill(histogram_name,\
+                                           calc_trkP,\
+                                           calc_trkEta,\
+                                           selections = selections,\
+                                           bins_x = p_bins,\
+                                           bins_y = list(np.linspace(-2.5, 2.5, 100)),\
+                                           xlabel ="Track Pt [GeV]",\
+                                           ylabel = "Track #eta")
 
         ################################################################################
         histogram_name = "TrackTruthPSpectrum"
@@ -51,3 +63,14 @@ def create_spectrum_plots(hist_filler, base_selection, eta_ranges,  p_bins_for_e
                                            xlabel ="Track Truth P [GeV]",\
                                            ylabel = "Number of Tracks")
 
+        ################################################################################
+        histogram_name = "2dTrackTruthPSpectrumVsEta"
+        histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
+        hist_filler.book_2dhistogram_fill(histogram_name,\
+                                           calc_TruthMomentum,\
+                                           calc_trkEta,\
+                                           selections = selections,\
+                                           bins_x = p_bins,\
+                                           bins_y = list(np.linspace(-2.5, 2.5, 100)),\
+                                           xlabel ="Track Truth P [GeV]",\
+                                           ylabel = "Track #eta")
