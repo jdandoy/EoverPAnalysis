@@ -11,7 +11,7 @@ CMTCONFIG=x86_64-slc6-gcc8-opt $TestArea/lcg_virtualenv/create_lcg_virtualenv ve
 source venv_EOPPlotting/bin/activate
 ```
 
-#Install all of the dependencies:
+Install all of the dependencies:
 ```
 pip install --upgrade pip
 pip install atlas-mpl-style --no-cache-dir
@@ -26,7 +26,7 @@ cd ../../../
 pip install uproot
 ```
 
-#Finish the setup by running the setup script
+Finish the setup by running the setup script
 ```
 source ./setup.sh
 ```
