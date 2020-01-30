@@ -5,16 +5,35 @@ These macros ship jobs to condor for all of your plotting needs. The histograms 
 ## Setup
 This setups up the envorment that we will need for all of the plotting fun!
 ```
-cd $TestArea/EoverPAnalysis/
-source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_94python3 x86_64-centos7-gcc62-opt
-python3 -m venv Plotting
-cd Plotting
+git clone ssh://git@gitlab.cern.ch:7999/cburr/lcg_virtualenv.git $TestArea/
+cd $TestArea/EoverPAnalysis/Plotting
+CMTCONFIG=x86_64-slc6-gcc8-opt $TestArea/lcg_virtualenv/create_lcg_virtualenv venv_EOPPlotting LCG_94python3
+source venv_EOPPlotting/bin/activate
+```
+
+#Install all of the dependencies:
+```
+pip install --upgrade pip
+pip install atlas-mpl-style --no-cache-dir
+git clone https://github.com/joeycarter/atlas-plots.git
+cd atlas-plots
+pip install -e .
+cd ..
+git clone https://github.com/xrootd/xrootd.git
+cd xrootd/bindings/python/
+python setup_standalone.py install
+cd ../../../
+pip install uproot
+```
+
+#Finish the setup by running the setup script
+```
 source ./setup.sh
 ```
 
 ## When logging back in
 ```
-source /cvmfs/sft.cern.ch/lcg/views/setupViews.sh LCG_94python3 x86_64-centos7-gcc62-opt
+cd $TestArea/EoverPAnalysis/Plotting
 source ./setup.sh
 ```
 
