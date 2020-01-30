@@ -31,26 +31,6 @@ def pt_lambda(vertex):
     return (vertex["vertex_pt"] > 0.5)
 sel_pt_lambda = Calculation(pt_lambda, ["vertex_pt"])
 
-def pos_track_momentum(vertex):
-    trk_momentum = np.ones(len(vertex))
-    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
-    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
-    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
-    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
-    trk_momentum[trk1_pos] = vertex["trk1_p"][trk1_pos]
-    trk_momentum[trk1_neg] = vertex["trk2_p"][trk1_neg]
-    return trk_momentum
-
-def neg_track_momentum(vertex):
-    trk_momentum = np.ones(len(vertex))
-    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
-    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
-    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
-    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
-    trk_momentum[trk1_pos] = vertex["trk2_p"][trk1_pos] #track 1 positive -> trk2 is negative
-    trk_momentum[trk1_neg] = vertex["trk1_p"][trk1_neg] #track 1 negative -> trk1 is negative
-    return trk_momentum
-
 #use the mass hypothesis of the higher-momentum track and it's momentum to select lambda and lambda_bars
 def sel_lambda(vertex):
     #get the charge of the higher-pt track
@@ -69,3 +49,19 @@ def pt_phi(vertex):
     return (vertex["vertex_pt"] > 0.1)
 sel_pt_phi = Calculation(pt_phi, ["vertex_pt"])
 
+from variables_identified import calc_pos_track_pt, calc_neg_track_pt, calc_pos_track_nearest_dR_EM, calc_neg_track_nearest_dR_EM
+def pos_track_higher_pt(vertex):
+    return calc_pos_track_pt.eval(vertex) > calc_neg_track_pt.eval(vertex)
+sel_pos_track_higher_pt = Calculation(pos_track_higher_pt, calc_pos_track_pt.branches)
+
+def neg_track_higher_pt(vertex):
+    return calc_pos_track_pt.eval(vertex) < calc_neg_track_pt.eval(vertex)
+sel_neg_track_higher_pt = Calculation(neg_track_higher_pt, calc_neg_track_pt.branches)
+
+def pos_track_isolated(vertex):
+    return calc_pos_track_nearest_dR_EM.eval(vertex) > 0.4
+sel_pos_track_isolated = Calculation(pos_track_isolated, calc_pos_track_nearest_dR_EM.branches)
+
+def neg_track_isolated(vertex):
+    return calc_neg_track_nearest_dR_EM.eval(vertex) > 0.4
+sel_neg_track_isolated = Calculation(neg_track_isolated, calc_neg_track_nearest_dR_EM.branches)

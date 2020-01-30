@@ -188,6 +188,18 @@ def create_eop_histograms(hist_filler, base_selection, eta_ranges,p_bins_for_eta
                                                   ylabel = "<E_{EM Anulus}>[GeV]",\
                                                   )
 
+#       from variables import calc_EOTotalEMCalibHitEnergy
+#       histogram_name = "EOTotalEMCalibHitEnergyProfileVsMomentum"  + "_" + "_" + description + "_Eta_" + str(eta_count)
+#       hist_filler.book_tprofile_fill(histogram_name,\
+#                                      calc_trkP,\
+#                                      calc_EOTotalEMCalibHitEnergy,\
+#                                      selections = selections,\
+#                                      bins = p_bins,\
+#                                      xlabel = "P[GeV]",\
+#                                      ylabel = "<E_{Total Calibration}/P>",\
+#                                      )
+
+
         histogram_name = "2DHist_EnergyAnulusVsMomentum"
         histogram_name = histogram_name + "_" + "_" + description + "_Eta_" + str(eta_count)
         hist_filler.book_2dhistogram_fill(histogram_name,\

@@ -66,3 +66,104 @@ calc_cos_theta = Calculation(cos_theta, ["primary_vertex_{}".format(x) for x in 
         + ["vertex_{}".format(x) for x in ["x", "y","z"]] \
         + ["trk1_{}".format(x) for x in ["px", "py","pz"]]\
         + ["trk2_{}".format(x) for x in ["px", "py", "pz"]])
+
+def pos_track_momentum(vertex):
+    trk_momentum = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_momentum[trk1_pos] = vertex["trk1_p"][trk1_pos]
+    trk_momentum[trk1_neg] = vertex["trk2_p"][trk1_neg]
+    return trk_momentum
+calc_pos_track_momentum = Calculation(pos_track_momentum, ["trk1_momentum", "trk2_momentum", "trk1_charge", "trk2_charge"])
+
+def neg_track_momentum(vertex):
+    trk_momentum = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_momentum[trk1_pos] = vertex["trk2_p"][trk1_pos] #track 1 positive -> trk2 is negative
+    trk_momentum[trk1_neg] = vertex["trk1_p"][trk1_neg] #track 1 negative -> trk1 is negative
+    return trk_momentum
+calc_neg_track_momentum = Calculation(neg_track_momentum, ["trk1_momentum", "trk2_momentum", "trk1_charge", "trk2_charge"])
+
+def pos_track_energy(vertex):
+    trk_energy = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_energy[trk1_pos] = (vertex["trk1_ClusterEnergy_EM_200"] + vertex["trk1_ClusterEnergy_HAD_200"])[trk1_pos] #track 1 positive -> trk2 is negative
+    trk_energy[trk1_neg] = (vertex["trk2_ClusterEnergy_EM_200"] + vertex["trk2_ClusterEnergy_HAD_200"])[trk1_neg] #track 1 negative -> trk1 is negative
+    return trk_energy
+branches = ["trk1_ClusterEnergy_EM_200", "trk1_ClusterEnergy_HAD_200"]
+branches += ["trk2_ClusterEnergy_EM_200", "trk2_ClusterEnergy_HAD_200"]
+calc_pos_track_energy = Calculation(pos_track_energy, ["trk1_charge", "trk2_charge"] + branches)
+
+def neg_track_energy(vertex):
+    trk_energy = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_energy[trk1_pos] = (vertex["trk2_ClusterEnergy_EM_200"] + vertex["trk2_ClusterEnergy_HAD_200"])[trk1_pos] #track 1 positive -> trk2 is negative
+    trk_energy[trk1_neg] = (vertex["trk1_ClusterEnergy_EM_200"] + vertex["trk1_ClusterEnergy_HAD_200"])[trk1_neg] #track 1 negative -> trk1 is negative
+    return trk_energy
+branches = ["trk1_ClusterEnergy_EM_200", "trk1_ClusterEnergy_HAD_200"]
+branches += ["trk2_ClusterEnergy_EM_200", "trk2_ClusterEnergy_HAD_200"]
+calc_neg_track_energy = Calculation(neg_track_energy, ["trk1_charge", "trk2_charge"] + branches)
+
+def pos_track_nearest_dR_EM(vertex):
+    trk_energy = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_nearest[trk1_pos] = vertex["trk1_nearest_dR_EM"]#track 1 positive -> trk2 is negative
+    trk_nearest[trk1_neg] = vertex["trk2_nearest_dR_EM"]#track 1 negative -> trk1 is negative
+    return trk_nearest
+calc_pos_track_nearest_dR_EM = Calculation(pos_track_nearest_dR_EM, ["trk1_nearest_dR_EM", "trk2_nearest_dR_EM", "trk1_charge", "trk2_charge"])
+
+def neg_track_nearest_dR_EM(vertex):
+    trk_energy = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_nearest[trk1_pos] = vertex["trk2_nearest_dR_EM"]#track 1 positive -> trk2 is negative
+    trk_nearest[trk1_neg] = vertex["trk1_nearest_dR_EM"]#track 1 negative -> trk1 is negative
+    return trk_nearest
+calc_neg_track_nearest_dR_EM = Calculation(neg_track_nearest_dR_EM, ["trk1_nearest_dR_EM", "trk2_nearest_dR_EM", "trk1_charge", "trk2_charge"])
+
+def pos_track_pt(vertex):
+    trk_pt = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_pt[trk1_pos] = vertex["trk1_pt"][trk1_pos]
+    trk_pt[trk1_neg] = vertex["trk2_pt"][trk1_neg]
+    return trk_pt
+calc_pos_track_pt = Calculation(pos_track_pt, ["trk1_pt", "trk2_pt", "trk1_charge", "trk2_charge"])
+
+def neg_track_pt(vertex):
+    trk_pt = np.ones(len(vertex))
+    trk1_pos = (vertex["trk1_charge"] > 0.5) & (vertex["trk2_charge"] < -0.5)
+    trk1_neg = (vertex["trk1_charge"] < -0.5) & (vertex["trk2_charge"] > 0.5)
+    two_same_charge = (vertex["trk1_charge"]  == vertex["trk2_charge"])
+    assert not np.any(two_same_charge) #check that the tracks really did both have opposite charge
+    trk_pt[trk1_pos] = vertex["trk2_pt"][trk1_pos] #track 1 positive -> trk2 is negative
+    trk_pt[trk1_neg] = vertex["trk1_pt"][trk1_neg] #track 1 negative -> trk1 is negative
+    return trk_pt
+calc_neg_track_pt = Calculation(neg_track_pt, ["trk1_pt", "trk2_pt", "trk1_charge", "trk2_charge"])
+
+def pos_track_eop(vertex):
+    return calc_pos_track_energy.eval(vertex)/calc_pos_track_momentum.eval(vertex)
+calc_pos_track_eop = Calculation(pos_track_eop, calc_pos_track_momentum.branches + calc_pos_track_energy.branches)
+
+def neg_track_eop(vertex):
+    return calc_neg_track_energy.eval(vertex)/calc_neg_track_momentum.eval(vertex)
+calc_neg_track_eop = Calculation(neg_track_eop, calc_neg_track_momentum.branches + calc_neg_track_energy.branches)
+

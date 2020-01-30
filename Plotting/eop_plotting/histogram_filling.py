@@ -364,12 +364,16 @@ class HistogramFiller:
 
 #These are python JZW samples. I normalize to the number of generated events, the cross section and the filter efficiency
 weight_dictionary = {\
-"361020" : (1./(9999000.0)) * 78420000 * 0.9755,
-"361021" : (1./(3995000.0)) * 78420000 * 0.00067143,
-"361022" : (1./(1998000.0)) * 2433200 * 0.00033423,
+"361020" : (1./(9999000.0)) * 78420000 * 0.9755, #xsection in nb
+"361021" : (1./(3995000.0)) * 78420000 * 0.00067143, #xsection in nb
+"361022" : (1./(1998000.0)) * 2433200 * 0.00033423, #xsection in nb
 "428001" : 1.0,
 "428002" : 1.0,
 }
+
+#prescale corrected luminosity:
+lumi_prescaled = 5.25948 #nb ** (-1)
+lumi_unprescaled = 147.717 * 1000.0 # nb ** (-1)
 
 try:
     imp.find_module('root_numpy')
@@ -391,7 +395,7 @@ def branchDresser(branches):
     '''this is a function that dresses the branches with information about the depth and dummy variables if entries have too few entires'''
     return branches
 
-def getXSectionWeight(filename):
+def get_x_section_weight(filename):
     '''
     Search for the x-section weight for this file by searching for the dsid in the filename. Return the weight.
     '''
@@ -459,9 +463,9 @@ def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = Non
 
     if not isData:
         print("getting the xsection weight")
-        xsec_weight = getXSectionWeight(filename)
+        xsec_weight = get_x_section_weight(filename)
         if verbose: print("X Section Weight Set To " + str(xsec_weight))
-        weights = weights * xsec_weight
+        weights = weights * xsec_weight * lumi_prescaled
 
     ##calculate everything we need in one go!
     for variable in variables:

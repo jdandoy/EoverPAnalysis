@@ -141,10 +141,12 @@ def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = Fals
     mpv_errs = {}
     fit_results = {}
     for channel in histograms:
-        if channel != "LowMuData" and channel != "PythiaJetJet":
+        if channel != "LowMuData" and channel != "PythiaJetJet" and channel != "PythiaJetJetTightIso" and channel != "LowMuDataTightIso":
             continue
         print("Fitting the histogram in channel {}".format(channel))
         to_fit = histograms[channel]
+        if "PythiaJetJet" in channel:
+            to_fit.Rebin(2)
         low = 0.0
         high = 2.0
         eop = generate_eop_var(0.0, 2.0)
@@ -331,6 +333,8 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
         mpvs = {}
         mpv_errs = {}
         for j, p_low, p_high in zip(range(0, len(p_bins_low_for_eta_bin[i])),p_bins_low_for_eta_bin[i], p_bins_high_for_eta_bin[i]):
+            if j == 0:
+                continue
             histogram_name = histogram_base + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
             histograms = HM.getHistograms(histogram_name)
             mpv, mpv_err, fit_result = do_fit(histograms, function = function, extra_str = "Eta_{}_P_{}_{}".format(i,j, selection_name), montecarlo_errors = montecarlo_errors)

@@ -27,14 +27,14 @@ cmake ../source && make
 ```
 
 ## Running locally in Release 21
-Inside the scripts folder are two different config files. These are config_eop_tree_dump.py for running over MC, and config_eop_dump_data.py for running over data. These files create ttrees for four different track selections, and store information about calorimeter energy deposits at the cell, EM, and LCW scale. To run a test job locally, try the following lines:
+The Analysis configurations are located in the scripts folder, called xAH_EoverP.py. These scripts are responsible for booking/running EoverP xAH Algorithms to create ttrees for four different track selections, and store information about calorimeter energy deposits at the cell, EM, and LCW scale. Files are located in  To run a test job locally, try the following lines:
 ```
 cd ../build
 source */setup.sh
 cd ../run
 mkdir results
-rucio download user.luadamek.14704913.EXT1._000001.pool.root
-xAH_run.py --files user.luadamek/user.luadamek.14704913.EXT1._000001.pool.root --config ../source/EoverPAnalysis/scripts/config_eop_tree_dump.py --submitDir testing --force direct
+rucio download >>Any JZ0, JZ1, JZ2 File<<
+xAH_run.py --files=>>Any JZ0, JZ1, JZ2 File<< --inputRucio --config=$TestArea/EoverPAnalysis/scripts/xAH_EoverP.py --submitDir=test_run --force direct
 ```
 
 ## Submitting Grid Jobs in Release 21

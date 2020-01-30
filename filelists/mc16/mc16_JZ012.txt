@@ -1,3 +1,3 @@
-user.luadamek.mc16_13TeV.361022.jetjet.DAOD_EOP.e3668_s3170_r10572.20180724_alpha1_EXT1
-user.luadamek.mc16_13TeV.361020.jetjet.DAOD_EOP.e3569_s3170_r10572.20180724_alpha1_EXT1
-user.luadamek.mc16_13TeV.361021.jetjet.DAOD_EOP.e3569_s3170_r10572.20180724_alpha1_EXT1
+user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.deriv.DAOD_EOP.e3668_s3170_r10572.Sep3_EXT0
+user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.deriv.DAOD_EOP.e3569_s3170_r10572.Sep3_EXT0
+user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.deriv.DAOD_EOP.e3569_s3170_r10572.Sep3_EXT0

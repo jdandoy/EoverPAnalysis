@@ -29,6 +29,10 @@ def HasHADCalibHit(trk):
     return TotalCalibHitEnergyHAD(trk) > 0.0
 sel_HasHADCalibHit = Calculation(HasHADCalibHit, CalibHitBranches)
 
+def EOTotalEMCalibEnergy(trk):
+    return (trk["trk_ClusterEMActiveCalibHitEnergy_EM_200"] + trk["trk_ClusterEMActiveCalibHitEnergy_HAD_200"])/trk["trk_p"]
+calc_EOTotalEMCalibHitEnergy = Calculation(EOTotalEMCalibEnergy, ["trk_ClusterEMActiveCalibHitEnergy_EM_200", "trk_ClusterEMActiveCalibHitEnergy_HAD_200", "trk_p"])
+
 def CalibHitFrac(trk):
     return (trk["trk_TotalCalibHitEnergy_EM_200"] + trk["trk_TotalCalibHitEnergy_HAD_200"]) / TotalCalibHitEnergy(trk)
 calc_CalibHitFrac = Calculation(CalibHitFrac, CalibHitBranches)

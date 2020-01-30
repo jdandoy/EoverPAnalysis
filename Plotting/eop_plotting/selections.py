@@ -120,6 +120,75 @@ def IDAcceptanceCalculator(trk, min_cut, max_cut):
 def EtaBin(trk, min_cut, max_cut):
     return ExtrapolAcceptanceCalculator(trk, min_cut, max_cut)
 
+#### Here are the eta track selections ###
+def ECAL_Eta00_06(trk):
+    return EtaBin(trk, 0.0, 0.6)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta00_06 = Calculation(ECAL_Eta00_06, branches)
+
+#### Here are the eta track selections ###
+def ECAL_Eta00_02(trk):
+    return EtaBin(trk, 0.0, 0.2)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta00_02 = Calculation(ECAL_Eta00_02, branches)
+
+#### Here are the eta track selections ###
+def ECAL_Eta02_04(trk):
+    return EtaBin(trk, 0.2, 0.4)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta02_04 = Calculation(ECAL_Eta02_04, branches)
+
+#### Here are the eta track selections ###
+def ECAL_Eta04_06(trk):
+    return EtaBin(trk, 0.4, 0.6)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta04_06 = Calculation(ECAL_Eta04_06, branches)
+
+def ECAL_Eta06_11(trk):
+    return EtaBin(trk, 0.6, 1.1)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta06_11 = Calculation(ECAL_Eta06_11, branches)
+
+def ECAL_Eta11_14(trk):
+    return EtaBin(trk, 1.1, 1.4)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta11_14 = Calculation(ECAL_Eta11_14, branches)
+
+def ECAL_Eta14_15(trk):
+    return EtaBin(trk, 1.4, 1.5)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta14_15 = Calculation(ECAL_Eta14_15, branches)
+
+def ECAL_Eta15_18(trk):
+    return EtaBin(trk, 1.5, 1.8)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta15_18 = Calculation(ECAL_Eta15_18, branches)
+
+def ECAL_Eta18_23(trk):
+    return EtaBin(trk, 1.8, 2.3)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta18_23 = Calculation(ECAL_Eta18_23, branches)
+
+def ECAL_Eta19_23(trk):
+    return EtaBin(trk, 1.9, 2.3)
+branches = ["trk_etaEMB2"]
+sel_ECAL_Eta19_23 = Calculation(ECAL_Eta19_23, branches)
+
+def PBetween12_18(trk):
+    return (1.2 < trk["trk_p"]) & (trk["trk_p"] < 1.8)
+branches = ["trk_p"]
+sel_PBetween12_18 = Calculation(PBetween12_18, branches)
+
+def PBetween22_28(trk):
+    return (2.2 < trk["trk_p"]) & (trk["trk_p"] < 2.8)
+branches = ["trk_p"]
+sel_PBetween22_28 = Calculation(PBetween22_28, branches)
+
+def PBetween28_36(trk):
+    return (2.8 < trk["trk_p"]) & (trk["trk_p"] < 3.6)
+branches = ["trk_p"]
+sel_PBetween28_36 = Calculation(PBetween28_36, branches)
+
 def PBin(trk, min_cut, max_cut):
     return (trk["trk_p"] > min_cut) & (trk["trk_p"] <= max_cut)
 

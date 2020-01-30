@@ -282,7 +282,8 @@ EL::StatusCode EoverPTreeAlgo :: execute ()
     float trk_z0=trk->z0();
     float beamspot_z0=trk->vz();
     float theta=trk->theta();
-    dz=fabs((trk_z0-(pvx->z())+beamspot_z0)*sin(theta)); // calculate dz
+    if (pvx != nullptr){ dz=fabs((trk_z0-(pvx->z())+beamspot_z0)*sin(theta));} // calculate dz
+    else {dz = -999.0;}
     trk_z0sintheta_primary = dz;
 
 

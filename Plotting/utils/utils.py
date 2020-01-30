@@ -5,12 +5,14 @@ import glob
 #the location of the files on eos
 dir_inclusive="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v01_tuples/"
 dir_identified="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v01_secondaries/"
+dir_identified_v02="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v02_secondaries/"
 
 # a dictionary to store the directories
 directories = {}
 directories["inclusive"] = dir_inclusive
 directories["test"] = dir_inclusive
 directories["identified"] = dir_identified
+directories["identified_v02"] = dir_identified_v02
 directories["inclusive_hadiso"] = dir_inclusive
 
 inclusive_hadiso_files = {}
@@ -39,12 +41,14 @@ inclusive_files["LowMuDataTightIso"] = ["user.luadamek.data17_13TeV.00341294.phy
 "user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_hist",\
 "user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_hist",\
 "user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_hist"]
-inclusive_files["SinglePion"] = [\
-"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist",\
+inclusive_files["SinglePionPos"] = [\
+"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist"]
+inclusive_files["SinglePionNeg"] = [\
 "user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist"]
-inclusive_files["SinglePionTightIso"] = [\
-"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist",\
-"user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist"]
+#inclusive_files["SinglePionPosTightIso"] = [\
+#"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist"]
+#inclusive_files["SinglePionNegTightIso"] = [\
+#"user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist"]
 inclusive_files["PythiaJetJet"] = [\
 "user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
 "user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
@@ -118,6 +122,11 @@ identified_files["PythiaJetJet"] = [\
 "user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_ANALYSIS.root",\
 "user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_ANALYSIS.root"]
 
+simulation_only_files = {}
+for key in identified_files:
+    if "Data" not in key:
+        simulation_only_files[key] = identified_files[key]
+
 files = {}
 files["inclusive"] = inclusive_files
 files["test"] = {"PythiaJetJet":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist"],\
@@ -125,6 +134,9 @@ files["test"] = {"PythiaJetJet":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_
                  "LowMuData":["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist"],\
                 }
 files["identified"] = identified_files 
+files["identified_v02"] = {}
+for key in identified_files:
+    files["identified_v02"][key] = [f.replace(".calibhits_v01_ANALYSIS.root","._Sep30_ANALYSIS.root") for f in identified_files[key]]
 files["inclusive_hadiso"] = inclusive_hadiso_files 
 
 def get_files(flavour):

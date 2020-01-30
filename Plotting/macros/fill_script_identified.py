@@ -26,10 +26,20 @@ def fill_histograms(hist_filler, outputRootFileName):
     hist_filler.weight_calculator = calc_weight
 
     from selections_identified import sel_tight_cos_theta_ks, sel_chi_square_fifteen, sel_rxy_ks, sel_pt_ks
-    from selections_identified import sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda
+    from selections_identified import calc_pos_track_momentum, calc_neg_track_momentum, calc_pos_track_eop, calc_neg_track_eop, calc_pos_track_nearest_dR_EM, calc_neg_track_nearest_dR_EM
+    from selections_identified import sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda, sel_pos, sel_pos_track_higher_pt, sel_neg_track_higher_pt, sel_pos_track_isolated, sel_neg_track_isolated
 
     for selections in [[], [sel_tight_cos_theta_ks, sel_chi_square_fifteen, sel_rxy_ks, sel_pt_ks],\
-            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda]]:
+            [sel_tight_cos_theta_ks, sel_chi_square_fifteen, sel_rxy_ks, sel_pt_ks, sel_pos_track_isolated],\
+            [sel_tight_cos_theta_ks, sel_chi_square_fifteen, sel_rxy_ks, sel_pt_ks, sel_neg_track_isolated],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda, sel_pos_track_higher_pt],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda, sel_neg_track_higher_pt],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda, sel_pos_track_higher_pt, sel_pos_track_isolated],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda, sel_pos_track_higher_pt, sel_neg_track_isolated],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda, sel_neg_track_higher_pt, sel_pos_track_isolated],\
+            [sel_tight_cos_theta_lambda, sel_chi_square_fifteen, sel_rxy_lambda, sel_pt_lambda, sel_neg_track_higher_pt, sel_neg_track_isolated],\
+            ]]:
        descriptor = "_".join([sel.name for sel in selections])
        histogram_name = "VertexCount" + descriptor
        trkCountHist = hist_filler.book_histogram_fill(histogram_name,\
@@ -100,6 +110,44 @@ def fill_histograms(hist_filler, outputRootFileName):
                                        range_high = 1.0,\
                                        xlabel = 'cos(#theta)',\
                                        ylabel = 'Number of Vertices')
+
+       histogram_name = "neg_track_eop" + descriptor
+       hist_filler.book_histogram_fill(histogram_name,\
+                                       calc_neg_track_eop,\
+                                       selections = selections,\
+                                       bins = 100,\
+                                       range_low = -1.0,\
+                                       range_high = 5.0,\
+                                       xlabel = 'E/P',\
+                                       ylabel = 'Number of Tracks')
+
+       histogram_name = "pos_track_eop" + descriptor
+       hist_filler.book_histogram_fill(histogram_name,\
+                                       calc_pos_track_eop,\
+                                       selections = selections,\
+                                       bins = 100,\
+                                       range_low = -1.0,\
+                                       range_high = 5.0,\
+                                       xlabel = 'E/P',\
+                                       ylabel = 'Number of Tracks')
+
+       histogram_name = "neg_track_eop_profile" + descriptor
+       hist_filler.book_tprofile_fill(histogram_name,\
+                                       calc_neg_track_eop,\
+                                       calc_neg_track_momentum,\
+                                       selections = selections,\
+                                       bins = 100,\
+                                       ylabel = '<E/P>',\
+                                       ylabel = 'P [GeV]')
+
+       histogram_name = "pos_track_eop_profile" + descriptor
+       hist_filler.book_tprofile_fill(histogram_name,\
+                                       calc_pos_track_eop,\
+                                       calc_pos_track_momentum,\
+                                       selections = selections,\
+                                       bins = 100,\
+                                       ylabel = '<E/P>',\
+                                       xlabel = 'P [GeV]')
 
     histograms = hist_filler.DumpHistograms()
     outFile = ROOT.TFile(outputRootFileName, "RECREATE")
