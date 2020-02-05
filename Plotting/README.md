@@ -3,18 +3,19 @@
 These macros ship jobs to condor for all of your plotting needs. The histograms are filled in the Fillingscript.py file.
 
 ## Setup
-This setups up the envorment that we will need for all of the plotting fun!
+Create the environment needed for plotting. This package uses a python virtual environment (https://docs.python.org/3/tutorial/venv.html), in conjuction with an lcg virtual environment (https://ep-dep-sft.web.cern.ch/document/lcg-releases). You must be on a fresh login of lxplus (centos7) for everything to work. The setup will not work if an analysisbase release has be set up, for example. Running this package on any computing site with condor and cvmfs should (in principle) work. 
+
+You must set the CMT config to match your operating system. "CMTCONFIG=x86_64-centos7-gcc8-opt" for centos7, and "CMTCONFIG=x86_64-slc6-gcc8-opt" for slc6
 ```
-git clone ssh://git@gitlab.cern.ch:7999/cburr/lcg_virtualenv.git $TestArea/
-cd $TestArea/EoverPAnalysis/Plotting
-CMTCONFIG=x86_64-slc6-gcc8-opt $TestArea/lcg_virtualenv/create_lcg_virtualenv venv_EOPPlotting LCG_94python3
+cd EoverPAnalysis/Plotting
+git clone ssh://git@gitlab.cern.ch:7999/cburr/lcg_virtualenv.git ./lcg_virtualenv
+CMTCONFIG=x86_64-centos7-gcc8-opt ./lcg_virtualenv/create_lcg_virtualenv venv_EOPPlotting LCG_94python3
 source venv_EOPPlotting/bin/activate
 ```
 
-Install all of the dependencies:
+Install all of the dependencies. This package uses uproot (https://uproot.readthedocs.io/en/latest/), along with python bindings for XRootD (https://github.com/xrootd/xrootd).
 ```
 pip install --upgrade pip
-pip install atlas-mpl-style --no-cache-dir
 git clone https://github.com/joeycarter/atlas-plots.git
 cd atlas-plots
 pip install -e .
