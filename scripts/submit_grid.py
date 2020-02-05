@@ -38,7 +38,7 @@ for sample in samples:
 
   config = os.path.expandvars(args.config)
 
-  command = 'xAH_run.py --files={0:s}  --inputRucio --config={1:s} --submitDir={2:s}'.format(sample, config, args.submitDir)
+  command = 'xAH_run.py --files={0:s}  --inputRucio --config={1:s} --submitDir={2:s}'.format(sample, config, args.submitDir + "_{}".format(sampleTag))
 
   if "data" in sample or "ParticleGun" in sample:
       command += " --extraOptions="
@@ -52,7 +52,7 @@ for sample in samples:
      command += ' --force '
 
   command += " prun "
-  command += ' --optSubmitFlags="--excludeFile=src/EoverPAnalysis/root_numpy_plotting/"'
+  command += ' --optSubmitFlags="--excludeFile=src/EoverPAnalysis/Plotting/"'
 
   if "data" in sample:
       command += " --optGridNFilesPerJob=3"
@@ -64,7 +64,13 @@ for sample in samples:
 
   #if ("data" in sample or "Data" in sample):
   #    command += ' --optGridNFilesPerJob 40 '
+  origin = os.path.join(os.getenv("TestArea"), "EoverPAnalysis","Plotting")
+  dest = "."
+  #os.system("mv {} {}".format(origin, dest))
 
   print('submitting {0:s}'.format(sample))
   print('running: {0:s}'.format(command))
   subprocess.call(command, shell=True)
+
+  #os.system("mv {} {}".format("Plotting",origin))
+    

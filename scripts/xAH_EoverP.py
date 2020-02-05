@@ -76,6 +76,38 @@ c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoTres",
 				   "m_energyCalibCommaList":"ClusterHadronicBackgroundEMActiveCalibHitEnergy,ClusterHadronicBackgroundNonEMActiveCalibHitEnergy,ClusterHadronicBackgroundEscapedActiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleActiveCalibHitEnergy,ClusterHadronicBackgroundEMInactiveCalibHitEnergy,ClusterHadronicBackgroundNonEMInactiveCalibHitEnergy,ClusterHadronicBackgroundEscapedInactiveCalibHitEnergy,ClusterHadronicBackgroundInvisibleInactiveCalibHitEnergy",
 				  })
 
+# Create new energy sum decorations for the tracks
+c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoQuaddro",
+				   "m_energySumName":"CalibEMActiveEnergy",
+				   "m_inTrackContainerName": trks,
+				   "m_radiusCutCommaList":radiusCuts,
+				   "m_energyCalibCommaList":"ClusterEMActiveCalibHitEnergy",\
+				  })
+
+# Create new energy sum decorations for the tracks
+c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoCenqo",
+				   "m_energySumName":"CalibEMInactiveEnergy",
+				   "m_inTrackContainerName": trks,
+				   "m_radiusCutCommaList":radiusCuts,
+				   "m_energyCalibCommaList":"ClusterEMInactiveCalibHitEnergy",\
+				  })
+
+# Create new energy sum decorations for the tracks
+c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoQuaddroAgain",
+				   "m_energySumName":"CalibNonEMActiveEnergy",
+				   "m_inTrackContainerName": trks,
+				   "m_radiusCutCommaList":radiusCuts,
+				   "m_energyCalibCommaList":"ClusterNonEMActiveCalibHitEnergy",\
+				  })
+
+# Create new energy sum decorations for the tracks
+c.setalg("TrackEnergyDecorator", { "m_name": "TrackEnergyDecoratorAlgoCenqoHereWeGo",
+				   "m_energySumName":"CalibNonEMInactiveEnergy",
+				   "m_inTrackContainerName": trks,
+				   "m_radiusCutCommaList":radiusCuts,
+				   "m_energyCalibCommaList":"ClusterNonEMInactiveCalibHitEnergy",\
+				  })
+
 # Fill histograms with tracking details, passing only basic event selection
 c.setalg("TrackHistsAlgo", {"m_name": "Tracks_BasicEvtSel",
                             "m_inContainerName": trks,
@@ -177,20 +209,21 @@ for track_container in [trks_loose_isolated, trks_loose_isolated_vertex]:#, trks
         # E/p histograms with LoosePrimary track selection
         c.setalg("EoverPTreeAlgo", {"m_name": "LA_EoverP_" + track_container,
 				    "m_inTrackContainerName": track_container,
-				    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
+				    "m_energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy,CalibEMActiveEnergy,CalibEMInactiveEnergy,CalibNonEMActiveEnergy,CalibNonEMInactiveEnergy",
 				    "m_radiusCutCommaList": radiusCuts,
 				    "m_useCutFlow": True,
                     "m_msgLevel": "info"
 				    })
 
-for sv in ['Lambda','Ks','Phi']:
-	c.algorithm("SecondariesTrees", {"m_name": "MLB_EoverP_" + sv,
-					 "label": sv,
-					 "isData": args.isData,
-					 "MessageFrequency": 10000,
-    				 "VertexContainer" : sv+"Candidates",
-				     "radiusCutCommaList": radiusCuts,
-				     "energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy",
-					 "TrackContainer" : trks_loose
-					 })
+if not args.isSingleParticle:
+    for sv in ['Lambda','Ks','Phi']:
+        c.algorithm("SecondariesTrees", {"m_name": "MLB_EoverP_" + sv,
+                         "label": sv,
+                         "isData": args.isData,
+                         "MessageFrequency": 10000,
+                         "VertexContainer" : sv+"Candidates",
+                         "radiusCutCommaList": radiusCuts,
+                         "energyCalibCommaList": "ClusterEnergy,CellEnergy,LCWClusterEnergy,TotalCalibHitEnergy,TotalPhotonBackgroundCalibHitEnergy,TotalHadronicBackgroundCalibHitEnergy,CalibEMActiveEnergy,CalibEMInactiveEnergy,CalibNonEMActiveEnergy,CalibNonEMInactiveEnergy",
+                         "TrackContainer" : trks_loose
+                         })
 	
