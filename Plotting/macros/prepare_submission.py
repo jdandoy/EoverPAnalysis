@@ -124,7 +124,7 @@ leading_script.write("transfer_input_files    = {rw},{eop},{u},{p},{py},{setup},
         setup=os.path.join(project_dir, "setup.sh"),\
         fs=os.path.abspath(args.filling_script),\
         bin=os.path.join(project_dir,"bin"),\
-        cert = os.path.join(os.getenv("EOPPlottingDir"), "grid_cert"),\
+        cert = os.path.join(os.getenv("EOPPlottingDir"), "grid_proxy"),\
         venv=os.path.join(project_dir, "venv_EOPPlotting")))
 leading_script.write("transfer_output_files   = " + job_name + "_$(Process).root\n")
 leading_script.write('transfer_output_remaps = "{} = {}"\n'.format(job_name + "_$(Process).root" , os.path.join(condor_directory, job_name + "_$(Process).root") ) )
