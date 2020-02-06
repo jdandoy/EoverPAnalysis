@@ -1,4 +1,3 @@
-export EOPPlottingDir=$PWD
 source venv_EOPPlotting/bin/activate
 export PYTHONPATH="${EOPPlottingDir}/eop_plotting:$PYTHONPATH"
 export PYTHONPATH="${EOPPlottingDir}/utils:$PYTHONPATH"

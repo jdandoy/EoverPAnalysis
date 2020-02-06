@@ -392,14 +392,15 @@ import psutil
 process = psutil.Process(os.getpid())
 
 def branchDresser(branches):
-    '''this is a function that dresses the branches with information about the depth and dummy variables if entries have too few entires'''
+    '''this is a function that dresses branches with variable length arrays. See http://scikit-hep.org/root_numpy/reference/generated/root_numpy.tree2array.html for details. You need to define a maximum length and what filler variables to use. Fortunately, there are no vector branches in any EOP trees.'''
     return branches
 
 def get_x_section_weight(filename):
     '''
     Search for the x-section weight for this file by searching for the dsid in the filename. Return the weight.
     '''
-    filename = filename.split("/")[-1]
+    if filename[-1] != "/": filename = filename.split("/")[-1]
+    else: filename = filename.split("/")[-2]
     weight = None
     for dsid in weight_dictionary:
         if dsid in filename:
@@ -412,7 +413,7 @@ def getIsData(filename):
     '''
     Return true if the file is a data file. Otherwise, return false because the file is simulation.
     '''
-    return "Data" in filename.split("/")[-1] or "data" in filename.split("/")[-1]
+    return ("Data" in filename.split("/")[-1] or "data" in filename.split("/")[-1] or "Data" in filename.split("/")[-2] or "data" in filename.split("/")[-2])
 
 def GetData(partition = (0, 0), bare_branches = [], channel = "", filename = None, tree = None, treename = None, variables = [], weight_calculator = None, selections = [], selection_string = "",  verbose = False):
     '''
