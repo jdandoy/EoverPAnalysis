@@ -3,124 +3,122 @@ import ROOT
 import glob
 
 #the location of the files on eos
-dir_inclusive="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v01_tuples/"
-dir_identified="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v01_secondaries/"
-dir_identified_v02="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v02_secondaries/"
+dir_inclusive="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v03_tuples/"
+dir_identified="/eos/atlas/atlascerngroupdisk/perf-jets/EoverP/v03_secondaries/"
 
 # a dictionary to store the directories
 directories = {}
 directories["inclusive"] = dir_inclusive
 directories["test"] = dir_inclusive
 directories["identified"] = dir_identified
-directories["identified_v02"] = dir_identified_v02
 directories["inclusive_hadiso"] = dir_inclusive
 
 inclusive_hadiso_files = {}
-inclusive_hadiso_files["LowMuData"] = ["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341312.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341419.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_hist"]
+inclusive_hadiso_files["LowMuData"] = ["user.luadamek.data17_13TeV.00341294.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341312.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341419.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341534.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341615.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341649.physics_MinBias.EoverP_Jan7_hist/"]
 inclusive_hadiso_files["PythiaJetJet"] = [\
-"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 
 # a dictionary to store all of the filenames for each channel
 inclusive_files = {}
-inclusive_files["LowMuData"] = ["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341312.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341419.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_hist"]
-inclusive_files["LowMuDataTightIso"] = ["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341312.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341419.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_hist",\
-"user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_hist"]
+inclusive_files["LowMuData"] = ["user.luadamek.data17_13TeV.00341294.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341312.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341419.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341534.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341615.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341649.physics_MinBias.EoverP_Jan7_hist/"]
+inclusive_files["LowMuDataTightIso"] = ["user.luadamek.data17_13TeV.00341294.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341312.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341419.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341534.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341615.physics_MinBias.EoverP_Jan7_hist/",\
+"user.luadamek.data17_13TeV.00341649.physics_MinBias.EoverP_Jan7_hist/"]
 inclusive_files["SinglePionPos"] = [\
-"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist"]
+"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.EoverP_Jan7_hist/"]
 inclusive_files["SinglePionNeg"] = [\
-"user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist"]
+"user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.EoverP_Jan7_hist/"]
 #inclusive_files["SinglePionPosTightIso"] = [\
-#"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist"]
+#"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.EoverP_Jan7_hist/"]
 #inclusive_files["SinglePionNegTightIso"] = [\
-#"user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.singlepartapr30_calibhits_hist"]
+#"user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.EoverP_Jan7_hist/"]
 inclusive_files["PythiaJetJet"] = [\
-"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 inclusive_files["PythiaJetJetTightIso"] = [\
-"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 inclusive_files["PythiaJetJetTightIso"] = [\
-"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 inclusive_files["PythiaJetJetHardScatter"] = [\
-"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 inclusive_files["PythiaJetJetHardScatterTightIso"] = [\
-"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetPionsReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetPionsPosReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetPionsNegReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetKaonsPosReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetKaonsNegReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetProtonsPosReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetProtonsNegReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetOtherReweighted"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetHardScatter"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 #inclusive_files["PythiaJetJetHardScatterTightIso"] = [\
-#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_hist",\
-#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_hist"]
+#"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7_hist/",\
+#"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7_hist/"]
 identified_files = {}
 identified_files["LowMuData"] = [\
-"user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_ANALYSIS.root",\
-"user.luadamek.data17_13TeV.00341312.physics_MinBias.calibhits_v01_ANALYSIS.root",\
-"user.luadamek.data17_13TeV.00341419.physics_MinBias.calibhits_v01_ANALYSIS.root",\
-"user.luadamek.data17_13TeV.00341534.physics_MinBias.calibhits_v01_ANALYSIS.root",\
-"user.luadamek.data17_13TeV.00341615.physics_MinBias.calibhits_v01_ANALYSIS.root",\
-"user.luadamek.data17_13TeV.00341649.physics_MinBias.calibhits_v01_ANALYSIS.root"]
+"user.luadamek.data17_13TeV.00341294.physics_MinBias.EoverP_Jan7.root",\
+"user.luadamek.data17_13TeV.00341312.physics_MinBias.EoverP_Jan7.root",\
+"user.luadamek.data17_13TeV.00341419.physics_MinBias.EoverP_Jan7.root",\
+"user.luadamek.data17_13TeV.00341534.physics_MinBias.EoverP_Jan7.root",\
+"user.luadamek.data17_13TeV.00341615.physics_MinBias.EoverP_Jan7.root",\
+"user.luadamek.data17_13TeV.00341649.physics_MinBias.EoverP_Jan7.root"]
 identified_files["PythiaJetJet"] = [\
-"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_ANALYSIS.root",\
-"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.calibhits_v01_ANALYSIS.root",\
-"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.calibhits_v01_ANALYSIS.root"]
+"user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7.root",\
+"user.luadamek.mc16_13TeV.361021.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ1W.EoverP_Jan7.root",\
+"user.luadamek.mc16_13TeV.361022.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ2W.EoverP_Jan7.root"]
 
 simulation_only_files = {}
 for key in identified_files:
@@ -129,15 +127,11 @@ for key in identified_files:
 
 files = {}
 files["inclusive"] = inclusive_files
-files["test"] = {"PythiaJetJet":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.calibhits_v01_hist"],\
-                 "SinglePion":["user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.singlepartapr30_calibhits_hist"],\
-                 "LowMuData":["user.luadamek.data17_13TeV.00341294.physics_MinBias.calibhits_v01_hist"],\
+files["test"] = {"PythiaJetJet":["user.luadamek.mc16_13TeV.361020.Pythia8EvtGen_A14NNPDF23LO_jetjet_JZ0W.EoverP_Jan7_hist/"],\
+                 "SinglePion":["user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.EoverP_Jan7_hist/"],\
+                 "LowMuData":["user.luadamek.data17_13TeV.00341294.physics_MinBias.EoverP_Jan7_hist/"],\
                 }
 files["identified"] = identified_files 
-files["identified_v02"] = {}
-for key in identified_files:
-    files["identified_v02"][key] = [f.replace(".calibhits_v01_ANALYSIS.root","._Sep30_ANALYSIS.root") for f in identified_files[key]]
-files["inclusive_hadiso"] = inclusive_hadiso_files 
 
 def get_files(flavour):
     '''
@@ -175,17 +169,23 @@ def tchain_files_together(tree_name, channel_to_filelist, on_eos = True):
             if os.path.isfile(f):
                 print("For channel {}, and file {}, found files {}".format(channel, f, f))
                 if on_eos:
-                    trees[channel][f].Add("root://eosatlas/" + f)
+                    trees[channel][f].Add('root://eosatlas.cern.ch/' + f)
                 else:
                     trees[channel][f].Add(f)
 
             else: #this was a directory
                 #go and get all of the files in the directory
-                wildcards = ["*.root", "*.root*"]
-                files = []
-                for wild_card in wildcards:
-                    files += glob.glob(os.path.join(f, wild_card))
-
+                if not on_eos:
+                    wildcards = ["*.root", "*.root*"]
+                    files = []
+                    for wild_card in wildcards:
+                        files += glob.glob(os.path.join(f, wild_card))
+                else:
+                    from XRootD import client
+                    from XRootD.client.flags import DirListFlags
+                    xrootd_client = client.FileSystem('root://eosatlas.cern.ch')
+                    files = [el.name for el in  xrootd_client.dirlist(f, DirListFlags.STAT)[1] if ".root" in os.path.split(el.name)[-1]]
+                    files = [os.path.join(f, el) for el in files if f not in el]
 
                 unique_files = []
                 for raw_file in files:
@@ -194,9 +194,10 @@ def tchain_files_together(tree_name, channel_to_filelist, on_eos = True):
                         assert "//" not in file_with_path
                         print("Found file {}".format(file_with_path))
                         if on_eos:
-                            trees[channel][f].Add("root://eosatlas/" + file_with_path)
+                            trees[channel][f].Add('root://eosatlas.cern.ch/' + file_with_path)
                         else:
                             trees[channel][f].Add(file_with_path)
+    print("Retrieved Trees")
     return trees
 
 def generate_partitions(trees, NPartitions):
@@ -230,5 +231,6 @@ def generate_partitions(trees, NPartitions):
             print("Found partitions for channel {}, and file {}, and they were {}".format(channel, f, cuts))
             partitions[channel][f] = cuts
 
+    print("Generated partitions")
     return partitions
 

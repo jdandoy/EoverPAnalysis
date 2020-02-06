@@ -147,3 +147,5 @@ for i in range(0, n_jobs):
 
 #create a pickle file for each submission
 pickle.dump( submission_list, open(submission_pickle_file, "wb" ) )
+print("Created the submission file. Ready to go!")
+os._exit(0)
