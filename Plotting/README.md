@@ -32,6 +32,11 @@ Finish the setup by running the setup script
 source ./setup.sh
 ```
 
+Every few months, you will need to generate a grid proxy to access files on eos. You can do this with the following lines:
+```
+voms-proxy-init --voms atlas --hours 10000
+```
+
 ## When logging back in
 ```
 cd $TestArea/EoverPAnalysis/Plotting

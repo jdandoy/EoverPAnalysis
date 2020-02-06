@@ -114,7 +114,7 @@ leading_script.write('Request_memory = 10000\n')
 leading_script.write("should_transfer_files = YES\n")
 leading_script.write("when_to_transfer_output = ON_Exit\n")
 leading_script.write("transfer_output         = True\n")
-leading_script.write("transfer_input_files    = {rw},{eop},{u},{p},{py},{setup},{fs},{bin},{venv}\n"\
+leading_script.write("transfer_input_files    = {rw},{eop},{u},{p},{py},{setup},{fs},{bin},{venv},{cert}\n"\
         .format(\
         rw=os.path.join(project_dir, "ReweightingHistograms"),\
         eop=os.path.join(project_dir,"eop_plotting"),\
@@ -124,6 +124,7 @@ leading_script.write("transfer_input_files    = {rw},{eop},{u},{p},{py},{setup},
         setup=os.path.join(project_dir, "setup.sh"),\
         fs=os.path.abspath(args.filling_script),\
         bin=os.path.join(project_dir,"bin"),\
+        cert = os.path.join(os.getenv("EOPPlottingDir"), "grid_cert"),\
         venv=os.path.join(project_dir, "venv_EOPPlotting")))
 leading_script.write("transfer_output_files   = " + job_name + "_$(Process).root\n")
 leading_script.write('transfer_output_remaps = "{} = {}"\n'.format(job_name + "_$(Process).root" , os.path.join(condor_directory, job_name + "_$(Process).root") ) )
