@@ -72,11 +72,14 @@ with open(python_executable, 'w') as f:
 #create the shell script to be executed
 plotting_instruction_script = []
 plotting_instruction_script.append("#!/bin/bash")
-plotting_instruction_script.append("source ./setup.sh")
+activate_location = os.path.join(os.getenv("EOPPlottingDir"),"venv_EOPPlotting/bin/activate")
+plotting_instruction_script.append("source {}".format(activate_location))
+plotting_instruction_script.append("source ./setup_condor.sh")
 plotting_instruction_script.append("printf \"Start time: \"; /bin/date")
 plotting_instruction_script.append("printf \"Job is running on node: \"; /bin/hostname")
 plotting_instruction_script.append("printf \"Job running as user: \"; /usr/bin/id")
 plotting_instruction_script.append("printf \"Job is running in directory: \"; /bin/pwd")
+plotting_instruction_script.append("ls -al")
 plotting_instruction_script.append("python {} ".format("plot.py") + " --num ${1} --picklefile ${2} --jobName ${3}")
 with open(executable, 'w') as f:
     for line in plotting_instruction_script:
@@ -114,18 +117,17 @@ with open(os.path.join(submission_script_dir,"condor_{}.sub".format(job_name)),"
     leading_script.write("should_transfer_files = YES\n")
     leading_script.write("when_to_transfer_output = ON_Exit\n")
     leading_script.write("transfer_output         = True\n")
-    leading_script.write("transfer_input_files    = {rw},{eop},{u},{p},{py},{setup},{fs},{bin},{venv},{cert}\n"\
+    leading_script.write("transfer_input_files    = {rw},{eop},{u},{p},{py},{setup},{fs},{bin},{cert}\n"\
             .format(\
             rw=os.path.join(project_dir, "ReweightingHistograms"),\
             eop=os.path.join(project_dir,"eop_plotting"),\
             u=os.path.join(project_dir,"utils"),\
             p=os.path.join(submission_pickle_file),\
             py=python_executable,\
-            setup=os.path.join(project_dir, "setup.sh"),\
+            setup=os.path.join(project_dir, "setup_condor.sh"),\
             fs=os.path.abspath(args.filling_script),\
             bin=os.path.join(project_dir,"bin"),\
-            cert = os.path.join(os.getenv("EOPPlottingDir"), "grid_proxy"),\
-            venv=os.path.join(project_dir, "venv_EOPPlotting")))
+            cert = os.path.join(os.getenv("EOPPlottingDir"), "grid_proxy")))
     leading_script.write("transfer_output_files   = " + job_name + "_$(Process).root\n")
     leading_script.write('transfer_output_remaps = "{} = {}"\n'.format(job_name + "_$(Process).root" , os.path.join(condor_directory, job_name + "_$(Process).root") ) )
     leading_script.write("\n")
