@@ -37,6 +37,16 @@ Every few months, you will need to generate a grid proxy to access files on eos.
 voms-proxy-init --voms atlas --hours 10000
 ```
 
+TODO: Fit E/P Distribtions with JESResponseFitter. Here you can create a standalone installation of the JES_ResponseFitter that should work with pyroot.
+```
+git clone https://gitlab.cern.ch/luadamek/JES_ResponseFitter.git
+cd JES_ResponseFitter
+mkdir build
+cd build
+cmake ../ && make
+cd ${EOPPlottingDir}
+```
+
 ## When logging back in
 ```
 cd $TestArea/EoverPAnalysis/Plotting
