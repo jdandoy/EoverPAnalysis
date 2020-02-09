@@ -54,9 +54,9 @@ source ./setup.sh
 ```
 
 ## Package Philosophy
-This script prepares a condor job. The job is defined in the macros/fill_script.py, which must have a function called fill_histograms. fill_histograms takes a HistogramFiller and books many histograms for plotting. Take a look inside of the script fill_scipt.py to get an idea of how this works.
+A plotting job is defined in a script such as macros/fill_script.py, which must have a function called fill_histograms. fill_histograms takes a HistogramFiller instance, an output rootfile name, and fills histograms. Take a look inside of the script fill_scipt.py to get an idea of how this works. From a user's perspective, one does not have to worry about creating an instance of a "HistogramFiller" or defining the name of the output rootfile. The scripts responsible for shipping jobs to condor handle everything. 
 
-All selections and variables to be plotted are defined as instances of the class "Caclulation". To define a new selection for the number of tracks, you could write the following function:
+All selections and variables to be plotted are defined as instances of the class "Caclulation". To define a new selection for tracks in a plot, you could write the following function:
 ```
 from calculation import Calculation
 def TightIso(trk):
@@ -97,11 +97,11 @@ def fill_histograms(hist_filler, outputRootFileName):
     outFile.Close()
 ```
 
-The following lines would prepare a batch job for submission. This job would use 100 condor jobs, and run over a test set of files. The condor jobqueue corresponds to the --queue_flavour flag and can be set to espresso (20mins), longlunch (2hr), workday (8hr), etc.
+The following lines would prepare a batch job for submission. This job would use 100 condor jobs, and run over a test set of files. The condor jobqueue corresponds to the --queue_flavour flag and can be set to espresso (20mins), longlunch (2hr), workday (8hr), etc. Notice that you have to define the "file flavour". These are defined in utils/utils.py and include a list of files separated by channels. Histograms will be filled for each channel independently by the histogram filling script. "test" includes channels for "PythiaJetJet", "LowMuData", and "SinglePions".
 ```
 python macros/prepare_submission.py --tree_name LA_EoverP_InDetTrackParticlesSortedLooseIsolatedVertexAssociated_tree --n_jobs 100 --queue_flavour longlunch --file_flavour test --filling_script macros/fill_script.py --job_name test
 ```
-You can change the filling script to any filling script that you have written.
+You can change the argument passed to --filling_script to any filling script that you have written.
 
 These lines will prepare a batch job for plotting from the identified hadron trees. 
 ```
