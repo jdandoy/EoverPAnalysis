@@ -8,7 +8,7 @@ Create the environment needed for plotting. This package uses a python virtual e
 You must set the CMT config to match your operating system. "CMTCONFIG=x86_64-centos7-gcc8-opt" for centos7, and "CMTCONFIG=x86_64-slc6-gcc8-opt" for slc6
 ```
 cd EoverPAnalysis/Plotting
-git clone ssh://git@gitlab.cern.ch:7999/cburr/lcg_virtualenv.git ./lcg_virtualenv
+git clone ssh://git@gitlab.cern.ch:7999/luadamek/lcg_virtualenv.git ./lcg_virtualenv
 CMTCONFIG=x86_64-centos7-gcc8-opt ./lcg_virtualenv/create_lcg_virtualenv venv_EOPPlotting LCG_94python3
 source venv_EOPPlotting/bin/activate
 ```
