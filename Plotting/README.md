@@ -14,14 +14,24 @@ source venv_EOPPlotting/bin/activate
 ```
 
 Install all of the dependencies. This package uses uproot (https://uproot.readthedocs.io/en/latest/), along with python bindings for XRootD (https://github.com/xrootd/xrootd).
+First upgrade pip.
 ```
 pip install --upgrade pip
+```
+
+Next install atlas-plots to help make the plots look good.
+```
 git clone https://github.com/joeycarter/atlas-plots.git
 cd atlas-plots
 pip install -e .
 cd ..
+```
+
+Next install xrootd to run over the ntuples stored on atlas eos. Make sure to checkout a stable brance -- e.g. stable-5.0.x.
+```
 git clone https://github.com/xrootd/xrootd.git
 cd xrootd/bindings/python/
+git checkout stable-5.0.x
 python setup_standalone.py install
 cd ../../../
 pip install uproot
@@ -32,12 +42,12 @@ Finish the setup by running the setup script
 source ./setup.sh
 ```
 
-Every few months, you will need to generate a grid proxy to access files on eos. You can do this with the following lines:
+Every few months, you will need to generate a grid proxy to access files on eos. You can do this with the following lines. This is required to access the files that are stored on eos.
 ```
 voms-proxy-init --voms atlas --hours 10000
 ```
 
-TODO: Fit E/P Distribtions with JESResponseFitter. Here you can create a standalone installation of the JES_ResponseFitter that should work with pyroot.
+Here you can create a standalone installation of the JES_ResponseFitter that should work with pyroot.
 ```
 git clone ssh://git@gitlab.cern.ch:7999/luadamek/JES_ResponseFitter.git
 cd JES_ResponseFitter
