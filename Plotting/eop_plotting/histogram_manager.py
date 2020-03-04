@@ -20,11 +20,11 @@ class HistogramManager:
        self.histograms = list(set(self.histograms))
        tFile.Close()
 
-    def listHistograms(self):
+    def listHistograms(self, wcard):
        print("=" * 50)
        print("listing all histograms:")
        for histogram in sorted(self.histograms, key=str.lower):
-           print(histogram)
+           if wcard in histogram: print(histogram)
 
     def hasHistogram(self, histogramName):
         return histogramName in self.histograms

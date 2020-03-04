@@ -38,6 +38,8 @@ COLOURS["PythiaJetJetTightIso"] = ROOT.TColor.GetColor(0,73,73)
 COLOURS["PythiaJetJetPionsReweighted"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["PythiaJetJetHardScatter"] = ROOT.TColor.GetColor(146,73,0)
 COLOURS["SinglePion"] = ROOT.TColor.GetColor(109,182,255)
+COLOURS["SinglePionPos"] = ROOT.TColor.GetColor(146,73,0)
+COLOURS["SinglePionNeg"] = ROOT.TColor.GetColor(109,182,255)
 COLOURS["down"] = ROOT.TColor.GetColor(146,73,0)
 CB_color_cycle = ['#ffffcc',\
 '#ffeda0',\
