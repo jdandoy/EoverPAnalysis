@@ -1,9 +1,9 @@
 import ROOT
 from plotting_tools import ProjectProfiles, DrawDataVsMC, DivideHistograms, cleanUpHistograms, SubtractHistograms, ProjectProfiles
 from array import array
-from fitting_tools import fitHistograms
 from histogram_manager import HistogramManager
 
+keep_alive = []
 
 # a funciton to show the composition of tracks from the hard scatter as a function of track pT
 def CreateCompositionPlot(HM, folder):
@@ -45,7 +45,7 @@ def CreateCompositionPlot(HM, folder):
                   ]
     root_colors = [ROOT.TColor.GetColor(c) for c in CB_color_cycle]
 
-    rebin = 10
+    rebin = 20
     for eta_bin in range(0, 5):
         histograms = HM.getHistograms("TrackPSpectrum__{}_Eta_{}".format("Inclusive", eta_bin))
         histogram_to_normalize_to = histograms["PythiaJetJetHardScatter"]
@@ -70,6 +70,7 @@ def CreateCompositionPlot(HM, folder):
         stack.SetMaximum(1.0)
         stack.GetXaxis().SetTitle("Track P [GeV]")
         stack.GetYaxis().SetTitle("Fraction of Total")
+        stack.GetXaxis().SetMoreLogLabels(True)
         l.Draw("SAME")
         c1.SetLogx()
         c1.Update()
@@ -92,6 +93,7 @@ def CreateCompositionPlot(HM, folder):
             hist.SetMinimum(0.0)
             hist.SetMaximum(0.75)
             l.AddEntry(hist,label,"F")
+            hist.GetXaxis().SetMoreLogLabels(True)
             if count == 0:
                 hist.Draw("][ Hist")
                 hist.GetXaxis().SetTitle("Track P [GeV]")
@@ -137,10 +139,15 @@ def CreateZeroFractionPlotsFromSelection(HM, numerator_selection_name, denomenat
             description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
             histogram_name = "NonZeroFraction" +numerator_selection_name + denomenator_selection_name + histogram + "_" + str(i)
 
+            for hist in ZeroFraction:
+                ZeroFraction[hist].GetXaxis().SetTitleSize(hist_numerator[hist].GetXaxis().GetTitleSize())
+                ZeroFraction[hist].GetYaxis().SetTitleSize(hist_numerator[hist].GetYaxis().GetTitleSize())
+                ZeroFraction[hist].GetXaxis().SetLabelSize(hist_numerator[hist].GetXaxis().GetLabelSize())
+                ZeroFraction[hist].GetYaxis().SetLabelSize(hist_numerator[hist].GetYaxis().GetLabelSize())
+
             DataVsMC1 = DrawDataVsMC(ZeroFraction,\
                                     channelLabels,\
                                     MCKeys = MCKeys,\
-                                    #MCKeys = MCKeys,\
                                     DataKey=DataKey,\
                                     doLogx=True,\
                                     doLogy=False,\
@@ -178,7 +185,12 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                    "EOPProfileVsMomentum",\
                                    "EnergyAnulusProfileVsMomentum",\
                                    "EnergyBigBkgProfileVsMomentum",\
-                                   "EnergyBkgProfileVsMomentum"]
+                                   "EnergyBkgProfileVsMomentum",\
+                                   "EnergyBkgUpProfileVsMomentum",\
+                                   "EnergyBkgDownProfileVsMomentum",\
+                                   "EnergyBigBkgUpProfileVsMomentum",\
+                                   "EnergyBigBkgDownProfileVsMomentum"]
+    #histograms_in_eta_bins = []
 
     from variables import cone_strings
     base = "EOPProfileVsMomentum_{}_{}"
@@ -190,17 +202,18 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
         histograms_in_eta_bins.append(base.format(low, high))
 
     histograms_in_momentum_bins = ["EOPDistribution",\
-                                    "EnergyBkgDistribution",\
-                                    "trkTRTHits",\
-                                    "trkEMDR100",\
-                                    "MomentumHadFrac",\
-                                    "HadFrac",\
+                                    #"EnergyBkgDistribution",\
+                                    #"trkTRTHits",\
+                                    #"trkEMDR100",\
+                                    #"MomentumHadFrac",\
+                                    #"HadFrac",\
 #                                   "NClusters",\
 #                                   "NClusters_EM",\
 #                                   "NClusters_HAD",\
 #                                   "NClusters_emlike",\
 #                                   "NClusters_hadlike",\
                                    ]
+    #histograms_in_momentum_bins = ["EOPBkgDistribution"]
 
     for i, eta_low, eta_high in zip(list(range(0, eta_bins_low.size())), eta_bins_low, eta_bins_high):
         #the plots binned in eta
@@ -284,16 +297,21 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             if "Profile" in histogram_name:
                 hist = ProjectProfiles(hist)
 
-            if "BkgProfileVsMomentum" in histogram_name:
-                ratio_min =0.0
-                ratio_max =2.0
-
             if "Spectrum" in histogram:
                 ratio_min = 0.0
                 ratio_max = 2.0
                 shouldILogy=True
 
+            xAxis_range = None
+            if "EOPBkgDistribution" in histogram_name:
+                xAxis_range = (0.0, 2.0)
+
+            if "BkgProfileVsMomentum" in histogram_name or  "BkgUpProfileVsMomentum" in histogram_name or  "BkgDownProfileVsMomentum" in histogram_name:
+                ratio_min =0.5
+                ratio_max =1.5
+
             description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+
 
             DataVsMC1 = DrawDataVsMC(hist,\
                                     channelLabels,\
@@ -301,8 +319,10 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                     DataKey=DataKey,\
                                     doLogy=shouldILogy,\
                                     doLogx=True,\
+                                    xAxis_range=xAxis_range,\
                                     ratio_min=ratio_min,\
                                     ratio_max=ratio_max,\
+                                    more_logx_labels=True,\
                                     extra_description = description)
 
             DataVsMC1[0].Draw()
@@ -330,12 +350,12 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                 rebin = None
             to_plot = []
             for j, p_low, p_high in zip(list(range(0, p_bins_low.size())), p_bins_low, p_bins_high):
-                continue
                 print("Got histogram in bin {} with momentum between {} and {}".format(j, p_low, p_high))
                 histattributes = []
                 histogram_name = histogram + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
                 hist = HM.getHistograms(histogram_name)
-                description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+                #description = base_description + [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
+                description = [str(round(eta_low, 2)) + " < |#eta| < " + str(round(eta_high, 2))]
                 description += [str(round(p_low, 3)) + " < P/GeV < " + str(round(p_high, 3))]
 
                 DataVsMC1 = DrawDataVsMC(hist,\
@@ -348,11 +368,15 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
                                         doLogy=doLogy,\
                                         marker_size = 1.0,\
                                         DataKey=DataKey,\
+                                        skip_atlas_label = True,\
+                                        skip_legend = True,\
                                         extra_description = description)
 
                 #DataVsMC1[0].Draw()
                 #DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + ".png")
-                to_plot.append(DataVsMC1[0].Clone())
+                to_plot.append(DataVsMC1[0])
+                keep_alive.append(DataVsMC1)
+                keep_alive.append(hist)
                 #DataVsMC1[0].Close()
 
             #create the canvas of all of the plots
@@ -362,9 +386,11 @@ def CreatePlotsFromSelection(HM, selection_name, filename, base_description = []
             for j, canvas in enumerate(to_plot):
                 total_canvas.cd(j+1)
                 canvas.DrawClonePad()
-            total_canvas.Draw()
+            total_canvas.Update()
+            total_canvas.Modified()
             histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
             canvas_name = plotting_directory + "/" + histogram + "_"  + selection_name + "_Eta_" + str(i) + ".png"
             print("Printing on png file {}".format(canvas_name))
+            total_canvas.cd()
             total_canvas.Print(canvas_name)
-            total_canvas.Close()
+            #total_canvas.Close()

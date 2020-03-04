@@ -2,8 +2,12 @@ import ROOT
 import array
 import uproot as ur
 from histogram_manager import HistogramManager
-from plotting_tools import DrawDataVsMC
+from plotting_tools import DrawDataVsMC, ProjectProfiles, SubtractHistograms
 import numpy as np
+from plotting_tools import DrawText
+ROOT.gROOT.SetBatch(True)
+
+ROOT.gSystem.Load("~/RooFitExtensions/build/libRooFitExtensions.dylib")
 
 def scotts_rule(histogram):
     N = histogram.Integral()
@@ -53,15 +57,15 @@ def generate_landau_gaus(x):
     return lxg, gaus_vars + landau_vars
 
 def generate_gaus(x, extra_str = ""):
-    eop_gaus_mean = ROOT.RooRealVar("eop_gaus_mean{}".format(extra_str), "eop_gaus_mean{}".format(extra_str), 0.0, 0.0, 5.0)
-    eop_gaus_sigma = ROOT.RooRealVar("eop_gaus_sigma{}".format(extra_str), "eop_gaus_sigma{}".format(extra_str), 0.1, 0.0, 5.0)
+    eop_gaus_mean = ROOT.RooRealVar("eop_gaus_mean{}".format(extra_str), "eop_gaus_mean{}".format(extra_str), 0.5, 0.0, 5.0)
+    eop_gaus_sigma = ROOT.RooRealVar("eop_gaus_sigma{}".format(extra_str), "eop_gaus_sigma{}".format(extra_str), 0.1, 0.05, 5.0)
     eop_gaus_model = ROOT.RooGaussian("gaus{}".format(extra_str),"gaus(x,mean,sigma){}".format(extra_str),x,eop_gaus_mean,eop_gaus_sigma)
     var_list = [eop_gaus_mean, eop_gaus_sigma]
     return eop_gaus_model, var_list
 
 def generate_landau(x):
     eop_landau_mpv = ROOT.RooRealVar("eop_landau_mean", "eop_landau_mean", 0.0, 0.0, 1.3)
-    eop_landau_sigma = ROOT.RooRealVar("eop_landau_sigma", "eop_landau_sigma", 0.1, 0.0, 1.0)
+    eop_landau_sigma = ROOT.RooRealVar("eop_landau_sigma", "eop_landau_sigma", 0.1, 0.05, 1.0)
     eop_landau_model = ROOT.RooLandau('landau', 'landau', x, eop_landau_mpv, eop_landau_sigma)
     var_list = [eop_landau_mpv, eop_landau_sigma]
     return eop_landau_model, var_list
@@ -110,11 +114,11 @@ def montecarlo_uncertainties(model, variables, x_var, minimum, maximum):
     original_errors = np.array(original_errors)
 
     f = model.asTF( ROOT.RooArgList(x_var) )
-    original_xmax = f.GetMaximumX()
+    original_xmax = f.GetMaximumX(minimum + 0.05, maximum - 0.05)
 
     montecarlo_maxima = []
     for montecarlo_round in range(0, 10000):
-        if montecarlo_round % 1000 == 0: 
+        if montecarlo_round % 1000 == 0:
             print("Bootstrap round {}".format(montecarlo_round))
         random_vals = np.random.normal(size=len(original_values))
         new_values = original_values + random_vals * original_errors #randomly sample the uncertainties on the parameters
@@ -122,7 +126,7 @@ def montecarlo_uncertainties(model, variables, x_var, minimum, maximum):
         [variables[i].setVal(v) for i,v in enumerate(new_values)]
         #find the maximum
         f = model.asTF( ROOT.RooArgList(x_var) )
-        xmax = f.GetMaximumX()
+        xmax = f.GetMaximumX(minimum + 0.05, maximum - 0.05)
         montecarlo_maxima.append(xmax)
 
     montecarlo_maxima = np.array(montecarlo_maxima)
@@ -132,16 +136,15 @@ def montecarlo_uncertainties(model, variables, x_var, minimum, maximum):
 
     #reset the variables to their origin values
     [variables[i].setVal(v) for i,v in enumerate(original_values)]
-
     return original_xmax, np.std(montecarlo_maxima)
 
 
-def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = False):
+def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = False, p_bin = 0, eta_bin=0,sel_type = ""):
     mpvs = {}
     mpv_errs = {}
     fit_results = {}
     for channel in histograms:
-        if channel != "LowMuData" and channel != "PythiaJetJet" and channel != "PythiaJetJetTightIso" and channel != "LowMuDataTightIso":
+        if channel != "LowMuData" and channel != "PythiaJetJet" and channel != "LowMuDataTightIso" and channel != "PythiaJetJetTightIso":
             continue
         print("Fitting the histogram in channel {}".format(channel))
         to_fit = histograms[channel]
@@ -170,40 +173,398 @@ def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = Fals
             bins = bins[1:] + [bin + 5]
 
         low_limit = to_fit.FindBin(0.1)
-        if to_fit.Integral() > 2000:
-            #find the integral for eop's below the mpv
-            integral_left = to_fit.Integral(low_limit, mpv_bin)
-            print("integral left {}".format(integral_left))
+        #if to_fit.Integral() > 2000:
+        #find the integral for eop's below the mpv
+        integral_left = to_fit.Integral(low_limit, mpv_bin)
+        print("integral left {}".format(integral_left))
 
-            #find the 68% quantile below the mpv
-            lower_count = 0
-            lower_bin = 0
-            for lower_bin in range(mpv_bin-1, low_limit, -1):
-                lower_count += to_fit.GetBinContent(lower_bin)
-                if lower_count > (1.0 - 0.1) * integral_left:
-                    break
-            lower_content = to_fit.GetBinContent(lower_bin)
+        #find the 68% quantile below the mpv
+        lower_count = 0
+        lower_bin = 0
+        for lower_bin in range(mpv_bin-1, low_limit, -1):
+            lower_count += to_fit.GetBinContent(lower_bin)
+            if lower_count > (1.0 - 0.2) * integral_left:
+                break
+        lower_content = to_fit.GetBinContent(lower_bin)
 
-            #find the bin above the mpv that has the same number of entries as the lower bin at the 68% quantile
-            up_bin = 0
-            max_bin = mpv_bin +1
-            for upper_bin in range(mpv_bin +1, to_fit.GetNbinsX()+1):
-                 if to_fit.GetBinCenter(upper_bin) > high:
-                     continue
-                 max_bin += 1
-                 print("{} {}".format(upper_bin, max_bin))
-                 if to_fit.GetBinContent(upper_bin) <=  lower_content:
-                     break
-                 up_bin = upper_bin
-            upper_bin = up_bin
-            if upper_bin == 0:
-                upper_bin = max_bin
-        else:
-            function = "gaus"
+        #find the bin above the mpv that has the same number of entries as the lower bin at the 68% quantile
+        up_bin = 0
+        max_bin = mpv_bin +1
+        for upper_bin in range(mpv_bin +1, to_fit.GetNbinsX()+1):
+             if to_fit.GetBinCenter(upper_bin) > high:
+                 continue
+             max_bin += 1
+             print("{} {}".format(upper_bin, max_bin))
+             if to_fit.GetBinContent(upper_bin) <=  lower_content:
+                 break
+             up_bin = upper_bin
+             upper_bin -= 5
+        upper_bin = up_bin
+        if upper_bin == 0:
+            upper_bin = max_bin
+
+        if function == "gaus":
+            old_min = to_fit.GetMinimum()
+            old_max = to_fit.GetMaximum()
+            to_fit.SetMinimum(0.15)
+            to_fit.SetMaximum(1.1)
             mean = to_fit.GetMean()
             sig = to_fit.GetRMS()
-            upper_bin = to_fit.FindBin( mean + sig)
+            to_fit.SetMinimum(old_min)
+            to_fit.SetMaximum(old_max)
+            upper_bin = to_fit.FindBin(mean + sig)
             lower_bin = to_fit.FindBin(mean-sig)
+
+            if p_bin > 7:
+                upper_bin = to_fit.FindBin(mean + 1.2*sig)
+                lower_bin = to_fit.FindBin(mean - 1.2*sig)
+            #if p_bin > 6:
+            #    to_fit.Rebin(2)
+            #if p_bin > 10:
+            #to_fit.Rebin(4)
+
+            #hack in the fits:
+            if "MIP" in sel_type:
+               if eta_bin == 0:
+                   if p_bin == 1:
+                      if "Pythia" not in channel:
+                          upper_bin = to_fit.FindBin(mean + (-0.225) *sig)
+                          lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                      else:
+                          upper_bin = to_fit.FindBin(mean + (-0.175) *sig)
+                          lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean - 0.125 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 *sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean + (-0.1) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + (-0.05) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.1 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.1 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.45 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.15 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.475 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.1 *sig)
+
+               if eta_bin == 1:
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (-0.15) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean - 0.05 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 *sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean + 0.05 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.90 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + 0.15 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.275 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.65 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.975 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.8 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 0.85 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 10:
+                      upper_bin = to_fit.FindBin(mean + 0.9 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+
+               if eta_bin == 2:
+                   if p_bin == 0:
+                      upper_bin = to_fit.FindBin(mean + (-0.45) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (-0.5) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean - 0.4 * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 * sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean - 0.225 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean - 0.1 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.1 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.45 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.15 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.5 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.65 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 0.825 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+
+               if eta_bin == 3:
+                   if p_bin == 0:
+                      upper_bin = to_fit.FindBin(mean + (-0.7) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.25 *sig)
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (-0.4) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean - 0.2 * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 * sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean - 0.0 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.875 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + 0.05 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.925 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.15 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.5 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.85 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 1.0 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+
+               if eta_bin == 4:
+                   if p_bin == 0:
+                      upper_bin = to_fit.FindBin(mean + (0.7) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.7 *sig)
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (0.7) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.7 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean + 0.6 * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 * sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean + 0.72 * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + 0.75 * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 * sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 0.8 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 10:
+                      upper_bin = to_fit.FindBin(mean + 0.9 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+
+            if "20TRT" in sel_type:
+               if eta_bin == 0:
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (0.25) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.75 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean + 0.15 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean + 0.1 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + 0.075 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.35 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.4 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.10 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.60 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.1 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.65 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.1 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 0.75 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+
+               if eta_bin == 1:
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (0.1) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean + 0.075 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.75 *sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean + 0.15 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.775 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + 0.15 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.2 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.25 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.4 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.975 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.025 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 0.5 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 10:
+                      upper_bin = to_fit.FindBin(mean + 0.9 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+
+               if eta_bin == 2:
+                   if p_bin == 0:
+                      upper_bin = to_fit.FindBin(mean + (-0.15) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.6 *sig)
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (-0.3) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean + 0.1 * sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 * sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean - 0.1 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + 0.05 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.75 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.2 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.76 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.25 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.35 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.0 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.4 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 0.4 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+                   if p_bin == 10:
+                      upper_bin = to_fit.FindBin(mean + 0.6 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.95 *sig)
+
+               if eta_bin == 3:
+                   if p_bin == 0:
+                      upper_bin = to_fit.FindBin(mean + (0.1) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.7 *sig)
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (0.1) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean + 0.15 * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.9 * sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean + 0.125 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.725 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + 0.125 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.775 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + 0.075 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.875 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + 0.125 *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.975 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + 0.15 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + 0.15 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.10 *sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + 0.55 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 10:
+                      upper_bin = to_fit.FindBin(mean + 0.7 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 11:
+                      upper_bin = to_fit.FindBin(mean + 0.8 *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+
+               if eta_bin == 4:
+                   if p_bin == 0:
+                      upper_bin = to_fit.FindBin(mean + (-0.25) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 1:
+                      upper_bin = to_fit.FindBin(mean + (-0.2) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 2:
+                      upper_bin = to_fit.FindBin(mean + (-0.2) * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 * sig)
+                   if p_bin == 3:
+                      upper_bin = to_fit.FindBin(mean + (-0.15) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.8 *sig)
+                   if p_bin == 4:
+                      upper_bin = to_fit.FindBin(mean + (-0.25) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.75 *sig)
+                   if p_bin == 5:
+                      upper_bin = to_fit.FindBin(mean + (-0.05) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.85 *sig)
+                   if p_bin == 6:
+                      upper_bin = to_fit.FindBin(mean + (-0.05) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.90 *sig)
+                   if p_bin == 7:
+                      upper_bin = to_fit.FindBin(mean + (0.0) *sig)
+                      lower_bin = to_fit.FindBin(mean - 0.90 *sig)
+                   if p_bin == 8:
+                      upper_bin = to_fit.FindBin(mean + (0.0) * sig)
+                      lower_bin = to_fit.FindBin(mean - 0.90 * sig)
+                   if p_bin == 9:
+                      upper_bin = to_fit.FindBin(mean + (0.15) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 10:
+                      upper_bin = to_fit.FindBin(mean + (0.2) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.05 *sig)
+                   if p_bin == 11:
+                      upper_bin = to_fit.FindBin(mean + (0.3) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.1 *sig)
+                   if p_bin == 12:
+                      upper_bin = to_fit.FindBin(mean + (0.4) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.15 *sig)
+                   if p_bin == 13:
+                      upper_bin = to_fit.FindBin(mean + (0.5) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.15 *sig)
+                   if p_bin == 14:
+                      upper_bin = to_fit.FindBin(mean + (0.65) *sig)
+                      lower_bin = to_fit.FindBin(mean - 1.2 *sig)
 
         #do the fit in this range.
         sigma_up = to_fit.GetBinCenter(upper_bin)
@@ -240,7 +601,7 @@ def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = Fals
                     mpvs[channel]=var.getVal()
                     mpv_errs[channel]=var.getError()
         else:
-            mpvs[channel], mpv_errs[channel]=montecarlo_uncertainties(model, variables,eop, low, high)
+            mpvs[channel], mpv_errs[channel]=montecarlo_uncertainties(model, variables,eop, to_fit.GetBinCenter(lower_bin), to_fit.GetBinCenter(upper_bin))
 
         #draw the fit
         c = ROOT.TCanvas("canv", "canv")
@@ -259,7 +620,18 @@ def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = Fals
         model.plotOn(f, ROOT.RooFit.Components("gausone"), ROOT.RooFit.LineStyle(ROOT.kDashed))
         model.plotOn(f, ROOT.RooFit.Components("landau"), ROOT.RooFit.LineStyle(ROOT.kDashed))
         model.plotOn(f, ROOT.RooFit.Components("gaustwo"), ROOT.RooFit.LineStyle(ROOT.kDashed))
+
+        n_param = result.floatParsFinal().getSize()
+        reduced_chi_square = f.chiSquare(n_param)
+
         f.Draw()
+        legend = ROOT.TLegend(0.5, 0.7, 0.89, 0.89)
+        legend.SetBorderSize(0)  # no border
+        legend.SetFillStyle(0)  # make transparent
+        legend.Draw()
+        legend.AddEntry(None,\
+                '#chi^{2}' + ' / {} = {:.3f}'.format( "nDOF",\
+                reduced_chi_square), '')
 
         f.GetXaxis().SetTitleFont(43)
         f.GetXaxis().SetTitleSize(25)
@@ -270,6 +642,8 @@ def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = Fals
         f.GetYaxis().SetLabelFont(43)
         f.GetYaxis().SetTitleSize(20)
         f.GetYaxis().SetTitleFont(43)
+
+        DrawText(0.60, 0.5,"Bin: {}".format(p_bin) ,  size = 0.18)
 
         pull.SetMarkerSize(0.3)
         bottom=ROOT.TPad("bottom", "bottom", 0.0, 0.0, 1.0, 0.3)
@@ -300,14 +674,14 @@ def do_fit(histograms, function="gaus", extra_str = "", montecarlo_errors = Fals
         c.Update()
         c.Modified()
         if extra_str != "":
-           c.Print("{}_fit_plot.png".format(extra_str))
+           c.Print("{}_{}_fit_plot.png".format(channel,extra_str))
         top.Close()
         bottom.Close()
         c.Close()
 
     return mpvs, mpv_errs, fit_results
 
-def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelectionHadFracAbove70", function = "gaus", montecarlo_errors = True):
+def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelectionHadFracAbove70", function = "gaus", montecarlo_errors = True, sel_type=""):
 
     #get the binning vectors
     rf = ROOT.TFile(f, "READ")
@@ -332,39 +706,82 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
     for i, eta_low, eta_high in zip(range(0, len(eta_bins_low)),eta_bins_low, eta_bins_high):
         mpvs = {}
         mpv_errs = {}
+        bins = []
+        bin_numbers = []
         for j, p_low, p_high in zip(range(0, len(p_bins_low_for_eta_bin[i])),p_bins_low_for_eta_bin[i], p_bins_high_for_eta_bin[i]):
-            if j == 0:
+            if j==0:
                 continue
+            if "MIP" in selection_name:
+                if i == 0 and j == 10:
+                    break
+                if i == 1 and j == 10:
+                    break
+                if i == 2 and j == 11:
+                    break
+                if i == 3 and j  == 12:
+                    break
+                if i == 4 and j == 20:
+                    break
+            if "20TRT" in selection_name:
+                if i == 0 and j == 10:
+                    break
+                if i == 1 and j == 11:
+                    break
+                if i == 2 and j == 12:
+                    break
+                if i == 3 and j == 12:
+                    break
+                if i == 4 and j == 14:
+                    pass
+>>>>>>> Update plotting code
             histogram_name = histogram_base + "_" + selection_name + "_Eta_" + str(i) + "_Momentum_" + str(j)
             histograms = HM.getHistograms(histogram_name)
-            mpv, mpv_err, fit_result = do_fit(histograms, function = function, extra_str = "Eta_{}_P_{}_{}".format(i,j, selection_name), montecarlo_errors = montecarlo_errors)
+            to_fit_function = function
+            mpv, mpv_err, fit_result = do_fit(histograms, function = to_fit_function, extra_str = "Eta_{}_P_{}_{}".format(i,j, selection_name), montecarlo_errors = montecarlo_errors, p_bin = j, eta_bin=i, sel_type = sel_type)
             for channel in mpv:
                if channel not in mpvs:
                    mpvs[channel]=[]
                    mpv_errs[channel]=[]
                mpvs[channel].append(mpv[channel])
                mpv_errs[channel].append(mpv_err[channel])
+            bins.append(p_low)
+            bin_numbers.append(j)
+        bins.append(p_high)
+
         hist_name = histogram_base + "{}_{}_".format(function, "fit") + selection_name + "_Eta_" + str(i)
-
-        bins = [b for b in p_bins_low_for_eta_bin[i]] + [p_bins_high_for_eta_bin[i][-1]]
         bin_array = array.array('d', bins)
-
         histograms = {}
         for channel in mpvs:
             histograms[channel] = ROOT.TH1D(hist_name + channel, hist_name + channel, len(bins)-1, bin_array)
-            for i in range(0, len(mpvs[channel])):
-                histograms[channel].SetBinContent(i+1, mpvs[channel][i])
-                histograms[channel].SetBinError(i+1, mpv_errs[channel][i])
+            for n in range(0, len(mpvs[channel])):
+                histograms[channel].SetBinContent(n+1, mpvs[channel][n])
+                histograms[channel].SetBinError(n+1, mpv_errs[channel][n])
 
         MCKeys = ["PythiaJetJet"]
         DataKey="LowMuData"
+        if "20TRT" in selection_name:
+            MCKeys = ["PythiaJetJetTightIso"]
+            DataKey = "LowMuDataTightIso"
+
         base_description = ["P_{T} Reweighted"]
-        description = base_description + ["MIP Selection", "{:.1f} < |#eta| < {:.1f}".format(eta_low, eta_high)]
-        channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "#splitline{Pythia8}{MinBias and Dijet}", DataKey: "2017 Low-<#mu> Data", "PythiaJetJetPions    Reweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched", "PythiaJetJetTightIso": "#splitline{Pythia8}{MinBias and D    ijet}", "LowMuDataTightIso":"2017 Low-<#mu> Data"}
-        ratio_min = 0.8
-        ratio_max = 1.2
+        if "MIP" in selection_name:
+            description = base_description + ["MIP Selection", "{:.1f} < |#eta| < {:.1f}".format(eta_low, eta_high)]
+        elif "20TRT" in selection_name:
+            description = base_description + ["N_{TRT} > 20","Tight Isolation", "E_{Total} != 0", "{:.1f} < |#eta| < {:.1f}".format(eta_low, eta_high)]
+        channelLabels = {"SinglePion": "Single Pion", "PythiaJetJet" : "#splitline{Pythia8}{MinBias and Dijet}", DataKey: "2017 Low-<#mu> Data", "PythiaJetJetPionsReweighted":"Pythia8 MB+DJ Pions Only", "PythiaJetJetHardScatter":"Pythia8 MB+DJ Truth Matched", "PythiaJetJetTightIso": "#splitline{Pythia8}{MinBias and Dijet}", "LowMuDataTightIso":"2017 Low-<#mu> Data"}
+        ratio_min = 0.9
+        ratio_max = 1.1
+        if "20TRT" in selection_name:
+            ratio_min = 0.9
+            ratio_max = 1.1
+        if "MIP" in selection_name and (i == 0 or i == 1 or i == 3):
+            ratio_min = 0.95
+            ratio_max = 1.05
+        clones = {}
+        for c in histograms:
+            clones[c] = histograms[c].Clone(histograms[c].GetName() + "Clone")
         #draw the fit results as a set of histograms
-        canvas = DataVsMC1 = DrawDataVsMC(histograms,\
+        canvas, top, bottom = DrawDataVsMC(histograms,\
                        channelLabels,\
                        MCKeys = MCKeys,\
                        ratio_min = ratio_min,\
@@ -374,165 +791,130 @@ def test_fit(f, histogram_base = "EOPDistribution", selection_name = "MIPSelecti
                        ylabel = "MPV(E/P)",\
                        xlabel = "P [GeV]",\
                        DataKey=DataKey,\
-                       extra_description = description)[0]
-
+                       extra_description = description)
         canvas_name = hist_name + "_"  + selection_name + "_Eta_" + str(i) + ".png"
         canvas.Print(canvas_name)
+        top.Close()
+        bottom.Close()
         canvas.Close()
+
+        if "MIP" in selection_name:
+            bkg_eop = HM.getHistograms("EnergyBkgProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
+        elif "20TRT" in selection_name:
+            bkg_eop = HM.getHistograms("EnergyBigBkgProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
+        bkg_eop_clone = {}
+        for channel in mpvs:
+            bkg_eop_clone[channel] = bkg_eop[channel]
+        bkg_eop = ProjectProfiles(bkg_eop_clone)
+        bkg_eop_subrange = {}
+        for channel in bkg_eop:
+            bkg_eop_subrange[channel] = ROOT.TH1D(hist_name + channel + "bkg", hist_name + channel, len(bins)-1, bin_array)
+            for a,b in enumerate(bin_numbers):
+                bkg_eop_subrange[channel].SetBinContent(a+1,bkg_eop[channel].GetBinContent(b+1))
+                bkg_eop_subrange[channel].SetBinError(a+1,bkg_eop[channel].GetBinError(b+1))
+        corr_eop = SubtractHistograms(clones, bkg_eop_subrange)
+
+        stuff = DrawDataVsMC(corr_eop,\
+                                channelLabels,\
+                                MCKeys = MCKeys,\
+                                DataKey=DataKey,\
+                                doLogy=False,\
+                                doLogx=True,\
+                                ratio_min=ratio_min,\
+                                ratio_max=ratio_max,\
+                                ylabel="MPV(E/P)_{CORR}",\
+                                xlabel = "P [GeV]",\
+                                extra_description = description)
+
+
+        for s in stuff:
+            s.Update()
+            s.Modified()
+        canvas = stuff[0]
+        canvas.Update()
+        canvas.Modified()
+        canvas.Print(hist_name + "corrected_"  + selection_name + ".png")
+        canvas.Draw()
+        histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
+        stuff[1].Close()
+        stuff[2].Close()
+        canvas.Close()
+
+        ratio_min = 0.9
+        ratio_max = 1.1
+        if "20TRT" in selection_name:
+            ratio_min = 0.9
+            ratio_max = 1.1
+        if "MIP" in selection_name and (i == 0 or i == 1 or i == 2):
+            ratio_min = 0.95
+            ratio_max = 1.05
+
+        average_eop = HM.getHistograms("EOPProfileVsMomentum" +"__" + selection_name + "_Eta_"+str(i))
+        average_eop_clone = {}
+        for channel in mpvs:
+            average_eop_clone[channel] =  ROOT.TH1D(hist_name + channel + "bkg", hist_name + channel, len(bins)-1, bin_array)
+            for a,b in enumerate(bin_numbers):
+                average_eop_clone[channel].SetBinContent(a+1,average_eop[channel].GetBinContent(b+1))
+                average_eop_clone[channel].SetBinError(a+1,average_eop[channel].GetBinError(b+1))
+        corr_average_eop = SubtractHistograms(average_eop_clone, bkg_eop_subrange)
+
+        stuff = DrawDataVsMC(corr_average_eop,\
+                                channelLabels,\
+                                MCKeys = MCKeys,\
+                                DataKey=DataKey,\
+                                doLogy=False,\
+                                doLogx=True,\
+                                ratio_min=ratio_min,\
+                                ratio_max=ratio_max,\
+                                ylabel="<E/P>_{CORR}",\
+                                xlabel = "P [GeV]",\
+                                extra_description = description)
+
+
+        for s in stuff:
+            s.Update()
+            s.Modified()
+        canvas = stuff[0]
+        canvas.Update()
+        canvas.Modified()
+        canvas.Print("EOPProfileVsMomentum_" + "corrected_"  + selection_name +  "_Eta_"+str(i) + ".png")
+        canvas.Draw()
+        histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
+        stuff[1].Close()
+        stuff[2].Close()
+        canvas.Close()
+
+        stuff = DrawDataVsMC(bkg_eop_subrange,\
+                                channelLabels,\
+                                MCKeys = MCKeys,\
+                                DataKey=DataKey,\
+                                doLogy=False,\
+                                doLogx=True,\
+                                ratio_min=0.5,\
+                                ratio_max=1.5,\
+                                ylabel="<E/P>_{BKG}",\
+                                xlabel = "P [GeV]",\
+                                extra_description = description)
+
+
+        for s in stuff:
+            s.Update()
+            s.Modified()
+        canvas = stuff[0]
+        canvas.Update()
+        canvas.Modified()
+        canvas.Print("EOPBkgEstimateProfileVsMomentum_" + selection_name +  "_Eta_"+str(i) + ".png")
+        canvas.Draw()
+        histogram_name += ("_".join(MCKeys) + "_{}".format(DataKey))
+        stuff[1].Close()
+        stuff[2].Close()
+        canvas.Close()
+
 
 if __name__ == "__main__":
     f="pt_reweighted.root"
-    for selection_name in ["MIPSelectionHadFracAbove70", "20TRTHitsNonZeroEnergy"]:
-        test_fit(f, selection_name = selection_name, function="landau+gaus")
-
-
-def fitHistograms(histograms, fit_function, histogramName, channels=[], eta_low=-1,eta_high=-1,p_low=-1,p_high=-1, refit=False, rebin=False, rebin_rule = None):
-    '''
-    Fit function fit_function to the histograms
-    fit_function can be gaus, landau or convolution
-    '''
-
-    low_value = 0.0
-    max_x = {}
-    max_x_err = {}
-    chisq = {}
-
-    low_fit = 1000.0
-    high_fit = -1000.0
-    low_rms = 0.0
-    high_rms = 1.2
-    means = {}
-    sigmas = {}
-
-    if rebin:
-        histograms = rebin_histograms(histograms, binning_option = rebin_rule)
-
-    if not refit:
-       for channel in channels:
-           histogram = histograms[channel]
-           low_bin = histogram.FindBin(low_rms)
-           high_bin = histogram.FindBin(high_rms)
-           histogram.GetXaxis().SetRange(low_bin, high_bin)
-           mean = histogram.GetMean()
-           rms = histogram.GetRMS()
-           sigmas[channel]=rms
-
-           new_low_fit = mean - rms * 1.0
-           new_high_fit = mean + rms * 1.0
-           means[channel]=mean
-           if new_low_fit < low_fit:
-               low_fit = new_low_fit
-           if new_high_fit > high_fit:
-               high_fit = new_high_fit
-    if refit:
-       histogram = histograms["LowMuData"]
-       histogram_name = histogram.GetName()
-       fit_function_string = fit_function + histogram_name
-       fit = histogram.GetFunction(fit_function_string)
-       low_fit = fit.GetParameter(0) - fit.GetParameter(1) * 0.8
-       high_fit = fit.GetParameter(0) + fit.GetParameter(1) * 0.8
-       for channel in channels:
-           means[channel] = fit.GetParameter(0)
-           sigmas[channel] = fit.GetParameter(1)
-
-    for channel in channels:
-       histogram = histograms[channel]
-
-       histogram_name = histogram.GetName()
-       #this is the landau distribution that will be fit to the histogramsograms
-       landau = ROOT.TF1("landau_" + channel +histogram_name, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-       landau.SetParName(0, "mpv")
-       landau.SetParameter(0, means[channel])
-       landau.SetParLimits(0, 0.3, 1.1)
-       landau.SetParName(1, "sigma")
-       landau.SetName("landau" +  histogram_name)
-       landau.SetParameter(1, sigmas[channel]/4.0)
-       landau.SetParLimits(1, sigmas[channel]/100.0, sigmas[channel]*2.0)
-       landau.SetParName(2, "Norm")
-       landau.SetParameter(2, histogram.Integral())
-
-       #this is the gaus distribution that will be fit to the histogramsograms
-       gaus = ROOT.TF1("gaus_" + channel +histogram_name, "[2]*TMath::Gaus(x, [0], [1])", -1.0, 5.0)
-       gaus.SetParName(0, "mu")
-       gaus.SetParameter(0, means[channel])
-       gaus.SetParLimits(0, 0.45, 0.95)
-       gaus.SetParName(1, "sigma")
-       gaus.SetName("gaus" + histogram_name)
-       gaus.SetParameter(1, sigmas[channel])
-       gaus.SetParLimits(1, sigmas[channel]/3.0, 1.2*sigmas[channel])
-       gaus.SetParName(2, "Norm")
-       gaus.SetParameter(2, histogram.Integral())
-
-       #Create a gaussian convoluted with a landau histogramsogram
-       gaus_forconvolution = ROOT.TF1("gaus_forconvolution_" + channel +histogram_name, "TMath::Gaus(x, 0.0, [0])", -10.0, +10.0)
-
-       landau_forconvolution = ROOT.TF1("landau_forconvolution_" + channel +histogram_name, "[2]*TMath::Landau(x, [0], [1])", -1.0, 5.0)
-
-       convolution = ROOT.TF1Convolution(gaus_forconvolution, landau_forconvolution,-1,6,True)
-       convolution.SetRange(-1.,5.)
-       convolution.SetNofPointsFFT(10000)
-       convolution_tofit = ROOT.TF1("f",convolution, -1.0, 5., convolution.GetNpar())
-       convolution_tofit.SetName("convolution" +histogram_name)
-
-       convolution_tofit.SetParName(0, "SigmaSmear")
-       convolution_tofit.SetParLimits(0, 0.0, 100.0)
-       convolution_tofit.SetParameter(0, 0.5)
-
-       convolution_tofit.SetParName(1, "mpv")
-       convolution_tofit.SetParameter(1, means[channel])
-       convolution_tofit.SetParLimits(1, 0.3, 1.1)
-       convolution_tofit.SetParName(2, "sigma")
-       convolution_tofit.SetParameter(2, sigmas[channel]/4.0)
-       convolution_tofit.SetParLimits(2, sigmas[channel]/100.0, sigmas[channel]*2.0)
-       convolution_tofit.SetParName(3, "Norm")
-       convolution_tofit.SetParameter(3, histogram.Integral())
-       print("Created convolution function")
-       convolution_tofit.Print()
-
-       #Good settings for a landau x gaus
-       fit_function_string = fit_function + histogram_name
-       print("convolution" +histogram_name)
-       print(fit_function_string)
-       histogram.GetXaxis().SetRange(histogram.FindBin(0.15), histogram.FindBin(1.3))
-       histogram.GetXaxis().SetRange()
-       histogram.Fit(fit_function_string, "", "", low_fit, high_fit)
-
-       fit = histogram.GetFunction(fit_function_string)
-       if  fit:
-           fit.SetLineColor(histogram.GetLineColor())
-           if fit_function == "convolution":
-               max_x_tmp=0.0
-               max_val_tmp=0.0
-               max_x_tmp_err = 0.0
-               chisq[channel]=fit.GetChisquare()
-           elif fit_function == "gaus":
-               max_x_tmp = fit.GetParameter(0)
-               max_val_tmp = -1.0
-               max_x_tmp_err = fit.GetParError(0)
-               chisq[channel]=fit.GetChisquare()
-       else:
-           max_x_tmp = -1.0
-           max_val_tmp = -1.0
-           max_x_tmp_err = 0.0
-           chisq[channel] = -1.0
-
-       max_x[channel]=max_x_tmp
-       max_x_err[channel]=max_x_tmp_err
-
-       print("The maximum value in data was at eop " + str(max_x_tmp))
-
-    return max_x, max_x_err, chisq
-
-def FindMostProbableValue(fit_function, low, high, ndivisions=10000):
-    x = np.linspace(low, high, ndivisions)
-    vals = np.zeros(len(x))
-    max_val = 0
-    max_x = -999999.0
-    for i in range(0, len(x)):
-        vals[i] = fit_function.Eval(x[i])
-        if vals[i] > max_val:
-            max_val = vals[i]
-            max_x = x[i]
-    return max_x, max_val
-
+    #for selection_name in ["MIPSelectionHadFracAbove70", "20TRTHitsNonZeroEnergy"][::-1]:
+    #for selection_name in ["MIPSelectionHadFracAbove70"]:
+    for selection_name in ["20TRTHitsNonZeroEnergy"]:
+        test_fit(f, selection_name = selection_name, function="gaus", sel_type = selection_name, montecarlo_errors = False)
 

@@ -240,7 +240,7 @@ def GetChannelName(hist_dict, hist):
     channel = hist1_name[first_difference:]
     return channel
 
-def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.40, extra_desy = 0.85, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None,marker_size = None, ratio_label = None, invert_ratio = False, bigger_legend = False, skip_data = False, skip_ratio = False):
+def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "", doLogy = True, doLogx = False, ratio_min= 0.0, ratio_max = 2.0, extra_description = None, extra_desx = 0.40, extra_desy = 0.85, scale_factor = 1000, xTicksNumber = None, yTicksNumber = 505, rebin=None, ylabel = None, xAxis_range = None, xlabel=None,marker_size = None, ratio_label = None, invert_ratio = False, bigger_legend = False, skip_data = False, skip_ratio = False, skip_atlas_label=False, skip_legend=False, more_logx_labels=True):
     '''
     This function returns a canvas with a data and MC histogram drawn acoording to configurable settings.
 
@@ -282,6 +282,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
         DataHist.SetMarkerSize(marker_size)
 
     MCHists = [cleanUpHistograms(MCHist) for MCHist in MCHists]
+    [MCHist.SetTickLength(0.06) for MCHist in MCHists]
+    DataHist.SetTickLength(0.06)
 
     title_offset = 0.9
 
@@ -433,7 +435,11 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     for MCHist, MCKey in zip(MCHists, MCKeys):
         legend.AddEntry(MCHist, LegendLabels[MCKey])
     legend.AddEntry(DataHist, LegendLabels[DataKey])
-    legend.Draw()
+    if not skip_legend:
+        legend.Draw()
+
+    if skip_atlas_label:
+        extra_desx -= 0.15
 
     if extra_description:
         if not type(extra_description) == list:
@@ -456,7 +462,8 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
     if foundAtlasPlots:
         x = 0.2
         y = 0.85
-        ATLASLabel(x, y, "Internal", size = text_size)
+        if not skip_atlas_label:
+            ATLASLabel(x, y, "Internal", size = text_size)
     top_pad.Modified()
     top_pad.Update()
     toGlobalScope(top_pad)
@@ -483,6 +490,9 @@ def DrawDataVsMC(histogram_dict, LegendLabels = {}, MCKeys = [""], DataKey = "",
                data_ratio.Divide(DataHist)
            data_ratio = cleanUpHistograms(data_ratio)
            data_ratio.SetLineColor(COLOURS[MCKey])
+
+           if doLogx and more_logx_labels:
+               data_ratio.GetXaxis().SetMoreLogLabels(True)
 
            if counter == 1:
                data_ratio.Draw("][ HIST E")

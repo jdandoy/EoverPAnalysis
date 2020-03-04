@@ -4,9 +4,8 @@ from plotting_tools import *
 from common_plots import *
 from array import array
 import os
-from fitting_tools import fitHistograms
 
-MCKeys = ['PythiaJetJet']#,"SinglePion","PythiaJetJetHardScatter"]
+MCKeys = ['PythiaJetJet', "SinglePion"]#,"SinglePion","PythiaJetJetHardScatter"]
 DataKey = "LowMuData"
 #, 'PythiaJetJetPionsReweighted'
 #, 'SinglePion']
@@ -44,6 +43,9 @@ if not os.path.exists("Plots/" + plotting_directory):
     os.makedirs("Plots/" + plotting_directory)
 plotting_directory = "Plots/" + plotting_directory
 
+if "SinglePion" in MCKeys:
+    plotting_directory += "_single_pion"
+
 histogram_name_base = "EnergyBkgProfileVsMomentum__{}_Eta_{}"
 histogram_name_base_up = "EnergyBkgUpProfileVsMomentum__{}_Eta_{}"
 histogram_name_base_down = "EnergyBkgDownProfileVsMomentum__{}_Eta_{}"
@@ -63,6 +65,7 @@ eta_bins_high = getattr(el, selection+"EtaBinsHigh")
 from variables import cone_strings
 
 for i in bins:
+    break
     histogram_name = histogram_name_base.format(selection, i)
     histogram_name_up = histogram_name_base_up.format(selection, i)
     histogram_name_down = histogram_name_base_down.format(selection, i)
@@ -80,7 +83,7 @@ for i in bins:
        these_DataKey = "nominal"
        to_plot = ProjectProfiles(to_plot)
        these_channelLabels = {"nominal":"Nominal", "up":"Outer Annulus", "down":"Inner Annulus"}
-       description = base_description + ["MIP Selection"] + ["{} < |#eta| < {}".format(eta_bins_low[i], eta_bins_high[i])]
+       description = base_description + ["MIP Selection"] + ["{:.1f} < |#eta| < {:.1f}".format(eta_bins_low[i], eta_bins_high[i])]
        DataVsMC1 = DrawDataVsMC(to_plot,\
                                these_channelLabels,\
                                MCKeys = these_MCKeys,\
@@ -210,6 +213,7 @@ eta_bins_low = getattr(el, selection+"EtaBinsLow")
 eta_bins_high = getattr(el, selection+"EtaBinsHigh")
 
 for i in bins:
+    break
     histogram_name = histogram_name_base.format(selection, i)
     histogram_name_up = histogram_name_base_up.format(selection, i)
     histogram_name_down = histogram_name_base_down.format(selection, i)
@@ -229,7 +233,7 @@ for i in bins:
        to_plot = ProjectProfiles(to_plot)
 
        these_channelLabels = {"nominal":"Nominal", "up":"Outer Annulus", "down":"Inner Annulus"}
-       description = base_description + ["E_{TOTAL} != 0.0", "N_{TRT} >= 20", "Tight Isolation"] + ["{} < |#eta| < {}".format(eta_bins_low[i], eta_bins_high[i])]
+       description = base_description + ["E_{TOTAL} != 0.0", "N_{TRT} >= 20", "Tight Isolation"] + ["{:.1f} < |#eta| < {:.1f}".format(eta_bins_low[i], eta_bins_high[i])]
        DataVsMC1 = DrawDataVsMC(to_plot,\
                                these_channelLabels,\
                                MCKeys = these_MCKeys,\
@@ -341,10 +345,12 @@ for i in bins:
         DataVsMC1[0].Print(plotting_directory + "/" + histogram_name + "{}Cones.png".format(channel))
 
 
+
+
 CreateCompositionPlot(HM, plotting_directory)
+#MCKeys = ['PythiaJetJet', "SinglePion"]#,"SinglePion","PythiaJetJetHardScatter"]
 #CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + [], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys, DataKey="LowMuData")
 #CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys, DataKey = "LowMuData")
-
 #CreateZeroFractionPlotsFromSelection(HM, "NonZeroEnergy", "Inclusive", filename, base_description= base_description + ["Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey="LowMuDataTightIso")
 #CreateZeroFractionPlotsFromSelection(HM, "20TRTHitsNonZeroEnergy", "20TRTHits", filename, base_description= base_description + ["N_{TRT} >= 20", "Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey = "LowMuDataTightIso")
 
@@ -353,10 +359,10 @@ CreateCompositionPlot(HM, plotting_directory)
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJet"], DataKey  = "LowMuData")
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + ["Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
 TwentyTRTNonZero_description = base_description + ["E_{TOTAL} != 0.0", "N_{TRT} >= 20", "Tight Isolation"]
-CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = TwentyTRTNonZero_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
-CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
+CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = TwentyTRTNonZero_description, channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso", "SinglePion"], DataKey  = "LowMuDataTightIso")
+#CreatePlotsFromSelection(HM,"20TRTHitsNonZeroEnergy", filename, base_description = base_description + ["N_{TRT} >= 20", "E_{TOTAL} != 0.0"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection"],channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
-CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection", "Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
+#CreatePlotsFromSelection(HM,"MIPSelectionHadFracAbove70", filename, base_description = base_description + ["MIP Selection", "Tight Isolation"], channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=["PythiaJetJetTightIso"], DataKey  = "LowMuDataTightIso")
 #CreatePlotsFromSelection(HM,"NonZeroEnergy", filename, base_description = base_description + ["E_{TOTAL} != 0.0"],doFit = True , fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory, MCKeys=MCKeys)
 #CreatePlotsFromSelection(HM,"Inclusive", filename, base_description = base_description + [],doFit = True,fitfunction="convolution", channelLabels=channelLabels,plotting_directory=plotting_directory)
 

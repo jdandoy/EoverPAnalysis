@@ -169,10 +169,10 @@ def trkEtaPhiECAL(trk):
     trk_phi = np.ones(len(trk)) * 99999999.0
 
     #if there is only one extrapolated coordinate, then it is easy
-    trk_eta[has_one & has_barrel_extrap] = trk_etaEMB[has_one & has_barrel_extrap] 
-    trk_phi[has_one & has_barrel_extrap] = trk_phiEMB[has_one & has_barrel_extrap] 
-    trk_eta[has_one & has_endcap_extrap] = trk_etaEME[has_one & has_endcap_extrap] 
-    trk_phi[has_one & has_endcap_extrap] = trk_phiEME[has_one & has_endcap_extrap] 
+    trk_eta[has_one & has_barrel_extrap] = trk_etaEMB[has_one & has_barrel_extrap]
+    trk_phi[has_one & has_barrel_extrap] = trk_phiEMB[has_one & has_barrel_extrap]
+    trk_eta[has_one & has_endcap_extrap] = trk_etaEME[has_one & has_endcap_extrap]
+    trk_phi[has_one & has_endcap_extrap] = trk_phiEME[has_one & has_endcap_extrap]
 
     #if there are two extrapolated coordinates, take the one in the barrel
     trk_eta[has_both] = trk_etaEMB[has_both]

@@ -96,6 +96,14 @@ elif args.flavour == "pt_reweight":
     for i in range(0, 5):
         plot_list.append(base.format(i))
 
+    base = "EnergyBigBkgProfileVsMomentum__20TRTHitsNonZeroEnergy_Eta_{}LowMuDataTightIsoSystVar.png"
+    for i in range(0, 5):
+        plot_list.append(base.format(i))
+
+    base = "EnergyBigBkgProfileVsMomentum__20TRTHitsNonZeroEnergy_Eta_{}PythiaJetJetTightIsoSystVar.png"
+    for i in range(0, 5):
+        plot_list.append(base.format(i))
+
     base = "EnergyBkgProfileVsMomentum__MIPSelectionHadFracAbove70_Eta_{}PythiaJetJetSystVar.png"
     for i in range(0, 5):
         plot_list.append(base.format(i))
