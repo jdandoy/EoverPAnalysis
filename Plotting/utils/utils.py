@@ -39,6 +39,9 @@ inclusive_files["LowMuDataTightIso"] = ["user.luadamek.data17_13TeV.00341294.phy
 "user.luadamek.data17_13TeV.00341534.physics_MinBias.EoverP_Jan7_hist/",\
 "user.luadamek.data17_13TeV.00341615.physics_MinBias.EoverP_Jan7_hist/",\
 "user.luadamek.data17_13TeV.00341649.physics_MinBias.EoverP_Jan7_hist/"]
+inclusive_files["SinglePion"] = [\
+"user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.EoverP_Jan7_hist/",\
+"user.luadamek.mc16_13TeV.428002.ParticleGun_single_piminus_logE0p2to2000.EoverP_Jan7_hist/"]
 inclusive_files["SinglePionPos"] = [\
 "user.luadamek.mc16_13TeV.428001.ParticleGun_single_piplus_logE0p2to2000.EoverP_Jan7_hist/"]
 inclusive_files["SinglePionNeg"] = [\
@@ -180,23 +183,22 @@ def tchain_files_together(tree_name, channel_to_filelist, on_eos = True):
                     files = []
                     for wild_card in wildcards:
                         files += glob.glob(os.path.join(f, wild_card))
+                    files = list(set(files))
                 else:
                     from XRootD import client
                     from XRootD.client.flags import DirListFlags
                     xrootd_client = client.FileSystem('root://eosatlas.cern.ch')
                     files = [el.name for el in  xrootd_client.dirlist(f, DirListFlags.STAT)[1] if ".root" in os.path.split(el.name)[-1]]
-                    files = [os.path.join(f, el) for el in files if f not in el]
+                    files = [os.path.join(f, el) if f not in el else el for el in files]
 
                 unique_files = []
-                for raw_file in files:
-                    file_with_path = os.path.join(f, raw_file)
-                    if file_with_path not in unique_files and os.path.isfile(file_with_path):
-                        assert "//" not in file_with_path
-                        print("Found file {}".format(file_with_path))
-                        if on_eos:
-                            trees[channel][f].Add('root://eosatlas.cern.ch/' + file_with_path)
-                        else:
-                            trees[channel][f].Add(file_with_path)
+                for file_with_path in files:
+                    assert "//" not in file_with_path
+                    print("Found file {}".format(file_with_path))
+                    if on_eos:
+                       trees[channel][f].Add('root://eosatlas.cern.ch/' + file_with_path)
+                    else:
+                       trees[channel][f].Add(file_with_path)
     print("Retrieved Trees")
     return trees
 
