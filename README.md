@@ -19,8 +19,10 @@ cd source
 Clone the packages that this analysis depends on. 
 ```
 git clone http://github.com/UCATLAS/xAODAnaHelpers xAODAnaHelpers
+cd xAODAnaHelpers && git checkout aaf7fc3fde9819bcb5cc3737df0226e275110671 && cd ..
 git clone http://github.com/luadamek/EoverPAnalysis
 git clone https://github.com/mattleblanc/IDTrackSel.git
+cd IDTrackSel && git checkout 13211645b1aa6c723d4f2c0b3492d5009dde8ee5 && cd ..
 asetup AnalysisBase,21.2.64,here
 cd ../build
 cmake ../source && make
