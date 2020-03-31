@@ -43,13 +43,13 @@ xAH_run.py --files=>>Any JZ0, JZ1, JZ2 File<< --inputRucio --config=$TestArea/Eo
 Grid jobs are handled by a submission script located in $TestArea/EoverPAnalysis/scripts/. The grid job script takes four arguments as input: the submission directory, a txt file with all samples listed, a descriptor to label the output, and a configuration file. As an example, the following command will submit grid jobs to run over the 361022 jet jet MC sample.
 ```
 cd ../run
-python $TestArea/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag 21.2.64 --submitDir results --FileList $TestArea/EoverPAnalysis/filelists/test_list.txt --config $TestArea/EoverPAnalysis/scripts/config_eop_tree_dump.py --descriptor test
+python ../source/EoverPAnalysis/scripts/submit_grid.py --user luadamek --tag EoverP --overwrite True --config ../source/EoverPAnalysis/scripts/xAH_EoverP.py --descriptor Jan7 --FileList ../source/EoverPAnalysis/filelists/mc16/mc16_JZ012.txt
 ```
 
 ## Plotting
 Plotting macros can be found the root_numpy_plotting folder. See the README contained in that folder.
 
-## Hadding together large root files.
+## Hadding together large root files. (Outdated. Not longer needed. The plotting code uses tchains).
 A macro exists for hadding together root files that are too large (> ~ 100 Gb). To use the macro, do:
 ```
 python hadd_bigfiles.py __outputfilename__ __directorywithfiles__
